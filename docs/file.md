@@ -24,8 +24,8 @@ The File Header is found at offset 0 in the file and is 32 bytes in length.
 
 | Field            | Offset | Size | Type                  | Comments |
 |------------------|-------:|-----:|-----------------------|----------|
-| File Format      | 0      | 4    | Four ASCII Characters | Always 'RSRC' |
-| Corruption Check | 4      | 2    | Two ASCII Characters  | Always '\r\n', checks for common text conversion corrption (similar to [PNG header](http://www.libpng.org/pub/png/spec/1.2/PNG-Rationale.html#R.PNG-file-signature)) |
+| File Format      | 0      | 4    | Four ASCII Characters | Always `RSRC` |
+| Corruption Check | 4      | 2    | Two ASCII Characters  | Always `\r\n`, checks for common text conversion corrption (similar to [PNG header](http://www.libpng.org/pub/png/spec/1.2/PNG-Rationale.html#R.PNG-file-signature)) |
 | Format Version   | 6      | 2    | unsigned integer      | Always 3 |
 | File Type        | 8      | 4    | Four ASCII Characters | Type of file (see [notes below](#file-types)) |
 | File Creator     | 12     | 4    | Four ASCII Characters | Creator of the file (see [notes below](#file-creators)) |
@@ -37,30 +37,30 @@ The File Header is found at offset 0 in the file and is 32 bytes in length.
 
 #### File Types
 
-1. **'LVIN'** - Virtual Instrument (.vi, .vit, .vim files)
-2. **'LVAR'** - Container (.llb files)
-3. **'LVCC'** - Control (.ctl, .ctt files)
-4. **'LVMNU'** - Menu file (.mnu)
-5. **'LVRS'** - Resource file (seen in .mnu files)
-6. **'LVSB'** - External code (.lvsb files)
-7. **'iuWl'** - LabWindows/CVI user interface resource file (.uir)
-8. **'\0\0\0\0'** - Resource file (seen in .mnu files)
+1. `LVIN` - Virtual Instrument (.vi, .vit, .vim files)
+2. `LVAR` - Container (.llb files)
+3. `LVCC` - Control (.ctl, .ctt files)
+4. `LVMNU` - Menu file (.mnu)
+5. `LVRS` - Resource file (seen in .mnu files)
+6. `LVSB` - External code (.lvsb files)
+7. `iuWl` - LabWindows/CVI user interface resource file (.uir)
+8. `\0\0\0\0` - Resource file (seen in .mnu files)
 
 
 #### File Creators
 
-1. **'LBVW'** - LabVIEW
-2. **'WLin'** - LabVIEWs/CVI
-3. **'\0\0\0\0'** - Unknown (seen in .uir and .mnu files)
+1. `LBVW` - LabVIEW
+2. `WLin` - LabVIEWs/CVI
+3. `\0\0\0\0` - Unknown (seen in .uir and .mnu files)
 
 
 ### Resource Data
 
-The Resource Data section is found at the offset indicated by `Data Offset` in the `File Header`.
+The Resource Data section is found at the offset indicated by `Data Offset` in the [File Header](#file-header).
 This offset is always right after the header (at offset 32).
-The size of the Resource Data section is indicated by `Data Size` in the `File Header`.
+The size of the Resource Data section is indicated by `Data Size` in the [File Header](#file-header).
 There may be gaps between actual resource data.
-The location and metadata for each resource can be found in the `Resource Metadata` section of the file.
+The location and metadata for each resource can be found in the [Resource Metadata](#resource-metadata) section of the file.
 
 | Field            | Offset | Size | Type                  | Comments                    |
 |------------------|-------:|-----:|-----------------------|-----------------------------|
@@ -70,8 +70,8 @@ The location and metadata for each resource can be found in the `Resource Metada
 
 ### Resource Metadata
 
-The Resource Metadata section is found at the offset indicated by `Metadata Offset` in the `File Header`.
-The offset is always right after the `Resource Data` section (at offset `Data Offset` (32) + `Data Size`).
+The Resource Metadata section is found at the offset indicated by `Metadata Offset` in the [File Header](#file-header).
+The offset is always right after the [Resource Data](#resource-data) section (at offset `Data Offset` (32) + `Data Size`).
 
 | Section                                      | Description                                                   |
 |----------------------------------------------|---------------------------------------------------------------|
@@ -89,7 +89,7 @@ The offset is always right after the `Resource Data` section (at offset `Data Of
 | Unused               | 32     | 8    | bytes                       | May be safely set to all 0's     |
 | File Header Size     | 40     | 4    | unsigned integer            | Always 32                        |
 | Metadata Header Size | 44     | 4    | unsigned integer            | Always 52                        |
-| Names Offset         | 48     | 4    | unsigned integer            | Offset in the `Resource Metadata` section of the [names list](#name-table). If no names, this is 0. |
+| Names Offset         | 48     | 4    | unsigned integer            | Offset in the [Resource Metadata](#resource-metadata) section of the [names list](#name-table). If no names, this is 0. |
 
 
 #### Type List
@@ -110,14 +110,14 @@ The offset is always right after the `Resource Data` section (at offset `Data Of
 
 #### Specific Resource Metadata
 
-| Field                | Offset | Size   | Type                  | Comments                                               |
-|----------------------|-------:|-------:|-----------------------|--------------------------------------------------------|
-| Resource ID          | 0      | 4      | signed integer        | Identifying number for this resource                   |
-| Name Offset          | 4      | 4      | unsigned integer      | Index of name in the `Name Table` or FFFFFFFF is none  |
-| Unused               | 8      | 4      | bytes                 | May safely be set to all 0's                           |
-| Data Offset          | 12     | 4      | unsigned integer      | Offset in the `Resource Data` section                  |
-| Unused               | 16     | 4      | bytes                 | May safely be set to all 0's                           |
+| Field                | Offset | Size   | Type                  | Comments                                                           |
+|----------------------|-------:|-------:|-----------------------|--------------------------------------------------------------------|
+| Resource ID          | 0      | 4      | signed integer        | Identifying number for this resource                               |
+| Name Offset          | 4      | 4      | unsigned integer      | Index of name in the [Name Table](#name-table) or FFFFFFFF is none |
+| Unused               | 8      | 4      | bytes                 | May safely be set to all 0's                                       |
+| Data Offset          | 12     | 4      | unsigned integer      | Offset in the [Resource Data](#resource-data) section              |
+| Unused               | 16     | 4      | bytes                 | May safely be set to all 0's                                       |
 
 #### Name Table
 
-The name table is a concatenated list of byte-prefixed ascii strings starting at `Names Offset` from the `Metadata Header`.
+The name table is a concatenated list of byte-prefixed ascii strings starting at `Names Offset` from the [Metadata Header](#metadata-header).
