@@ -37,6 +37,7 @@ You can query for what types are available, fetch all resources for a given type
 | .lsb      | .   | User Compiled Code |
 | .rtexe    | .   | ??? |
 | .glb      | .   | Globals |
+| .gbl      | .   | Globals |
 
 
 ## General LabVIEW resource file layout
