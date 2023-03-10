@@ -1,8 +1,22 @@
 # LabVIEW Resource File Format
 
+- [LabVIEW Resource File Format](#labview-resource-file-format)
+  * [Origins](#origins)
+  * [General LabVIEW resource file layout](#general-labview-resource-file-layout)
+    + [File Header](#file-header)
+      - [File Types](#file-types)
+      - [File Creators](#file-creators)
+    + [Resource Data](#resource-data)
+    + [Resource Metadata](#resource-metadata)
+      - [Metadata Header](#metadata-header)
+      - [Type List](#type-list)
+        * [Type Info](#type-info)
+      - [Specific Resource Metadata](#specific-resource-metadata)
+      - [Name Table](#name-table)
+
 ## Origins
 
-The LabVIEW resource file format appears to be a replication of the 1980's era [Macintosh resource fork](https://formats.kaitai.io/resource_fork/resource_fork.svg) (at least in behavior). 
+The LabVIEW resource file format appears to be a replication of the 1980's era [Macintosh resource fork](https://formats.kaitai.io/resource_fork/resource_fork.svg) (at least in behavior).
 From an interface standpoint, the resource file is a collection of resource types (identified by a four character code).
 Resources of a given type can be identified by name or id number.
 You can query for what types are available, fetch all resources for a given type, or fetch a single resource by type/id or type/name pair.
