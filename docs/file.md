@@ -12,9 +12,9 @@ You can query for what types are available, fetch all resources for a given type
 
 | Section | Description                                                   |
 |---------|---------------------------------------------------------------|
-| Header  | Verification of file format and offset to sections            |
-| Data    | The contents of the resources                                 |
-| Metadata| The data that ties type, id, and name to a block of data      |
+| [Header](#file-header)  | Verification of file format and offset to sections            |
+| [Data](#resource-data)    | The contents of the resources                                 |
+| [Metadata](#resource-metadata) | The data that ties type, id, and name to a block of data      |
 | Padding | There appears to be unnecessary data at the end of some files |
 
 
@@ -27,8 +27,8 @@ The File Header is found at offset 0 in the file and is 32 bytes in length.
 | File Format      | 0      | 4    | Four ASCII Characters | Always 'RSRC' |
 | Corruption Check | 4      | 2    | Two ASCII Characters  | Always '\r\n', checks for common text conversion corrption (similar to [PNG header](http://www.libpng.org/pub/png/spec/1.2/PNG-Rationale.html#R.PNG-file-signature)) |
 | Format Version   | 6      | 2    | unsigned integer      | Always 3 |
-| File Type        | 8      | 4    | Four ASCII Characters | Type of file (see notes below) |
-| File Creator     | 12     | 4    | Four ASCII Characters | Creator of the file (see notes below) |
+| File Type        | 8      | 4    | Four ASCII Characters | Type of file (see [notes below](#file-types)) |
+| File Creator     | 12     | 4    | Four ASCII Characters | Creator of the file (see [notes below](#file-creators)) |
 | Metadata Offset  | 16     | 4    | unsigned integer      | Offset in the file of the metadata section |
 | Metadata Size    | 20     | 4    | unsigned integer      | Size of the metadata section |
 | Data Offset      | 24     | 4    | unsigned integer      | Offset in the file of the resource data (always right after this header) |
@@ -68,9 +68,56 @@ The location and metadata for each resource can be found in the `Resource Metada
 | Data             | 4      | N    | binary data           | The resource data           |
 
 
-### Ressource Metadata
+### Resource Metadata
 
 The Resource Metadata section is found at the offset indicated by `Metadata Offset` in the `File Header`.
 The offset is always right after the `Resource Data` section (at offset `Data Offset` (32) + `Data Size`).
 
+| Section                                      | Description                                                   |
+|----------------------------------------------|---------------------------------------------------------------|
+| [Metadata Header](#metadata-header)          | Offsets of sections in the Metadata section                   |
+| [Type List](#type-list)                      | List of all resource types                                    |
+| [Resource Info](#specific-resource-metadata) | Information about specific resources                          |
+| [Name Table](#name-table)                    | List of names used in resources (not-deduplicated)            |
 
+
+#### Metadata Header
+
+| Field                | Offset | Size | Type                        | Comments                         |
+|----------------------|-------:|-----:|-----------------------------|----------------------------------|
+| File Header          | 0      | 32   | [File Header](#file-header) | An exact copy of the file header |
+| Unused               | 32     | 8    | bytes                       | May be safely set to all 0's     |
+| File Header Size     | 40     | 4    | unsigned integer            | Always 32                        |
+| Metadata Header Size | 44     | 4    | unsigned integer            | Always 52                        |
+| Names Offset         | 48     | 4    | unsigned integer            | Offset in the `Resource Metadata` section of the [names list](#name-table). If no names, this is 0. |
+
+
+#### Type List
+
+| Field                | Offset | Size   | Type                    | Comments                              |
+|----------------------|-------:|-------:|-------------------------|---------------------------------------|
+| Type Count           | 0      | 4      | unsigned integer        | Number of types less one (need to +1) |
+| Type Blocks          | 4      | 12 x N | [Type Info](#type-info) | Repeated entries for each type        |
+
+##### Type Info
+
+| Field                | Offset | Size   | Type                  | Comments                                               |
+|----------------------|-------:|-------:|-----------------------|--------------------------------------------------------|
+| Resource Type        | 0      | 4      | Four ASCII Characters | The code for the data type                             |
+| Resource Count       | 4      | 4      | unsigned integer      | Number of resources of this type less one (need to +1) |
+| List Offset          | 8      | 4      | unsigned integer      | Offset after [Metadata Header](#metadata-header)       |
+
+
+#### Specific Resource Metadata
+
+| Field                | Offset | Size   | Type                  | Comments                                               |
+|----------------------|-------:|-------:|-----------------------|--------------------------------------------------------|
+| Resource ID          | 0      | 4      | signed integer        | Identifying number for this resource                   |
+| Name Offset          | 4      | 4      | unsigned integer      | Index of name in the `Name Table` or FFFFFFFF is none  |
+| Unused               | 8      | 4      | bytes                 | May safely be set to all 0's                           |
+| Data Offset          | 12     | 4      | unsigned integer      | Offset in the `Resource Data` section                  |
+| Unused               | 16     | 4      | bytes                 | May safely be set to all 0's                           |
+
+#### Name Table
+
+The name table is a concatenated list of byte-prefixed ascii strings starting at `Names Offset` from the `Metadata Header`.
