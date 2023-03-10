@@ -56,7 +56,7 @@ The File Header is found at offset 0 in the file and is 32 bytes in length.
 
 ### Resource Data
 
-The Resource Data is found at the offset indicated by `Data Offset` in the `File Header`.
+The Resource Data section is found at the offset indicated by `Data Offset` in the `File Header`.
 This offset is always right after the header (at offset 32).
 The size of the Resource Data section is indicated by `Data Size` in the `File Header`.
 There may be gaps between actual resource data.
@@ -69,3 +69,8 @@ The location and metadata for each resource can be found in the `Resource Metada
 
 
 ### Ressource Metadata
+
+The Resource Metadata section is found at the offset indicated by `Metadata Offset` in the `File Header`.
+The offset is always right after the `Resource Data` section (at offset `Data Offset` (32) + `Data Size`).
+
+
