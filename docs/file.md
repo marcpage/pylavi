@@ -22,6 +22,23 @@ Resources of a given type can be identified by name or id number.
 You can query for what types are available, fetch all resources for a given type, or fetch a single resource by type/id or type/name pair.
 
 
+## File Types
+
+
+| Extension | % | Description |
+|-----------|--:|-------------|
+| .vi       | 90% | Virtual Instrument |
+| .ctl      | 10% | Control |
+| .mnu      | 1%  | Menu |
+| .llb      | .   | Container |
+| .vit      | .   | Virtual Instrument Template |
+| .vim      | .   | Virtual Instrument Macro |
+| .ctt      | .   | Control Template |
+| .lsb      | .   | User Compiled Code |
+| .rtexe    | .   | ??? |
+| .glb      | .   | Globals |
+
+
 ## General LabVIEW resource file layout
 
 | Section | Description                                                   |
@@ -54,14 +71,14 @@ You can query for what types are available, fetch all resources for a given type
 
 #### File Types
 
-1. `LVIN` - Virtual Instrument (.vi, .vit, .vim files)
-2. `LVAR` - Container (.llb files)
-3. `LVCC` - Control (.ctl, .ctt files)
-4. `LVMNU` - Menu file (.mnu)
-5. `LVRS` - Resource file (seen in .mnu files)
-6. `LVSB` - External code (.lvsb files)
-7. `iuWl` - LabWindows/CVI user interface resource file (.uir)
-8. `\0\0\0\0` - Resource file (seen in .mnu files)
+1. `LVIN` - Virtual Instrument (`.vi`, `.vit`, `.vim` files)
+2. `LVAR` - Container (`.llb` files)
+3. `LVCC` - Control (`.ctl`, `.ctt` files)
+4. `LVMNU` - Menu file (`.mnu`)
+5. `LVRS` - Resource file (seen in `.mnu` files)
+6. `LVSB` - External code (`.lvsb` files)
+7. `iuWl` - LabWindows/CVI user interface resource file (`.uir`)
+8. `\0\0\0\0` - Resource file (seen in `.mnu` files)
 
 
 #### File Creators
