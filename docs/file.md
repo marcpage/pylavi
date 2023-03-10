@@ -7,11 +7,11 @@
       - [File Types](#file-types)
       - [File Creators](#file-creators)
     + [Resource Data](#resource-data)
-    + [Resource Metadata](#resource-metadata)
+    + [Metadata](#metadata)
       - [Metadata Header](#metadata-header)
       - [Type List](#type-list)
         * [Type Info](#type-info)
-      - [Specific Resource Metadata](#specific-resource-metadata)
+      - [Resource Metadata](#resource-metadata)
       - [Name Table](#name-table)
 
 ## Origins
@@ -28,13 +28,16 @@ You can query for what types are available, fetch all resources for a given type
 |---------|---------------------------------------------------------------|
 | [Header](#file-header)  | Verification of file format and offset to sections            |
 | [Data](#resource-data)    | The contents of the resources                                 |
-| [Metadata](#resource-metadata) | The data that ties type, id, and name to a block of data      |
+| [Metadata](#metadata) | The data that ties type, id, and name to a block of data      |
 | Padding | There appears to be unnecessary data at the end of some files |
 
 
 ### File Header
 
-The File Header is found at offset 0 in the file and is 32 bytes in length.
+|  |  |  |  |
+|---|---|---|---|
+| Offset | 0 | Size | 32 |
+
 
 | Field            | Offset | Size | Type                  | Comments |
 |------------------|-------:|-----:|-----------------------|----------|
@@ -43,9 +46,9 @@ The File Header is found at offset 0 in the file and is 32 bytes in length.
 | Format Version   | 6      | 2    | unsigned integer      | Always 3 |
 | File Type        | 8      | 4    | Four ASCII Characters | Type of file (see [notes below](#file-types)) |
 | File Creator     | 12     | 4    | Four ASCII Characters | Creator of the file (see [notes below](#file-creators)) |
-| Metadata Offset  | 16     | 4    | unsigned integer      | Offset in the file of the metadata section |
+| Metadata Offset  | 16     | 4    | unsigned integer      | Offset in the file of the metadata section (always Data Offset + Data Size) |
 | Metadata Size    | 20     | 4    | unsigned integer      | Size of the metadata section |
-| Data Offset      | 24     | 4    | unsigned integer      | Offset in the file of the resource data (always right after this header) |
+| Data Offset      | 24     | 4    | unsigned integer      | Offset in the file of the resource data (always right after this header which is 32) |
 | Data Size        | 28     | 4    | unsigned integer      | The size of the data section |
 
 
@@ -70,11 +73,17 @@ The File Header is found at offset 0 in the file and is 32 bytes in length.
 
 ### Resource Data
 
-The Resource Data section is found at the offset indicated by `Data Offset` in the [File Header](#file-header).
-This offset is always right after the header (at offset 32).
+This section is always right after the header (at offset 32).
 The size of the Resource Data section is indicated by `Data Size` in the [File Header](#file-header).
-There may be gaps between actual resource data.
-The location and metadata for each resource can be found in the [Resource Metadata](#resource-metadata) section of the file.
+There may be gaps between actual resource data blocks.
+The location and metadata for each resource can be found in the [Metadata](#metadata) section of the file.
+
+#### Resource Data Block
+
+|  |  |  |  |
+|---|---|---|---|
+| Offset | [Resource Metadata](#resource-metadata).`Data Offset` | Size | 4 + `Resource Data`.`Data Size` |
+
 
 | Field            | Offset | Size | Type                  | Comments                    |
 |------------------|-------:|-----:|-----------------------|-----------------------------|
@@ -82,20 +91,24 @@ The location and metadata for each resource can be found in the [Resource Metada
 | Data             | 4      | N    | binary data           | The resource data           |
 
 
-### Resource Metadata
+### Metadata
 
-The Resource Metadata section is found at the offset indicated by `Metadata Offset` in the [File Header](#file-header).
+The Metadata section is found at the offset indicated by `Metadata Offset` in the [File Header](#file-header).
 The offset is always right after the [Resource Data](#resource-data) section (at offset `Data Offset` (32) + `Data Size`).
 
 | Section                                      | Description                                                   |
 |----------------------------------------------|---------------------------------------------------------------|
 | [Metadata Header](#metadata-header)          | Offsets of sections in the Metadata section                   |
 | [Type List](#type-list)                      | List of all resource types                                    |
-| [Resource Info](#specific-resource-metadata) | Information about specific resources                          |
+| [Resource Metadata](#resource-metadata) | Information about specific resources                          |
 | [Name Table](#name-table)                    | List of names used in resources (not-deduplicated)            |
 
 
 #### Metadata Header
+
+|  |  |  |  |
+|---|---|---|---|
+| Offset | [File Header](#file-header).`Metadata Offset` | Size | 52 |
 
 | Field                | Offset | Size | Type                        | Comments                         |
 |----------------------|-------:|-----:|-----------------------------|----------------------------------|
@@ -103,10 +116,14 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 | Unused               | 32     | 8    | bytes                       | May be safely set to all 0's     |
 | File Header Size     | 40     | 4    | unsigned integer            | Always 32                        |
 | Metadata Header Size | 44     | 4    | unsigned integer            | Always 52                        |
-| Names Offset         | 48     | 4    | unsigned integer            | Offset in the [Resource Metadata](#resource-metadata) section of the [names list](#name-table). If no names, this is 0. |
+| Names Offset         | 48     | 4    | unsigned integer            | Offset in the [Metadata](#metadata) section of the [names list](#name-table). If no names, this is 0. |
 
 
 #### Type List
+
+|  |  |  |  |
+|---|---|---|---|
+| Offset | [File Header](#file-header).`Metadata Offset` + 52 | Size | 4 + 12 x number of types |
 
 | Field                | Offset | Size   | Type                    | Comments                              |
 |----------------------|-------:|-------:|-------------------------|---------------------------------------|
@@ -115,6 +132,10 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 
 ##### Type Info
 
+|  |  |  |  |
+|---|---|---|---|
+| Offset | [File Header](#file-header).`Metadata Offset` + 56 + 12 x type index | Size | 12 |
+
 | Field                | Offset | Size   | Type                  | Comments                                               |
 |----------------------|-------:|-------:|-----------------------|--------------------------------------------------------|
 | Resource Type        | 0      | 4      | Four ASCII Characters | The code for the data type                             |
@@ -122,16 +143,24 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 | List Offset          | 8      | 4      | unsigned integer      | Offset after [Metadata Header](#metadata-header)       |
 
 
-#### Specific Resource Metadata
+#### Resource Metadata
+
+|  |  |  |  |
+|---|---|---|---|
+| Offset | [File Header](#file-header).`Metadata Offset` + 52 + [Type Info](#type-info).`List Offset` + 20 x resource index | Size | 20 |
 
 | Field                | Offset | Size   | Type                  | Comments                                                           |
 |----------------------|-------:|-------:|-----------------------|--------------------------------------------------------------------|
 | Resource ID          | 0      | 4      | signed integer        | Identifying number for this resource                               |
 | Name Offset          | 4      | 4      | unsigned integer      | Index of name in the [Name Table](#name-table) or FFFFFFFF is none |
 | Unused               | 8      | 4      | bytes                 | May safely be set to all 0's                                       |
-| Data Offset          | 12     | 4      | unsigned integer      | Offset in the [Resource Data](#resource-data) section              |
+| Data Offset          | 12     | 4      | unsigned integer      | Offset of the [Resource Data Block](#resoure-data-block) in the [Resource Data](#resource-data) section              |
 | Unused               | 16     | 4      | bytes                 | May safely be set to all 0's                                       |
 
 #### Name Table
+
+|  |  |  |  |
+|---|---|---|---|
+| Offset | [File Header](#file-header).`Metadata Offset` + [Metadata Header](#metadata-header).`Names Offset` | Size | variable |
 
 The name table is a concatenated list of [byte-prefixed strings](data_types.md#byte-prefixed-string) starting at `Names Offset` from the [Metadata Header](#metadata-header).
