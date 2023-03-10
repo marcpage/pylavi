@@ -120,4 +120,4 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 
 #### Name Table
 
-The name table is a concatenated list of byte-prefixed ascii strings starting at `Names Offset` from the [Metadata Header](#metadata-header).
+The name table is a concatenated list of [byte-prefixed strings](data_types.md#byte-prefixed-string) starting at `Names Offset` from the [Metadata Header](#metadata-header).
