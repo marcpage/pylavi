@@ -10,4 +10,4 @@ This project is designed to be a reboot, taking the incredible discovery done by
 This starts with a conceptual model of the [LabVIEW resource file](docs/file.md) and treats the binary resources files as just collections of resources.
 Once the API for working with the file format itself is solidified, then code can be added to work with resources of specific types.
 
-Along the way documentation of discoveries will be [documented](docs/).
+Along the way discoveries will be [documented](docs/).
