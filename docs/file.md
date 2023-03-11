@@ -71,7 +71,7 @@ You can query for what types are available, fetch all resources for a given type
 |  |  | Resource Data
 | [Metadata](#metadata) |
 |  | [Metadata Header](#metadata-header) |
-|  |  | [File Header](#file-header) |
+|  |  | [File Header](#file-header) copy |
 |  |  |  | File Format (RSRC) |
 |  |  |  | Corruption Check (\r\n) |
 |  |  |  | Format Version (3) |
