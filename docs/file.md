@@ -81,7 +81,7 @@ You can query for what types are available, fetch all resources for a given type
 |  |  |  | [Metadata](#metadata) size |
 |  |  |  | [Data](#resource-data) offset |
 |  |  |  | [Data](#resource-data) size |
-|  |  | Unused |
+|  |  | Unused (0) |
 |  |  | [Header](#file-header) size (32) |
 |  |  | [Metadata Header](#metadata-header) size (52) |
 |  |  | [Names List](#name-list) offset |
