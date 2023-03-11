@@ -6,9 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# macOS Finder file
+.DS_Store
+
 # Distribution / packaging
 .Python
-.DS_Store
 build/
 develop-eggs/
 dist/
