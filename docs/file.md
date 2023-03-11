@@ -116,8 +116,8 @@ You can query for what types are available, fetch all resources for a given type
 | File Format      | 0      | 4    | Four ASCII Characters | Always `RSRC` |
 | Corruption Check | 4      | 2    | Two ASCII Characters  | Always `\r\n`, checks for common text conversion corrption (similar to [PNG header](http://www.libpng.org/pub/png/spec/1.2/PNG-Rationale.html#R.PNG-file-signature)) |
 | Format Version   | 6      | 2    | unsigned integer      | Always 3 |
-| File Type        | 8      | 4    | Four ASCII Characters | Type of file (see [notes below](#file-types)) |
-| File Creator     | 12     | 4    | Four ASCII Characters | Creator of the file (see [notes below](#file-creators)) |
+| File Type        | 8      | 4    | Four ASCII Characters | [Type of file](#file-types)) |
+| File Creator     | 12     | 4    | Four ASCII Characters | [Creator of the file](#file-creators)) |
 | Metadata Offset  | 16     | 4    | unsigned integer      | Offset in the file of the metadata section (always Data Offset + Data Size) |
 | Metadata Size    | 20     | 4    | unsigned integer      | Size of the metadata section |
 | Data Offset      | 24     | 4    | unsigned integer      | Offset in the file of the resource data (always right after this header which is 32) |
