@@ -98,7 +98,7 @@ You can query for what types are available, fetch all resources for a given type
 |  |  | [Data](#resource-data-block) Offset |
 |  |  | Unused (0) |
 |  | [Name List](#name-list) |
-|  |  | N x string |
+|  |  | N x [string](data_types.md#byte-prefixed-string) |
 |  |  |  | length |
 |  |  |  | string data |
 | Optional Padding |
