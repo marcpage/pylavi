@@ -2,7 +2,6 @@
     Parses a LabVIEW resource file
 """
 
-# TODO: Dump textual format
 
 import ctypes
 import typing
@@ -439,10 +438,10 @@ class Resources:
     ]
 
     def __init__(
-        self, file_type: str = None, creator: str = None, description: list = None
+        self, file_type: str = None, file_creator: str = None, description: list = None
     ):
         self.file_type = file_type
-        self.creator = creator
+        self.file_creator = file_creator
         self.__resources = description
 
     def types(self) -> [str]:
@@ -605,12 +604,13 @@ class Resources:
 
         return Resources(
             file_type=header.file_type,
-            creator=header.file_creator,
+            file_creator=header.file_creator,
             description=resource_types,
         )
 
 
 def handle_file(file_path, extensions, types):
+    """temporary function that attempts to open a resource file"""
     known_file_extensions = Resources.EXTENSIONS
     extension = os.path.splitext(file_path)[1].lower()
 
