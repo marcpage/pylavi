@@ -1,6 +1,6 @@
-.PHONE:clean venv install upgrade uninstall check dist format lint test coverage
+.PHONE:clean venv install upgrade uninstall check dist format lint test coverage report
 
-MIN_TEST_COVERAGE=57
+MIN_TEST_COVERAGE=84
 MODULE_NAME=pylavi
 SOURCES=$(MODULE_NAME)/*.py
 TEST_DIR=tests
@@ -39,18 +39,20 @@ lint: $(LINT_LOG) format
 	@cat $<
 
 $(TEST_LOG): $(SOURCES) $(TESTS)  $(VENV_ACTIVATE_SCRIPT)
-	@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run -m pytest > $@
+	@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run --source=$(MODULE_NAME) -m pytest > $@
 
 test: $(TEST_LOG)
 	@cat $<
 
 $(COVERAGE_LOG): $(TEST_LOG)
-	@$(RUN_IN_VENV) coverage report --include="$(SOURCES)" --skip-covered > $@
-	@$(RUN_IN_VENV) coverage html --include="$(SOURCES)" --skip-covered --fail-under=$(MIN_TEST_COVERAGE)
+	@$(RUN_IN_VENV) coverage report --skip-covered > $@
+
+report: $(TEST_LOG)
+	@$(RUN_IN_VENV) coverage html --skip-covered --fail-under=$(MIN_TEST_COVERAGE)
+	@open htmlcov/index.html
 
 coverage: $(COVERAGE_LOG)
 	@cat $<
-	@open htmlcov/index.html
 
 install: $(VENV_ACTIVATE_SCRIPT)
 	$(RUN_IN_VENV) pip3 install .

@@ -10,8 +10,9 @@ import sys
 import pylavi.file
 
 
-def parse_args():
+def parse_args(command_line=None):
     """Interpret command line arguments"""
+    command_line = command_line or sys.argv[1:]
     parser = argparse.ArgumentParser(description="Converts LabVIEW Resources to text")
     parser.add_argument(
         "-d",
@@ -24,12 +25,13 @@ def parse_args():
     parser.add_argument(
         "-o", "--out", dest="output_file", type=str, help="Path to output the results"
     )
-    args = parser.parse_args()
+    args = parser.parse_args(args=command_line)
     return args
 
 
-def main(args=parse_args()):
+def main(args=None):
     """run the (dis)assembler"""
+    args = args or parse_args()
     resources = pylavi.file.Resources.load(args.input_file)
     output = {
         "path": args.input_file,
