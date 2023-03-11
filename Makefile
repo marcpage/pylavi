@@ -33,9 +33,10 @@ format: $(BLACK_LOG)
 
 $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
 	@$(RUN_IN_VENV) pip3 install -q pylint && pylint $(SOURCES) > $@
+	@$(RUN_IN_VENV) pip3 install -q black && black --check $(SOURCES) 2> $@
 	@echo Linting Complete
 
-lint: $(LINT_LOG) format
+lint: $(LINT_LOG)
 	@cat $<
 
 $(TEST_LOG): $(SOURCES) $(TESTS)  $(VENV_ACTIVATE_SCRIPT)
@@ -45,7 +46,7 @@ test: $(TEST_LOG)
 	@cat $<
 
 $(COVERAGE_LOG): $(TEST_LOG)
-	@$(RUN_IN_VENV) coverage report --skip-covered > $@
+	@$(RUN_IN_VENV) coverage report --skip-covered --show-missing > $@
 
 report: $(TEST_LOG)
 	@$(RUN_IN_VENV) coverage html --skip-covered --fail-under=$(MIN_TEST_COVERAGE)
