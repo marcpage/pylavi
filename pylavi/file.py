@@ -4,7 +4,6 @@
 
 
 import ctypes
-import typing
 import string
 
 
@@ -30,18 +29,6 @@ class FileStructure(ctypes.BigEndianStructure):
     def size(self) -> int:
         """the number of bytes in the file"""
         return ctypes.sizeof(self)
-
-    def read(self, rsrc_file: typing.BinaryIO):
-        """read the bytes from the file from the current location"""
-        return self.from_bytes(rsrc_file.read(self.size()))
-
-    def write(self, rsrc_file: typing.BinaryIO):
-        """Write the structure to the file at the current location"""
-        rsrc_file.write(self.to_bytes())
-
-    def to_string(self):
-        """Get a string representation of the file"""
-        return "FileStructure"
 
     def __repr__(self) -> str:
         return self.to_string()
@@ -370,6 +357,7 @@ def create_type_list(count: int):
         ]
 
         def to_string(self):
+            """Convert to string"""
             return f"[{', '.join(e.to_string() for e in self.type)}]"
 
         def __repr__(self) -> str:
@@ -405,6 +393,7 @@ class ResourceMetadata(FileStructure):
         super().__init__(**kwargs)
 
     def to_string(self):
+        """Convert to a string"""
         return (
             "{"
             + f"resource_id = {self.resource_id}, "

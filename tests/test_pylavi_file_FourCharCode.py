@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
+
 from pylavi.file import FourCharCode
+
 
 def test_FourCharCode():
     test_set = {b"TEST":"TEST", b"test":"test", b"Test":"Test", b"\xff\x00\xff\x00":"xff00ff00"}
@@ -8,6 +10,14 @@ def test_FourCharCode():
     for test_bytes in test_set:
         fcc = FourCharCode().from_bytes(test_bytes)
         assert fcc.to_string().lower() == test_set[test_bytes].lower(), f"{fcc.to_string()} != {test_set[test_bytes]}"
+        assert fcc.to_bytes() == test_bytes
+        assert fcc == test_bytes
+
+    assert FourCharCode('TEST').to_string() == 'TEST'
+    assert FourCharCode('TEST') == 'TEST'
+    assert FourCharCode('TEST') == FourCharCode('TEST')
+    assert repr(FourCharCode('TEST')) == "FourCharCode('TEST')"
+    assert str(FourCharCode('TEST')) == "FourCharCode('TEST')"
 
 
 if __name__ == "__main__":
