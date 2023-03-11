@@ -1,11 +1,13 @@
-.PHONE:clean venv install upgrade uninstall check dist format lint
+.PHONE:clean venv install upgrade uninstall check dist format lint test
 
 MODULE_NAME=pylavi
 SOURCES=$(MODULE_NAME)/*.py
+TESTS=tests/*.py
 VENV_DIR=.venv
 VENV_ACTIVATE_SCRIPT=$(VENV_DIR)/bin/activate
 LINT_LOG=$(VENV_DIR)/lint.txt
 BLACK_LOG=$(VENV_DIR)/format.txt
+TEST_LOG=$(VENV_DIR)/test.txt
 RUN_IN_VENV=. $(VENV_ACTIVATE_SCRIPT) &&
 
 clean:
@@ -31,6 +33,12 @@ $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
 	@echo Linting Complete
 
 lint: $(LINT_LOG) format
+	@cat $<
+
+$(TEST_LOG): $(SOURCES) $(TESTS)
+	-@$(RUN_IN_VENV) pip3 install -q pytest && pytest > $@
+
+test: $(TEST_LOG)
 	@cat $<
 
 install: $(VENV_ACTIVATE_SCRIPT)
