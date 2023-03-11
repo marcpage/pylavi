@@ -42,12 +42,66 @@ You can query for what types are available, fetch all resources for a given type
 
 ## General LabVIEW resource file layout
 
-| Section | Description                                                   |
-|---------|---------------------------------------------------------------|
-| [Header](#file-header)  | Verification of file format and offset to sections            |
-| [Data](#resource-data)    | The contents of the resources                                 |
-| [Metadata](#metadata) | The data that ties type, id, and name to a block of data      |
-| Padding | There appears to be unnecessary data at the end of some files |
+### Overview
+
+| Section | Description                                                            |
+|---------|------------------------------------------------------------------------|
+| [Header](#file-header)  | Verification of file format and offset to sections     |
+| [Data](#resource-data)    | The contents of the resources                        |
+| [Metadata](#metadata) | The data that ties type, id, and name to a block of data |
+| Padding | There appears to be unnecessary data at the end of some files          |
+
+### Expanded Overview
+
+| Sections |  |  |  |
+|----------|---|---|---|
+| [Header](#file-header) |
+|  | File Format (RSRC) |
+|  | Corruption Check (\r\n) |
+|  | Format Version (3) |
+|  | [File Type](#file-types) |
+|  | [File Creator](#file-creators) |
+|  | [Metadata](#metadata) offset |
+|  | [Metadata](#metadata) size |
+|  | [Data](#resource-data) offset |
+|  | [Data](#resource-data) size |
+| [Data](#resource-data) |
+|  | N x [Resource Data Block](#resource-data-block) |
+|  |  | [Resource Data Block](#resource-data-block) size |
+|  |  | Resource Data
+| [Metadata](#metadata) |
+|  | [Metadata Header](#metadata-header) |
+|  |  | [File Header](#file-header) |
+|  |  |  | File Format (RSRC) |
+|  |  |  | Corruption Check (\r\n) |
+|  |  |  | Format Version (3) |
+|  |  |  | [File Type](#file-types) |
+|  |  |  | [File Creator](#file-creators) |
+|  |  |  | [Metadata](#metadata) offset |
+|  |  |  | [Metadata](#metadata) size |
+|  |  |  | [Data](#resource-data) offset |
+|  |  |  | [Data](#resource-data) size |
+|  |  | Unused |
+|  |  | [Header](#file-header) size (32) |
+|  |  | [Metadata Header](#metadata-header) size (52) |
+|  |  | [Names List](#name-list) offset |
+|  | [Type List](#type-list) |
+|  |  | Type Count |
+|  |  | N x [Type Info](#type-info) |
+|  |  |  | Resource Type |
+|  |  |  | Resource Count |
+|  |  |  | [List](#resource-metadata) Offset |
+|  | N x [Resource Metadata](#resource-metadata) |
+|  |  | Resource ID |
+|  |  | [Name](#name-list) Offset |
+|  |  | Unused (0) |
+|  |  | [Data](#resource-data-block) Offset |
+|  |  | Unused (0) |
+|  | [Name List](#name-list) |
+|  |  | N x string |
+|  |  |  | length |
+|  |  |  | string data |
+| Optional Padding |
 
 
 ### File Header
@@ -122,8 +176,8 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 |----------------------------------------------|---------------------------------------------------------------|
 | [Metadata Header](#metadata-header)          | Offsets of sections in the Metadata section                   |
 | [Type List](#type-list)                      | List of all resource types                                    |
-| [Resource Metadata](#resource-metadata) | Information about specific resources                          |
-| [Name List](#name-list)                    | List of names used in resources (not-deduplicated)            |
+| [Resource Metadata](#resource-metadata)      | Information about specific resources                          |
+| [Name List](#name-list)                      | List of names used in resources (not-deduplicated)            |
 
 
 #### Metadata Header
@@ -174,9 +228,9 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 | Field                | Offset | Size   | Type                  | Comments                                                           |
 |----------------------|-------:|-------:|-----------------------|--------------------------------------------------------------------|
 | Resource ID          | 0      | 4      | signed integer        | Identifying number for this resource                               |
-| Name Offset          | 4      | 4      | unsigned integer      | Offset of name in the [Name List](#name-list) or FFFFFFFF is none |
+| Name Offset          | 4      | 4      | unsigned integer      | Offset of name in the [Name List](#name-list) or FFFFFFFF is none  |
 | Unused               | 8      | 4      | bytes                 | May safely be set to all 0's                                       |
-| Data Offset          | 12     | 4      | unsigned integer      | Offset of the [Resource Data Block](#resoure-data-block) in the [Resource Data](#resource-data) section              |
+| Data Offset          | 12     | 4      | unsigned integer      | Offset of the [Resource Data Block](#resoure-data-block) in the [Resource Data](#resource-data) section |
 | Unused               | 16     | 4      | bytes                 | May safely be set to all 0's                                       |
 
 **Notes**:
