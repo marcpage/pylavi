@@ -160,7 +160,7 @@ class Header(FileStructure):
             + f"file_type={self.file_type.to_string()}, "
             + f"file_creator={self.file_creator.to_string()}, "
             + f"metadata_offset={self.metadata_offset}, metadata_size={self.metadata_size}, "
-            + f"data_offset={self.metadata_offset}, data_size={self.metadata_size}"
+            + f"data_offset={self.data_offset}, data_size={self.data_size}"
             + "}"
         )
 
@@ -569,6 +569,10 @@ class Resources:
 
         assert len(contents) >= 2 * Header().size(), "File too small"
         header = Resources.__load_file_header(contents)
+        identifier = header.file_type.to_string() + header.file_creator.to_string()
+        if identifier not in SEEN:
+            SEEN.add(identifier)
+            print(contents[: header.size()])
         offset = Resources.__validate_2nd_file_header(contents, header)
         offset, metadata_header = Resources.__load_metadata_header(
             contents, header, offset
@@ -596,6 +600,9 @@ class Resources:
             file_creator=header.file_creator,
             description=resource_types,
         )
+
+
+SEEN = set()
 
 
 def handle_file(file_path, extensions, types):
