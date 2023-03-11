@@ -170,7 +170,7 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 | Field                | Offset | Size   | Type                  | Comments                                                           |
 |----------------------|-------:|-------:|-----------------------|--------------------------------------------------------------------|
 | Resource ID          | 0      | 4      | signed integer        | Identifying number for this resource                               |
-| Name Offset          | 4      | 4      | unsigned integer      | Index of name in the [Name List](#name-list) or FFFFFFFF is none |
+| Name Offset          | 4      | 4      | unsigned integer      | Offset of name in the [Name List](#name-list) or FFFFFFFF is none |
 | Unused               | 8      | 4      | bytes                 | May safely be set to all 0's                                       |
 | Data Offset          | 12     | 4      | unsigned integer      | Offset of the [Resource Data Block](#resoure-data-block) in the [Resource Data](#resource-data) section              |
 | Unused               | 16     | 4      | bytes                 | May safely be set to all 0's                                       |
