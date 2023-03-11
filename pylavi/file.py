@@ -603,10 +603,14 @@ class Resources:
 
             resource_types.append((entry.resource_type.to_string(), resources))
 
-        return Resources(description=resource_types)
+        return Resources(
+            file_type=header.file_type,
+            creator=header.file_creator,
+            description=resource_types,
+        )
 
 
-def handle_file(file_path, seen_extensions):
+def handle_file(file_path, extensions, types):
     known_file_extensions = Resources.EXTENSIONS
     extension = os.path.splitext(file_path)[1].lower()
 
@@ -614,8 +618,16 @@ def handle_file(file_path, seen_extensions):
         return
 
     try:
-        Resources.load(file_path)
-        seen_extensions[extension] = seen_extensions.get(extension, 0) + 1
+        resources = Resources.load(file_path)
+
+        for resource_type in resources.types():
+            types[resource_type] = types.get(
+                resource_type, {"extensions": set(), "types": set()}
+            )
+            types[resource_type]["extensions"].add(extension)
+            types[resource_type]["types"].add(resources.file_type.to_string())
+
+        extensions[extension] = extensions.get(extension, 0) + 1
 
     except AssertionError as error:
         print(f"{file_path} : {error}")
@@ -627,15 +639,18 @@ if __name__ == "__main__":
     import time
 
     seen_extensions = {}
+    all_resource_types = {}
     start = time.time()
 
     for argument in sys.argv[1:]:
         if os.path.isfile(argument):
-            handle_file(argument, seen_extensions)
+            handle_file(argument, seen_extensions, all_resource_types)
         else:
             for root, dirs, files in os.walk(sys.argv[1]):
                 for file in files:
-                    handle_file(os.path.join(root, file), seen_extensions)
+                    handle_file(
+                        os.path.join(root, file), seen_extensions, all_resource_types
+                    )
 
     total = sum(seen_extensions.values())
     assert total > 0, "No actual resource files found"
@@ -650,4 +665,13 @@ if __name__ == "__main__":
     )
     print(
         f"{total} resource files in {duration:0.1f} seconds {total/duration:0.2f} files/sec"
+    )
+    print("Resource Types")
+    print(
+        "\n".join(
+            f"## {t} "
+            + f"(extensions = {', '.join(all_resource_types[t]['extensions'] - {None})}, "
+            + f"file types = {', '.join(all_resource_types[t]['types'] - {None})})"
+            for t in sorted(all_resource_types)
+        )
     )

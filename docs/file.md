@@ -38,6 +38,7 @@ You can query for what types are available, fetch all resources for a given type
 | .rtexe    | .   | LabVIEW RT executable |
 | .glb      | .   | Globals |
 | .gbl      | .   | Globals |
+| .uir      | .   | LabWindows/CVI |
 
 
 ## General LabVIEW resource file layout
