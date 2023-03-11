@@ -17,7 +17,7 @@ def test_FourCharCode():
     assert FourCharCode('TEST') == 'TEST'
     assert FourCharCode('TEST') == FourCharCode('TEST')
     assert repr(FourCharCode('TEST')) == "FourCharCode('TEST')"
-    assert str(FourCharCode('TEST')) == "FourCharCode('TEST')"
+    assert str(FourCharCode('TEST')) == "TEST", [str(FourCharCode('TEST'))]
 
 
 if __name__ == "__main__":

@@ -25,21 +25,21 @@ $(VENV_ACTIVATE_SCRIPT):
 venv: $(VENV_ACTIVATE_SCRIPT)
 
 $(BLACK_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
-	-@$(RUN_IN_VENV) pip3 install -q black && black $(SOURCES) 2> $@
+	@$(RUN_IN_VENV) pip3 install -q black && black $(SOURCES) 2> $@
 	@echo Source Formatted
 
 format: $(BLACK_LOG)
 	@cat $<
 
 $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
-	-@$(RUN_IN_VENV) pip3 install -q pylint && pylint $(SOURCES) > $@
+	@$(RUN_IN_VENV) pip3 install -q pylint && pylint $(SOURCES) > $@
 	@echo Linting Complete
 
 lint: $(LINT_LOG) format
 	@cat $<
 
-$(TEST_LOG): $(SOURCES) $(TESTS)
-	-@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run -m pytest > $@
+$(TEST_LOG): $(SOURCES) $(TESTS)  $(VENV_ACTIVATE_SCRIPT)
+	@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run -m pytest > $@
 
 test: $(TEST_LOG)
 	@cat $<
@@ -50,6 +50,7 @@ $(COVERAGE_LOG): $(TEST_LOG)
 
 coverage: $(COVERAGE_LOG)
 	@cat $<
+	@open htmlcov/index.html
 
 
 install: $(VENV_ACTIVATE_SCRIPT)
