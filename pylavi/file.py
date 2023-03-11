@@ -213,6 +213,7 @@ class Header(FileStructure):
         assert (
             self.data_offset + self.data_size == self.metadata_offset
         ), f"post-data gap {self.metadata_offset - (self.data_offset + self.data_size)}"
+        assert self.data_size % 4 == 0
         assert (
             file_size is None or file_size >= self.metadata_offset + self.metadata_size
         ), (
@@ -396,6 +397,12 @@ class ResourceMetadata(FileStructure):
         kwargs["unused_8"] = kwargs.get("unused_8", 0)
         kwargs["unused_16"] = kwargs.get("unused_16", 0)
         kwargs["name_offset"] = kwargs.get("name_offset", ResourceMetadata.NO_NAME)
+        assert (
+            "name_offset" not in kwargs
+            or kwargs["name_offset"] % 4 == 0
+            or kwargs["name_offset"] == ResourceMetadata.NO_NAME
+        )
+        assert "data_offset" not in kwargs or kwargs["data_offset"] % 4 == 0
         super().__init__(**kwargs)
 
     def to_string(self):

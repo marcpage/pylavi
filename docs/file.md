@@ -69,6 +69,9 @@ You can query for what types are available, fetch all resources for a given type
 | Data Offset      | 24     | 4    | unsigned integer      | Offset in the file of the resource data (always right after this header which is 32) |
 | Data Size        | 28     | 4    | unsigned integer      | The size of the data section |
 
+**Notes**:
+1. Metadata size is always a multiple of 4
+
 
 #### File Types
 
@@ -95,6 +98,7 @@ This section is always right after the header (at offset 32).
 The size of the Resource Data section is indicated by `Data Size` in the [File Header](#file-header).
 There may be gaps between actual resource data blocks.
 The location and metadata for each resource can be found in the [Metadata](#metadata) section of the file.
+The offset of data is always padded to 4 bytes.
 
 #### Resource Data Block
 
@@ -175,7 +179,10 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 | Data Offset          | 12     | 4      | unsigned integer      | Offset of the [Resource Data Block](#resoure-data-block) in the [Resource Data](#resource-data) section              |
 | Unused               | 16     | 4      | bytes                 | May safely be set to all 0's                                       |
 
-**Note**: Resources of a given type are always in the order in which they are in the file
+**Notes**:
+1. Resources of a given type are always in the order in which they are in the file
+1. Name Offset is always a multiple of 4
+1. Data Offset is always a multiple of 4
 
 #### Name List
 
@@ -184,3 +191,4 @@ The offset is always right after the [Resource Data](#resource-data) section (at
 | Offset | [File Header](#file-header).`Metadata Offset` + [Metadata Header](#metadata-header).`Names Offset` | Size | variable |
 
 The name list is a concatenated list of [byte-prefixed strings](data_types.md#byte-prefixed-string) starting at `Names Offset` from the [Metadata Header](#metadata-header).
+Each name is aligned to a 4-byte offset.
