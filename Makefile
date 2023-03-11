@@ -1,46 +1,60 @@
 .PHONE:clean venv install upgrade uninstall check dist format lint
 
-SOURCES=pylavi/*.py
+MODULE_NAME=pylavi
+SOURCES=$(MODULE_NAME)/*.py
+VENV_DIR=.venv
+VENV_ACTIVATE_SCRIPT=$(VENV_DIR)/bin/activate
+LINT_LOG=$(VENV_DIR)/lint.txt
+BLACK_LOG=$(VENV_DIR)/format.txt
+RUN_IN_VENV=. $(VENV_ACTIVATE_SCRIPT) &&
 
 clean:
-	rm -Rf build dist pylavi.egg-info .venv
+	@rm -Rf build dist $(MODULE_NAME).egg-info $(VENV_DIR)
+	@echo Now Clean
 
-.venv/bin/activate:
-	@python3 -m venv .venv
-	@. .venv/bin/activate && \
+$(VENV_ACTIVATE_SCRIPT):
+	@python3 -m venv $(VENV_DIR)
+	@$(RUN_IN_VENV) \
 		python3 -m pip install -q --upgrade pip && \
 		pip3 install -q setuptools && \
 		pip3 install -q wheel
+	@echo VENV Created
 
-venv: .venv/bin/activate
+venv: $(VENV_ACTIVATE_SCRIPT)
 
-.venv/format.txt: $(SOURCES) .venv/bin/activate
-	-@. .venv/bin/activate && \
+$(BLACK_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
+	-@$(RUN_IN_VENV) \
 		pip3 install -q black && \
 		black $(SOURCES) 2> $@
+	@echo Source Formatted
 
-format: .venv/format.txt
+format: $(BLACK_LOG)
 	@cat $<
 
-.venv/lint.txt: $(SOURCES) .venv/bin/activate
-	-@. .venv/bin/activate && \
+$(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
+	-@$(RUN_IN_VENV) \
 		pip3 install -q pylint && \
 		pylint $(SOURCES) > $@
+	@echo Linting Complete
 
-lint: .venv/lint.txt format
+lint: $(LINT_LOG) format
 	@cat $<
 
-install: venv
-	. .venv/bin/activate && \
+install: $(VENV_ACTIVATE_SCRIPT)
+	$(RUN_IN_VENV) \
 		pip3 install .
+	@echo $(MODULE_NAME) installed
 
-upgrade: venv
-	. .venv/bin/activate && \
+upgrade: $(VENV_ACTIVATE_SCRIPT)
+	$(RUN_IN_VENV) \
 		pip install --upgrade .
+	@echo $(MODULE_NAME) upgraded
 
-uninstall: venv
-	. .venv/bin/activate && \
-		pip uninstall pylavi -y
+uninstall: $(VENV_ACTIVATE_SCRIPT)
+	$(RUN_IN_VENV) \
+		pip uninstall $(MODULE_NAME) -y
+	@echo $(MODULE_NAME) uninstalled
+
 
 check:
 	python3 setup.py check
