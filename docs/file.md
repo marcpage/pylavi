@@ -72,7 +72,7 @@ You can query for what types are available, fetch all resources for a given type
 |  |  | Resource Data
 | [Metadata](#metadata) |
 |  | [Metadata Header](#metadata-header) |
-|  |  | [File Header](#file-header) |
+|  |  | [File Header](#file-header) copy |
 |  |  |  | File Format (RSRC) |
 |  |  |  | Corruption Check (\r\n) |
 |  |  |  | Format Version (3) |
@@ -82,7 +82,7 @@ You can query for what types are available, fetch all resources for a given type
 |  |  |  | [Metadata](#metadata) size |
 |  |  |  | [Data](#resource-data) offset |
 |  |  |  | [Data](#resource-data) size |
-|  |  | Unused |
+|  |  | Unused (0) |
 |  |  | [Header](#file-header) size (32) |
 |  |  | [Metadata Header](#metadata-header) size (52) |
 |  |  | [Names List](#name-list) offset |
@@ -99,7 +99,7 @@ You can query for what types are available, fetch all resources for a given type
 |  |  | [Data](#resource-data-block) Offset |
 |  |  | Unused (0) |
 |  | [Name List](#name-list) |
-|  |  | N x string |
+|  |  | N x [string](data_types.md#byte-prefixed-string) |
 |  |  |  | length |
 |  |  |  | string data |
 | Optional Padding |
@@ -117,8 +117,8 @@ You can query for what types are available, fetch all resources for a given type
 | File Format      | 0      | 4    | Four ASCII Characters | Always `RSRC` |
 | Corruption Check | 4      | 2    | Two ASCII Characters  | Always `\r\n`, checks for common text conversion corrption (similar to [PNG header](http://www.libpng.org/pub/png/spec/1.2/PNG-Rationale.html#R.PNG-file-signature)) |
 | Format Version   | 6      | 2    | unsigned integer      | Always 3 |
-| File Type        | 8      | 4    | Four ASCII Characters | Type of file (see [notes below](#file-types)) |
-| File Creator     | 12     | 4    | Four ASCII Characters | Creator of the file (see [notes below](#file-creators)) |
+| File Type        | 8      | 4    | Four ASCII Characters | [Type of file](#file-types) |
+| File Creator     | 12     | 4    | Four ASCII Characters | [Creator of the file](#file-creators) |
 | Metadata Offset  | 16     | 4    | unsigned integer      | Offset in the file of the metadata section (always Data Offset + Data Size) |
 | Metadata Size    | 20     | 4    | unsigned integer      | Size of the metadata section |
 | Data Offset      | 24     | 4    | unsigned integer      | Offset in the file of the resource data (always right after this header which is 32) |
