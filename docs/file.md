@@ -35,7 +35,7 @@ You can query for what types are available, fetch all resources for a given type
 | .vim      | .   | Virtual Instrument Macro |
 | .ctt      | .   | Control Template |
 | .lsb      | .   | User Compiled Code |
-| .rtexe    | .   | ??? |
+| .rtexe    | .   | LabVIEW RT executable |
 | .glb      | .   | Globals |
 | .gbl      | .   | Globals |
 
