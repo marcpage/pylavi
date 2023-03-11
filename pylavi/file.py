@@ -524,7 +524,7 @@ class Resources:
         )
 
     @staticmethod
-    def _load_resource_name(
+    def __load_resource_name(
         header: Header,
         metadata_header: MetadataHeader,
         resource_info: ResourceMetadata,
@@ -561,7 +561,7 @@ class Resources:
         data_offset += data_size.size()
         offset_past_data = data_offset + data_size.byte_count
         data = contents[data_offset:offset_past_data]
-        name = Resources._load_resource_name(
+        name = Resources.__load_resource_name(
             header, metadata_header, resource_info, contents
         )
         return resource_info.resource_id, name, data
