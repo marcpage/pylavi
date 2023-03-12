@@ -6,38 +6,10 @@
 import ctypes
 import string
 
-
-class FileStructure(ctypes.BigEndianStructure):
-    """Common parent of all structures in the resource file"""
-
-    def to_bytes(self):
-        """Get the raw bytes as they are in the file"""
-        data = ctypes.create_string_buffer(self.size())
-        ctypes.memmove(data, ctypes.addressof(self), self.size())
-        return data.raw
-
-    def from_bytes(self, data: bytes, offset: int = 0):
-        """Take raw bytes from the file and interpret them.
-        offset - the offset in data to start parsing the bytes
-        """
-        size = self.size()
-        subset = data[offset : offset + size]
-        assert len(subset) >= size, f"Expected {size} bytes: found {len(subset)}"
-        ctypes.memmove(ctypes.addressof(self), subset, size)
-        return self
-
-    def size(self) -> int:
-        """the number of bytes in the file"""
-        return ctypes.sizeof(self)
-
-    def __repr__(self) -> str:
-        return self.to_string()
-
-    def __str__(self) -> str:
-        return self.to_string()
+from pylavi.data_types import Structure
 
 
-class FourCharCode(FileStructure):
+class FourCharCode(Structure):
     """Four-byte ascii code"""
 
     DISPLAYABLE = (string.ascii_letters + string.digits + " ").encode("ascii")
@@ -97,7 +69,7 @@ class FourCharCode(FileStructure):
         )
 
 
-class Header(FileStructure):
+class Header(Structure):
     """Resource header."""
 
     FILE_TYPES = [
@@ -224,7 +196,7 @@ class Header(FileStructure):
         return self
 
 
-class MetadataHeader(FileStructure):
+class MetadataHeader(Structure):
     """header for the metadata section"""
 
     _pack_ = 1
@@ -277,7 +249,7 @@ class MetadataHeader(FileStructure):
         return self
 
 
-class TypeInfo(FileStructure):
+class TypeInfo(Structure):
     """Structure for the list of resource types."""
 
     _pack_ = 1
@@ -317,7 +289,7 @@ class TypeInfo(FileStructure):
         return self.resource_count + 1
 
 
-class TypeCount(FileStructure):
+class TypeCount(Structure):
     """Header for the list of type lists."""
 
     _pack_ = 1
@@ -333,7 +305,7 @@ class TypeCount(FileStructure):
         return self.num_types + 1
 
 
-class DataSize(FileStructure):
+class DataSize(Structure):
     """Header for the resource data block."""
 
     _pack_ = 1
@@ -348,7 +320,7 @@ class DataSize(FileStructure):
 def create_type_list(count: int):
     """Create a structure for a list Resource based on the count found in the type map."""
 
-    class TypeList(FileStructure):
+    class TypeList(Structure):
         """Fixed size list of types"""
 
         _pack_ = 1
@@ -366,7 +338,7 @@ def create_type_list(count: int):
     return TypeList()
 
 
-class ResourceMetadata(FileStructure):
+class ResourceMetadata(Structure):
     """Structure for the RsrcEntry Entry in the resource map."""
 
     NO_NAME = 0xFFFFFFFF
