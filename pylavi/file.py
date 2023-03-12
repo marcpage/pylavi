@@ -440,7 +440,7 @@ class Resources:
             r[0] for t in self.__resources if t[0] == resource_type for r in t[1]
         )
 
-    def get_names(self, resource_type: str) -> [int]:
+    def get_names(self, resource_type: str) -> [str]:
         """Get the names of the resources"""
         return list(
             r[1] for t in self.__resources if t[0] == resource_type for r in t[1]
@@ -470,13 +470,14 @@ class Resources:
                 if r[0] == resource_id
             )[0]
 
-        return list(
+        with_name = list(
             r[2]
             for t in self.__resources
             if t[0] == resource_type
             for r in t[1]
-            if r[1] == name
-        )[0]
+            if r[1] == name.encode("ascii")
+        )
+        return None if not with_name else with_name[0]
 
     @staticmethod
     def __load_file_header(contents: bytes) -> Header:
@@ -564,8 +565,6 @@ class Resources:
             offset += Header().size() + MetadataHeader().size()
             offset += entry.list_offset
             resource_list.from_bytes(contents[offset:])
-            end_offset = offset + resource_list.size()
-            print(contents[offset:end_offset])
             resources = [
                 (
                     r.resource_id,
