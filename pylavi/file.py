@@ -318,7 +318,7 @@ class DataSize(Structure):
 
 
 def create_type_list(count: int):
-    """Create a structure for a list Resource based on the count found in the type map."""
+    """Create a structure for a list Resource types based on the count found in the type map."""
 
     class TypeList(Structure):
         """Fixed size list of types"""
@@ -378,6 +378,27 @@ class ResourceMetadata(Structure):
 
     def __repr__(self) -> str:
         return f"ResourceMetadata({self.to_string()})"
+
+
+def create_resource_list(count: int):
+    """Create a structure for a list Resources based on the count found in the type map."""
+
+    class ResourceList(Structure):
+        """Fixed size list of types"""
+
+        _pack_ = 1
+        _fields_ = [
+            ("resources", ResourceMetadata * count),
+        ]
+
+        def to_string(self):
+            """Convert to string"""
+            return f"[{', '.join(e.to_string() for e in self.resources)}]"
+
+        def __repr__(self) -> str:
+            return f"ResourceList({self.to_string()})"
+
+    return ResourceList()
 
 
 class Resources:
@@ -486,9 +507,6 @@ class Resources:
     def __load_typelist(contents: bytes, offset: int) -> any:
         type_count = TypeCount().from_bytes(contents[offset:])
         offset += type_count.size()
-        print(
-            contents[offset : offset + TypeInfo().size() * type_count.number_of_types()]
-        )
         return create_type_list(type_count.number_of_types()).from_bytes(
             contents[offset:]
         )
@@ -515,26 +533,12 @@ class Resources:
         return None
 
     @staticmethod
-    def __load_resource(
-        header: Header,
-        metadata_header: MetadataHeader,
-        type_entry: TypeInfo,
-        type_index: int,
-        contents: bytes,
-    ) -> (int, str, bytes):
-        base_offset = header.metadata_offset + Header().size() + MetadataHeader().size()
-        resource_offset = type_index * ResourceMetadata().size()
-        offset = base_offset + type_entry.list_offset + resource_offset
-        resource_info = ResourceMetadata().from_bytes(contents[offset:])
+    def __load_resource_data(header, resource_info, contents):
         data_offset = header.data_offset + resource_info.data_offset
         data_size = DataSize().from_bytes(contents[data_offset:])
         data_offset += data_size.size()
         offset_past_data = data_offset + data_size.byte_count
-        data = contents[data_offset:offset_past_data]
-        name = Resources.__load_resource_name(
-            header, metadata_header, resource_info, contents
-        )
-        return resource_info.resource_id, name, data
+        return contents[data_offset:offset_past_data]
 
     @staticmethod
     def load(path: str):
@@ -555,15 +559,23 @@ class Resources:
         for entry in data_types.type:
             assert entry.list_offset > last_offset, "Unordered type table"
             last_offset = entry.list_offset
-            resources = []
-
-            for type_index in range(0, entry.number_of_resources()):
-                resources.append(
-                    Resources.__load_resource(
-                        header, metadata_header, entry, type_index, contents
-                    )
+            resource_list = create_resource_list(entry.number_of_resources())
+            offset = header.metadata_offset
+            offset += Header().size() + MetadataHeader().size()
+            offset += entry.list_offset
+            resource_list.from_bytes(contents[offset:])
+            end_offset = offset + resource_list.size()
+            print(contents[offset:end_offset])
+            resources = [
+                (
+                    r.resource_id,
+                    Resources.__load_resource_name(
+                        header, metadata_header, r, contents
+                    ),
+                    Resources.__load_resource_data(header, r, contents),
                 )
-
+                for r in resource_list.resources
+            ]
             resource_types.append((entry.resource_type.to_string(), resources))
 
         return Resources(
