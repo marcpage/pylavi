@@ -333,7 +333,7 @@ def create_type_list(count: int):
             return f"[{', '.join(e.to_string() for e in self.type)}]"
 
         def __repr__(self) -> str:
-            return "TypeList({self.to_string()})"
+            return f"TypeList({self.to_string()})"
 
     return TypeList()
 
@@ -486,6 +486,9 @@ class Resources:
     def __load_typelist(contents: bytes, offset: int) -> any:
         type_count = TypeCount().from_bytes(contents[offset:])
         offset += type_count.size()
+        print(
+            contents[offset : offset + TypeInfo().size() * type_count.number_of_types()]
+        )
         return create_type_list(type_count.number_of_types()).from_bytes(
             contents[offset:]
         )
