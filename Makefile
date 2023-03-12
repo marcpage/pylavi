@@ -25,28 +25,28 @@ $(VENV_ACTIVATE_SCRIPT):
 venv: $(VENV_ACTIVATE_SCRIPT)
 
 $(BLACK_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
-	@$(RUN_IN_VENV) pip3 install -q black && black $(SOURCES) 2> $@
+	@$(RUN_IN_VENV) pip3 install -q black && black $(SOURCES) 2> $@ || (cat $@; exit 1)
 	@echo Source Formatted
 
 format: $(BLACK_LOG)
 	@cat $<
 
 $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
-	@$(RUN_IN_VENV) pip3 install -q pylint && pylint $(SOURCES) > $@
-	@$(RUN_IN_VENV) pip3 install -q black && black --check $(SOURCES) 2>> $@
+	@$(RUN_IN_VENV) pip3 install -q pylint && pylint $(SOURCES) > $@ || (cat $@; exit 1)
+	@$(RUN_IN_VENV) pip3 install -q black && black --check $(SOURCES) 2>> $@ || (cat $@; exit 1)
 	@echo Linting Complete
 
 lint: $(LINT_LOG)
 	@cat $<
 
 $(TEST_LOG): $(SOURCES) $(TESTS)  $(VENV_ACTIVATE_SCRIPT)
-	@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run --source=$(MODULE_NAME) -m pytest > $@
+	@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run --source=$(MODULE_NAME) -m pytest > $@ || (cat $@; exit 1)
 
 test: $(TEST_LOG)
 	@cat $<
 
 $(COVERAGE_LOG): $(TEST_LOG)
-	@$(RUN_IN_VENV) coverage report --skip-covered --show-missing --fail-under=$(MIN_TEST_COVERAGE) > $@
+	@$(RUN_IN_VENV) coverage report --skip-covered --show-missing --fail-under=$(MIN_TEST_COVERAGE) > $@ || (cat $@; exit 1)
 
 report: $(TEST_LOG)
 	@$(RUN_IN_VENV) coverage html --skip-covered
