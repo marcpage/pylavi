@@ -167,6 +167,7 @@ The offset of data is always padded to 4 bytes.
 | Data Size        | 0      | 4    | unsigned integer      | The number of bytes of data |
 | Data             | 4      | N    | binary data           | The resource data           |
 
+**Note** Data blocks are at an offset that is 4-byte aligned
 
 ### Metadata
 
