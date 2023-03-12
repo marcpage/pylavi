@@ -616,7 +616,7 @@ Each resource type is identified by a four character ascii code.
 | Korean   |  23   |
 | Chinese  |  33   |
 
-**Note** The language codes seem to come from the old Macintosh [Script.h](https://github.com/phracker/MacOSX-SDKs/blob/master/MacOSX10.6.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/Script.h) header file.
+**Note** The language codes seem to come from the old Macintosh [Script.h](https://github.com/phracker/MacOSX-SDKs/blob/master/MacOSX10.6.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/Script.h#L121) header file.
 No other languages other than the ones above have been found to be used.
 
 ## Non-VI types
