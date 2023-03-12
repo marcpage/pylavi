@@ -14,7 +14,7 @@ COVERAGE_LOG=$(VENV_DIR)/coverage.txt
 RUN_IN_VENV=. $(VENV_ACTIVATE_SCRIPT) &&
 
 clean:
-	@rm -Rf build dist $(MODULE_NAME).egg-info $(VENV_DIR)
+	@rm -Rf build dist $(MODULE_NAME).egg-info $(VENV_DIR) htmlcov
 	@echo Now Clean
 
 $(VENV_ACTIVATE_SCRIPT):
