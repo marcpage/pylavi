@@ -46,10 +46,10 @@ test: $(TEST_LOG)
 	@cat $<
 
 $(COVERAGE_LOG): $(TEST_LOG)
-	@$(RUN_IN_VENV) coverage report --skip-covered --show-missing > $@
+	@$(RUN_IN_VENV) coverage report --skip-covered --show-missing --fail-under=$(MIN_TEST_COVERAGE) > $@
 
 report: $(TEST_LOG)
-	@$(RUN_IN_VENV) coverage html --skip-covered --fail-under=$(MIN_TEST_COVERAGE)
+	@$(RUN_IN_VENV) coverage html --skip-covered
 	@open htmlcov/index.html
 
 coverage: $(COVERAGE_LOG)
