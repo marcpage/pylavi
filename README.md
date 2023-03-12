@@ -1,3 +1,13 @@
+![status sheild](https://img.shields.io/static/v1?label=status&message=starting...&color=inactive&style=plastic)
+![GitHub](https://img.shields.io/github/license/marcpage/pylavi?style=plastic)
+[![commit sheild](https://img.shields.io/github/last-commit/marcpage/pylavi?style=plastic)](https://github.com/marcpage/pylavi/commits)
+[![activity sheild](https://img.shields.io/github/commit-activity/m/marcpage/pylavi?style=plastic)](https://github.com/marcpage/pylavi/commits)
+![GitHub top language](https://img.shields.io/github/languages/top/marcpage/pylavi?style=plastic)
+[![size sheild](https://img.shields.io/github/languages/code-size/marcpage/pylavi?style=plastic)](https://github.com/marcpage/pylavi)
+[![issues sheild](https://img.shields.io/github/issues-raw/marcpage/pylavi?style=plastic)](https://github.com/marcpage/pylavi/issues)
+[![follow sheild](https://img.shields.io/github/followers/marcpage?label=Follow&style=social)](https://github.com/marcpage?tab=followers)
+[![watch sheild](https://img.shields.io/github/watchers/marcpage/pylavi?label=Watch&style=social)](https://github.com/marcpage/pylavi/watchers)
+
 # pylavi
 Python LabVIEW resource file parser
 
