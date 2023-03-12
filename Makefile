@@ -33,7 +33,7 @@ format: $(BLACK_LOG)
 
 $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
 	@$(RUN_IN_VENV) pip3 install -q pylint && pylint $(SOURCES) > $@
-	@$(RUN_IN_VENV) pip3 install -q black && black --check $(SOURCES) 2> $@
+	@$(RUN_IN_VENV) pip3 install -q black && black --check $(SOURCES) 2>> $@
 	@echo Linting Complete
 
 lint: $(LINT_LOG)
