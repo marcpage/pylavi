@@ -13,6 +13,8 @@ TEST_LOG=$(VENV_DIR)/test.txt
 COVERAGE_LOG=$(VENV_DIR)/coverage.txt
 RUN_IN_VENV=. $(VENV_ACTIVATE_SCRIPT) &&
 
+all:format lint coverage install check dist
+
 clean:
 	rm -Rf build dist $(MODULE_NAME).egg-info $(VENV_DIR) htmlcov .coverage .pytest_cache
 	@echo Now Clean
