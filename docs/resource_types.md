@@ -16,7 +16,8 @@ Each resource type is identified by a four character ascii code.
       [LVSR](#lvsr), [MNGI](#mngi), [MUID](#muid), [NUID](#nuid), [OBSG](#obsg), [OMId](#omid), [PICC](#picc), [PLAT](#plat), [PRIM](#prim)
       [PRT](#prt), [PsEL](#psel), [RSID](#rsid), [RTMP](#rtmp), [RTSG](#rtsg), [SBSP](#sbsp), [SCSR](#scsr), [STR](#str), [STRG](#strg)
       [SUID](#suid), [TITL](#titl), [TM80](#tm80), [TRec](#trec), [VAST](#vast), [VCTP](#vctp), [VICD](#vicd), [VIMS](#vims), [VINS](#vins)
-      [VITS](#vits), [VPDP](#vpdp), [WEMF](#wemf), [XFlg](#xflg), [icl4](#icl4), [icl8](#icl8), [vers - LabVIEW Editor Version](#vers---labview-editor-version)
+      [VITS](#vits), [VPDP](#vpdp), [WEMF](#wemf), [XFlg](#xflg), [icl4](#icl4), [icl8](#icl8)
+    + [vers - LabVIEW Editor Version](#vers---labview-editor-version)
   * [Non-VI types](#non-vi-types)
     + [ADir](#adir)
     + [CPRF](#cprf)
@@ -602,8 +603,8 @@ Each resource type is identified by a four character ascii code.
 |----------|---------:|------:|--------------|---------------------------------------------|
 | Version  | 0        | 4     | unsigned int | LabVIEW [Version](data_types.md#version)    |
 | Language | 4        | 2     | unsigned int | [Language](#version-language)               |
-| Text     | 6        | L + 1 |[Byte prefixed string](data_types.md#bytes-prefixed-string) |
-| Name     | 6 + L +1 | L + 1 |[Byte prefixed string](data_types.md#bytes-prefixed-string) |
+| Text     | 6        | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string) |
+| Name     | 6 + L +1 | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string) |
 
 #### Version Language
 
