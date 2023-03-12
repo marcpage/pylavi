@@ -692,6 +692,26 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
 
+| Field    | Offset   | Size  | Type         | Description                                 |
+|----------|---------:|------:|--------------|---------------------------------------------|
+| Version  | 0        | 4     | unsigned int | LabVIEW [Version](data_types.md#version)    |
+| Language | 4        | 2     | unsigned int | [Language](#version-language)               |
+| Text     | 6        | L + 1 |[Byte prefixed string](data_types.md#bytes-prefixed-string) |
+| Name     | 6 + L +1 | L + 1 |[Byte prefixed string](data_types.md#bytes-prefixed-string) |
+
+#### Version Language
+
+| Language | Value |
+|----------|------:|
+| English  |   0   |
+| French   |   1   |
+| German   |   3   |
+| Japanese |  14   |
+| Korean   |  23   |
+| Chinese  |  33   |
+
+**Note** The language codes seem to come from the old Macintosh [Script.h](https://github.com/phracker/MacOSX-SDKs/blob/master/MacOSX10.6.sdk/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/CarbonCore.framework/Versions/A/Headers/Script.h) header file.
+No other languages other than the ones above have been found to be used.
 
 ## Non-VI types
 
