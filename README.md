@@ -21,3 +21,36 @@ This starts with a conceptual model of the [LabVIEW resource file](https://githu
 Once the API for working with the file format itself is solidified, then code can be added to work with resources of specific types.
 
 Along the way discoveries will be [documented](https://github.com/marcpage/pylavi/tree/main/docs).
+
+
+## Using to validate VIs
+
+### Install
+
+`pip3 install pylavi`
+
+### Validate VIs
+
+`vi_validate --path lv_source --no_beta --gt 21.0`
+
+```
+usage: vi_validate [-h] [-l LT] [-g GT] [-e EQ] [-r] [-b] [-a] [-d] [-i] [-p PATH] [-s SKIP] [-x EXTENSION] [-q]
+
+Validates LabVIEW resource files
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -l LT, --lt LT        LabVIEW version must be less than this
+  -g GT, --gt GT        LabVIEW version must be greater than this
+  -e EQ, --eq EQ        LabVIEW version must this
+  -r, --no-release      LabVIEW version must not be release
+  -b, --no-beta         LabVIEW version must not be beta
+  -a, --no-alpha        LabVIEW version must not be alpha
+  -d, --no-development  LabVIEW version must not be development
+  -i, --no-invalid      LabVIEW version must be a valid phase
+  -p PATH, --path PATH  Path to scan for files (or a file path) (defaults to current directory)
+  -s SKIP, --skip SKIP  Path to not scan for files (or a file to ignore)
+  -x EXTENSION, --extension EXTENSION
+                        File extensions to evaluate (defaults to all known)
+  -q, --quiet           Reduce the output (multiple times reduces output more)
+```
