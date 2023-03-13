@@ -10,12 +10,14 @@
 
 ## Version
 
+[Semantic Version](https://semver.org)
+
 | Field                   | Bit Offset | Bits | Type         |
 |-------------------------|-----------:|-----:|--------------|
 | Major (tens)            |      28    |  4   | unsigned BCD |
 | Major (ones)            |      24    |  4   | unsigned BCD |
 | Minor                   |      20    |  4   | unsigned BCD |
-| Bugfix                  |      16    |  4   | unsigned BCD |
+| Patch                   |      16    |  4   | unsigned BCD |
 | [Stage](#version-stage) |      13    |  3   | unsigned int |
 | Build (thousands)       |      12    |  1   | unsigned BCD |
 | Build (hundreds)        |       8    |  4   | unsigned BCD |
@@ -27,8 +29,8 @@
 | Value | Description |
 |------:|-------------|
 | 0     | Undefined   |
-| 1     | Alpha       |
-| 2     | Beta        |
-| 3     | Release     |
-| 4     | Undefined   |
+| 1     | Development |
+| 2     | Alpha       |
+| 3     | Beta        |
+| 4     | Release     |
 | 5-7   | Undefined   |
