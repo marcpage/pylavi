@@ -82,6 +82,7 @@ def parse_args(command_line=None):
     args = parser.parse_args(args=command_line)
     args.path = args.path or [""]
     args.skip = args.skip or []
+    args.quiet = args.quiet or 0
     has_comparison = args.lt or args.gt or args.eq
     has_phase = (
         args.no_release
