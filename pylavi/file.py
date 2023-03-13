@@ -4,70 +4,8 @@
 
 
 import ctypes
-import string
 
-from pylavi.data_types import Structure
-from pylavi.data_types import PString
-
-
-class FourCharCode(Structure):
-    """Four-byte ascii code"""
-
-    DISPLAYABLE = (string.ascii_letters + string.digits + " ").encode("ascii")
-    _pack_ = 1
-    _fields_ = [
-        ("b1", ctypes.c_byte),
-        ("b2", ctypes.c_byte),
-        ("b3", ctypes.c_byte),
-        ("b4", ctypes.c_byte),
-    ]
-
-    def __init__(self, value: str = None):
-        if value is not None:
-            value_bytes = value.encode("ascii")
-            assert len(value_bytes) == 4
-            kwargs = {
-                "b1": value_bytes[0],
-                "b2": value_bytes[1],
-                "b3": value_bytes[2],
-                "b4": value_bytes[3],
-            }
-        else:
-            kwargs = {}
-
-        super().__init__(**kwargs)
-
-    def to_string(self):
-        """Get the four characters as a string"""
-        if any(
-            (256 + b) % 256 not in FourCharCode.DISPLAYABLE
-            for b in [self.b1, self.b2, self.b3, self.b4]
-        ):
-            return (
-                f"x{(256 + self.b1)%256:02x}"
-                + f"{(256 + self.b2)%256:02x}"
-                + f"{(256 + self.b3)%256:02x}"
-                + f"{(256 + self.b4)%256:02x}"
-            )
-
-        return bytes([self.b1, self.b2, self.b3, self.b4]).decode("ascii")
-
-    def __repr__(self) -> str:
-        return f"FourCharCode('{self.to_string()}')"
-
-    def __eq__(self, other) -> bool:
-        if isinstance(other, str):
-            return self.to_string() == other
-
-        if isinstance(other, bytes):
-            return self.to_bytes() == other
-
-        return (
-            self.b1 == other.b1
-            and self.b2 == other.b2
-            and self.b3 == other.b3
-            and self.b4 == other.b4
-        )
+from pylavi.data_types import Structure, FourCharCode, PString
 
 
 class Header(Structure):
@@ -574,6 +512,8 @@ class Resources:
                 )
                 for r in resource_list.resources
             ]
+            if entry.resource_type.to_string() == "vers":
+                print(resources)
             resource_types.append((entry.resource_type.to_string(), resources))
 
         return Resources(
