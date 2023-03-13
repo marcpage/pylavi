@@ -117,3 +117,15 @@ class Typevers:
         self.text = encoder_func(description.get("text", ""))
         self.name = encoder_func(description.get("name", ""))
         return self
+
+    def __lt__(self, other):
+        if isinstance(other, Typevers):
+            return self.version < other.version
+
+        return self.version < other
+
+    def __eq__(self, other):
+        if isinstance(other, Typevers):
+            return self.version == other.version
+
+        return self.version == other
