@@ -67,8 +67,10 @@ setup(
     ),
     packages=find_packages(),
     entry_points={
-        "console_scripts": ["lv_assembler = pylavi.assembler:main"],
-        "console_scripts": ["vi_validate = pylavi.validate:main"],
+        "console_scripts": [
+            "lv_assembler = pylavi.assembler:main",
+            "vi_validate = pylavi.validate:main",
+        ],
     },
     project_urls={
         "Bug Reports": "https://github.com/marcpage/pylavi/issues",

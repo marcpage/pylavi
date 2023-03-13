@@ -13,10 +13,11 @@ Each resource type is identified by a four character ascii code.
       [GCDI](#gcdi), [GCPR](#gcpr), [GTMI](#gtmi), [HBIN](#hbin), [HBUF](#hbuf), [HIDL](#hidl), [HIST](#hist), [HLPP](#hlpp), [HLPT](#hlpt)
       [HLPU](#hlpu), [HLPW](#hlpw), [HLPX](#hlpx), [HOBJ](#hobj), [HOMp](#homp), [ICON](#icon), [IPSR](#ipsr), [L2FG](#l2fg), [LBDP](#lbdp)
       [LFPP](#lfpp), [LIBN](#libn), [LIbd](#libd), [LIds](#lids), [LIfp](#lifp), [LIvi](#livi), [LPIN](#lpin), [LVIN](#lvin), [LVSB](#lvsb)
-      [LVSR](#lvsr), [MNGI](#mngi), [MUID](#muid), [NUID](#nuid), [OBSG](#obsg), [OMId](#omid), [PICC](#picc), [PLAT](#plat), [PRIM](#prim)
+      [MNGI](#mngi), [MUID](#muid), [NUID](#nuid), [OBSG](#obsg), [OMId](#omid), [PICC](#picc), [PLAT](#plat), [PRIM](#prim)
       [PRT](#prt), [PsEL](#psel), [RSID](#rsid), [RTMP](#rtmp), [RTSG](#rtsg), [SBSP](#sbsp), [SCSR](#scsr), [STR](#str), [STRG](#strg)
       [SUID](#suid), [TITL](#titl), [TM80](#tm80), [TRec](#trec), [VAST](#vast), [VCTP](#vctp), [VICD](#vicd), [VIMS](#vims), [VINS](#vins)
       [VITS](#vits), [VPDP](#vpdp), [WEMF](#wemf), [XFlg](#xflg), [icl4](#icl4), [icl8](#icl8)
+    + [LVSR - Save Record](#lvsr---save-record)
     + [vers - LabVIEW Editor Version](#vers---labview-editor-version)
   * [Non-VI types](#non-vi-types)
     + [ADir](#adir)
@@ -129,6 +130,8 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### CCSG
 
 - **extensions** .ctl, .vit, .vi, .ctt
@@ -138,6 +141,8 @@ Each resource type is identified by a four character ascii code.
 
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
+
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
 
 ### CGRS
 
@@ -184,6 +189,8 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### CPSP
 
 - **extensions** .vi, .vit
@@ -204,10 +211,14 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### DLDR
 
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
+
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
 
 ### DLLP
 
@@ -284,6 +295,8 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### FPTS
 
 - **extensions** .ctl, .vim, .vi, .vit
@@ -299,10 +312,14 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVCC, LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### GCPR
 
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
+
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
 
 ### GTMI
 
@@ -404,6 +421,8 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### LIfp
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
@@ -429,10 +448,54 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .vi, .lsb
 - **file types** LVIN, LVSB
 
-### LVSR
+### LVSR - Save Record
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
+
+| Field    | Offset   | Size  | Type         | Description                                 |
+|----------|---------:|------:|--------------|---------------------------------------------|
+| Version  | 0        | 4     | unsigned int | LabVIEW [Version](data_types.md#version)    |
+| Unknown  | 4        | 4     | unsigned int | |
+| Flags    | 8        | 4     | unsigned int | [Flags](#lvsr-flags)                        |
+| Unknown  | 12       | 56    | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 68       | 8     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 76       | 4     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 80       | 2     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 82       | 4     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 96       | 16    | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 112      | 4     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 116      | 4     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 120      | 16    | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 136      | 1     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 137      | 3     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 140      | 4     | unsigned int | |
+| -------  | -------- | ----- | ------------ | End of some                                 |
+| Unknown  | 144      | 16    | unsigned int | |
+
+**Note:** The save record size varies depending on LabVIEW version.
+The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 160 bytes.
+
+
+
+#### LVSR Flags
+
+| Bit Mask | Description                        |
+|----------|------------------------------------|
+| 00000004 | Saved for previous                 |
+| 00000400 | Separate compiled code from source |
+
 
 ### MNGI
 
@@ -448,6 +511,8 @@ Each resource type is identified by a four character ascii code.
 
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
+
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
 
 ### OBSG
 
@@ -509,6 +574,8 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### STR
 
 - **extensions** .vim, .llb, .vi, .ctl, .vit
@@ -524,6 +591,8 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
 
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
+
 ### TITL
 
 - **extensions** .ctl, .llb, .vi, .vit
@@ -533,6 +602,8 @@ Each resource type is identified by a four character ascii code.
 
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
+
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
 
 ### TRec
 
@@ -553,6 +624,8 @@ Each resource type is identified by a four character ascii code.
 
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
+
+**Note:** This resources is missing when **Separate compiled code from source** is turned on
 
 ### VIMS
 
@@ -605,6 +678,12 @@ Each resource type is identified by a four character ascii code.
 | Language | 4        | 2     | unsigned int | [Language](#version-language)               |
 | Text     | 6        | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string)  |
 | Name     | 6 + L +1 | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string)  |
+
+
+**Note:**
+When **Separate compiled code from source** is turned on, only `vers#4` is available.
+Otherwise, `vers#7`, `vers#8`, `vers#9`, `vers#10` exist.
+
 
 #### Version Language
 
