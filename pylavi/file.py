@@ -512,8 +512,6 @@ class Resources:
                 )
                 for r in resource_list.resources
             ]
-            if entry.resource_type.to_string() == "vers":
-                print(resources)
             resource_types.append((entry.resource_type.to_string(), resources))
 
         return Resources(
