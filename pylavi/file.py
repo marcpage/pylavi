@@ -7,6 +7,7 @@ import ctypes
 import string
 
 from pylavi.data_types import Structure
+from pylavi.data_types import PString
 
 
 class FourCharCode(Structure):
@@ -525,11 +526,9 @@ class Resources:
                 + metadata_header.names_offset
                 + resource_info.name_offset
             )
-            name_size = contents[name_offset]
-            assert name_size > 0, f"name_size = {name_size}"
-            name_offset += 1
-            offset_past_name = name_offset + name_size
-            return contents[name_offset:offset_past_name]
+            name = PString().from_bytes(contents[name_offset:])
+            assert len(name.string) > 0, f"name_size = {len(name.string)}"
+            return name.string
 
         return None
 
