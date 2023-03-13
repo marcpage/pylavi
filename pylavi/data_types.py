@@ -5,6 +5,7 @@
 
 import ctypes
 import re
+import struct
 
 
 class Structure(ctypes.BigEndianStructure):
@@ -195,3 +196,43 @@ class Version(Structure):
 
     def __repr__(self) -> str:
         return f"Version('{self.to_string()}')"
+
+
+class PString:
+    """A byte-length prefixed string"""
+
+    def __init__(self, data: bytes = b""):
+        assert len(data) <= 255, f"data is {len(data)} bytes"
+        self.string = data
+
+    def to_bytes(self) -> bytes:
+        """Get the raw bytes as they are in the file"""
+        return struct.pack("B", len(self.string)) + self.string
+
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """Take raw bytes from the file and interpret them.
+        offset - the offset in data to start parsing the bytes
+        """
+        size = data[0]
+        self.string = data[offset + 1 : offset + 1 + size]
+        assert (
+            len(self.string) >= size
+        ), f"Expected {size} bytes: found {len(self.string)}"
+        return self
+
+    def size(self) -> int:
+        """the number of bytes in the file"""
+        return 1 + len(self.string)
+
+    def to_string(self) -> str:
+        """Convert the string to a str"""
+        return str(self.string)
+
+    def __str__(self) -> str:
+        return self.to_string()
+
+    def __repr__(self) -> str:
+        return f"PString({self.to_string()})"
+
+    def __eq__(self, other) -> bool:
+        return self.string == other.string
