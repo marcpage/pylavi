@@ -45,16 +45,29 @@ def test_fields():
         assert version.build() == version_fields[4]
 
 
+def test_comparisons():
+    versions = {Version(v):v for v in VERSION_STRINGS}
+
+    for version_string in VERSION_STRINGS:
+        version = Version(version_string)
+
+    for sorted_version, ordered_version in zip(sorted(versions), versions):
+        assert sorted_version == ordered_version
+        assert sorted_version == ordered_version.to_string()
+
+    assert Version("1.2.3a") < "1.2.3a1234"
+
+
 VERSION_STRINGS = {
     '0': (0,0,0,Version.RELEASE,0),
+    '1{0}': (1,0,0,0,0),
     '1': (1,0,0,Version.RELEASE,0),
-    '23': (23,0,0,Version.RELEASE,0),
+    '1{6}': (1,0,0,6,0),
     '1.2': (1,2,0,Version.RELEASE,0),
-    '1.2.3': (1,2,3,Version.RELEASE,0),
     '1.2.3a': (1,2,3,Version.ALPHA,0),
     '1.2.3a1234': (1,2,3,Version.ALPHA,1234),
-    '1{6}': (1,0,0,6,0),
-    '1{0}': (1,0,0,0,0),
+    '1.2.3': (1,2,3,Version.RELEASE,0),
+    '23': (23,0,0,Version.RELEASE,0),
 }
 
 VERSION_INTS = {
@@ -87,4 +100,6 @@ if __name__ == "__main__":
     test_ints()
     test_bytes()
     test_fields()
+    test_comparisons()
+
 

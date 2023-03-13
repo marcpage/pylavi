@@ -125,6 +125,21 @@ class Version(Structure):
 
         super().__init__(**kwargs)
 
+    def __lt__(self, other):
+        if isinstance(other, Version):
+            return self.bytes < other.bytes
+
+        return self.bytes < Version(other).bytes
+
+    def __eq__(self, other):
+        if isinstance(other, Version):
+            return self.bytes == other.bytes
+
+        return self.bytes == Version(other).bytes
+
+    def __hash__(self):
+        return self.bytes
+
     def major(self):
         """get the major version"""
         return (self.bytes >> 28 & 0xF) * 10 + (self.bytes >> 24 & 0xF)
