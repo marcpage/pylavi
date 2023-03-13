@@ -73,6 +73,12 @@ def parse_args(command_line=None):
         action="append",
         help="File extensions to evaluate (defaults to all known)",
     )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="count",
+        help="Reduce the output (multiple times reduces output more)",
+    )
     args = parser.parse_args(args=command_line)
     args.path = args.path or [""]
     args.skip = args.skip or []
@@ -159,7 +165,7 @@ def validate(args, resources, problems, next_path):
             problems.append(("no-invalid", version_string, next_path))
             break
 
-    if len(problems) > problem_count:
+    if len(problems) > problem_count and args.quiet < 1:
         print(
             f"FAIL: {problems[-1][0]} saved in version {problems[-1][1]}: {problems[-1][2]}"
         )
@@ -183,9 +189,10 @@ def find_problems(args, files):
 
         except AssertionError as error:
             problems.append((error, "", next_path))
-            print(
-                f"FAIL: {problems[-1][0]} saved in version {problems[-1][1]}: {problems[-1][2]}"
-            )
+            if args.quiet < 2:
+                print(
+                    f"FAIL: {problems[-1][0]} saved in version {problems[-1][1]}: {problems[-1][2]}"
+                )
 
     return problems
 
@@ -196,7 +203,7 @@ def main(args=None):
     files = start_finding_files(*args.path)
     problems = find_problems(args, files)
 
-    if len(problems) > 0:
+    if len(problems) > 0 and args.quiet < 3:
         print(f"{len(problems)} problems encounted")
         sys.exit(1)
 
