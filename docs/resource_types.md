@@ -603,8 +603,8 @@ Each resource type is identified by a four character ascii code.
 |----------|---------:|------:|--------------|---------------------------------------------|
 | Version  | 0        | 4     | unsigned int | LabVIEW [Version](data_types.md#version)    |
 | Language | 4        | 2     | unsigned int | [Language](#version-language)               |
-| Text     | 6        | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string) |
-| Name     | 6 + L +1 | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string) |
+| Text     | 6        | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string)  |
+| Name     | 6 + L +1 | L + 1 |[Byte prefixed string](data_types.md#byte-prefixed-string)  |
 
 #### Version Language
 
