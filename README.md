@@ -1,4 +1,4 @@
-![status sheild](https://img.shields.io/static/v1?label=status&message=starting...&color=inactive&style=plastic)
+![status sheild](https://img.shields.io/static/v1?label=status&message=Milestone+1&color=inactive&style=plastic)
 ![GitHub](https://img.shields.io/github/license/marcpage/pylavi?style=plastic)
 [![commit sheild](https://img.shields.io/github/last-commit/marcpage/pylavi?style=plastic)](https://github.com/marcpage/pylavi/commits)
 [![activity sheild](https://img.shields.io/github/commit-activity/m/marcpage/pylavi?style=plastic)](https://github.com/marcpage/pylavi/commits)
