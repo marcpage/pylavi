@@ -10,6 +10,7 @@ VENV_ACTIVATE_SCRIPT=$(VENV_DIR)/bin/activate
 LINT_LOG=$(VENV_DIR)/lint.txt
 BLACK_LOG=$(VENV_DIR)/format.txt
 TEST_LOG=$(VENV_DIR)/test.txt
+DIST_LOG=$(VENV_DIR)/dist.txt
 COVERAGE_LOG=$(VENV_DIR)/coverage.txt
 RUN_IN_VENV=. $(VENV_ACTIVATE_SCRIPT) &&
 
@@ -77,5 +78,9 @@ uninstall: $(VENV_ACTIVATE_SCRIPT)
 check:
 	python3 setup.py check
 
-dist:
-	python3 setup.py sdist
+$(DIST_LOG): $(SOURCE) README.md LICENSE setup.py
+	@mkdir -p $(VENV_DIR)
+	@python3 setup.py sdist > $@ || (cat $@; exit 1)
+
+dist: $(DIST_LOG)
+	@cat $<
