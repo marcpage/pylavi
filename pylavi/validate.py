@@ -10,7 +10,7 @@ import sys
 import threading
 
 from pylavi.file import Resources
-from pylavi.resource_types import Typevers
+from pylavi.resource_types import Typevers, TypeLVSR
 from pylavi.data_types import Version
 
 
@@ -127,12 +127,20 @@ def start_finding_files(*paths):
 
 def validate(args, resources, problems, next_path):
     """Validate that the given resources file is valid"""
-    versions = [Typevers().from_bytes(r[2]) for r in resources.get_resources("vers")]
+    versions = [
+        Typevers().from_bytes(r[2]).version for r in resources.get_resources("vers")
+    ]
+    versions.extend(
+        [
+            TypeLVSR().from_bytes(r[2]).header.version
+            for r in resources.get_resources("LVSR")
+        ]
+    )
     problem_count = len(problems)
 
     for version in versions:
-        version_string = version.version.to_string()
-        phase = version.version.phase()
+        version_string = version.to_string()
+        phase = version.phase()
 
         if args.gt and version < args.gt:
             problems.append((f"<{args.gt}", version_string, next_path))
