@@ -9,18 +9,22 @@
 [![watch sheild](https://img.shields.io/github/watchers/marcpage/pylavi?label=Watch&style=social)](https://github.com/marcpage/pylavi/watchers)
 
 # pylavi
-Python LabVIEW resource file parser
+Python LabVIEW VI file checker
+
+## Notice
+
+This code is not endorsed, supported, or encouraged by National Instruments (NI).
+This is a clean-room examiniation of LabVIEW files and using information from [pylabview by mefistotelis](https://github.com/mefistotelis/pylabview).
+There is no guarantee of this tool working as designed with any particular LabVIEW files.
+You should validate that this tool will work for your use case and re-verify with each new version of LabVIEW.
 
 ## Description
 
-This project was inspired by [pylabview by mefistotelis](https://github.com/mefistotelis/pylabview) (which was originally forked from [pylabview by jcreigh](https://github.com/jcreigh/pylabview)).
-The idea was to reverse engineer the LabVIEW VI file format.
-This project is designed to be a reboot, taking the incredible discovery done by the pylabview projects and simplifying the structure of the code.
+This tool is designed to quickly validate large groups of VIs for common problems.
+This could be used in a Pull Request build to verify the LabVIEW files are saved in the correct version.
 
-This starts with a conceptual model of the [LabVIEW resource file](https://github.com/marcpage/pylavi/blob/main/docs/file.md) and treats the binary resources files as just collections of resources.
-Once the API for working with the file format itself is solidified, then code can be added to work with resources of specific types.
-
-Along the way discoveries will be [documented](https://github.com/marcpage/pylavi/tree/main/docs).
+You could perform the same check using LabVIEW, but this tool can often verify thousands of files in the time it takes to launch LabVIEW.
+For a Pull Request build, you want to make sure your builds are as short as possible, hence, this tool.
 
 
 ## Using to validate VIs
@@ -31,7 +35,11 @@ Along the way discoveries will be [documented](https://github.com/marcpage/pylav
 
 ### Validate VIs
 
+This command will validate that all LabVIEW files in this directory (deep scan) were saved in a LabVIEW version greater than 21.0.0f0.
+If any VIs were saved in a previous version, it will print the path to the VI and return a non-zero exit code.
+
 `vi_validate --path lv_source --no_beta --gt 21.0`
+
 
 ```
 usage: vi_validate [-h] [-l LT] [-g GT] [-e EQ] [-r] [-b] [-a] [-d] [-i] [-p PATH] [-s SKIP] [-x EXTENSION] [-q]
@@ -54,3 +62,15 @@ optional arguments:
                         File extensions to evaluate (defaults to all known)
   -q, --quiet           Reduce the output (multiple times reduces output more)
 ```
+
+## Credits
+
+This project was inspired by [pylabview by mefistotelis](https://github.com/mefistotelis/pylabview) (which was originally forked from [pylabview by jcreigh](https://github.com/jcreigh/pylabview)).
+The idea was to reverse engineer the LabVIEW VI file format.
+This project is designed to be a reboot, taking the incredible discovery done by the pylabview projects and simplifying the structure of the code.
+
+This starts with a conceptual model of the [LabVIEW resource file](https://github.com/marcpage/pylavi/blob/main/docs/file.md) and treats the binary resources files as just collections of resources.
+Once the API for working with the file format itself is solidified, then code can be added to work with resources of specific types.
+
+Along the way discoveries will be [documented](https://github.com/marcpage/pylavi/tree/main/docs).
+
