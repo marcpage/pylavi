@@ -67,6 +67,14 @@ def test_run():
     assert len(problems) == 1, problems
     problems = find_problems(parse_args(['-i']), start_finding_files(*test_vi_set))
     assert len(problems) == 1, problems
+    problems = find_problems(parse_args(['--code']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    assert len(problems) == 0, problems
+    problems = find_problems(parse_args(['--code']), start_finding_files(os.path.join('tests', 'empty_separate_code.vi')))
+    assert len(problems) == 1, problems
+    problems = find_problems(parse_args(['--no-code']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    assert len(problems) == 1, problems
+    problems = find_problems(parse_args(['--no-code']), start_finding_files(os.path.join('tests', 'empty_separate_code.vi')))
+    assert len(problems) == 0, problems
 
 
 EXPECTED_FILES = {

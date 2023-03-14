@@ -52,6 +52,8 @@ def parse_args(command_line=None):
         action="store_true",
         help="LabVIEW version must be a valid phase",
     )
+    parser.add_argument("-c", "--no-code", action="count", help="Saved without code")
+    parser.add_argument("--code", action="count", help="Saved with code")
     parser.add_argument(
         "-p",
         "--path",
@@ -83,6 +85,8 @@ def parse_args(command_line=None):
     args.path = args.path or [""]
     args.skip = args.skip or []
     args.quiet = args.quiet or 0
+    args.no_code = args.no_code or 0
+    args.code = args.code or 0
     has_comparison = args.lt or args.gt or args.eq
     has_phase = (
         args.no_release
@@ -91,8 +95,9 @@ def parse_args(command_line=None):
         or args.no_development
         or args.no_invalid
     )
+    has_code = args.no_code > 0 or args.code > 0
 
-    if not has_comparison and not has_phase:
+    if not has_comparison and not has_phase and not has_code:
         args.no_beta = True
         args.no_alpha = True
         args.no_development = True
@@ -125,20 +130,44 @@ def start_finding_files(*paths):
     return found
 
 
-def validate(args, resources, problems, next_path):
+def validate_code(
+    args, save_record_bytes: bytes, problems: list, next_path: str
+) -> bool:
+    """Validates if the separate code flags matches the command line arguments"""
+    save_record = TypeLVSR().from_bytes(save_record_bytes)
+
+    if args.code - args.no_code > 0 and save_record.separate_code():
+        problems.append(("no code", "", next_path))
+        return True
+
+    if args.code - args.no_code < 0 and not save_record.separate_code():
+        problems.append(("has code", "", next_path))
+        return True
+
+    return False
+
+
+def validate(args, resources: Resources, problems: list, next_path: str):
     """Validate that the given resources file is valid"""
-    versions = [
-        Typevers().from_bytes(r[2]).version for r in resources.get_resources("vers")
-    ]
+    version_resources = resources.get_resources("vers")
+    save_record_resources = resources.get_resources("LVSR")
+    assert len(save_record_resources) < 2
+    versions = [Typevers().from_bytes(r[2]).version for r in version_resources]
     versions.extend(
-        [
-            TypeLVSR().from_bytes(r[2]).header.version
-            for r in resources.get_resources("LVSR")
-        ]
+        [TypeLVSR().from_bytes(r[2]).header.version for r in save_record_resources]
     )
     problem_count = len(problems)
+    invalid = False
 
-    for version in versions:
+    if args.code - args.no_code != 0 and save_record_resources:
+        invalid = validate_code(
+            args,
+            save_record_resources[0][2],
+            problems,
+            next_path,
+        )
+
+    for version in [] if invalid else versions:
         version_string = version.to_string()
         phase = version.phase()
 
