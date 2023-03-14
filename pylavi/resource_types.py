@@ -8,6 +8,101 @@ import ctypes
 from pylavi.data_types import Structure, Version, PString
 
 
+class HeaderLVSR(Structure):
+    """Header for LVSR resource"""
+
+    _pack_ = 1
+    _fields_ = [
+        ("version", Version),
+        ("flags", 16 * ctypes.c_uint),
+    ]
+
+
+class TypeLVSR:
+    """handles 'LVSR' resource types"""
+
+    SEPARATE_CODE = (1, 0x00000400)
+    SAVE_FOR_PREVIOUS = (1, 0x00000004)
+
+    def __init__(self):
+        self.header = HeaderLVSR()
+        self.extra = b""
+
+    def __flag_value(self, flag: int, mask: int, new_value: bool) -> bool:
+        old_value = self.header.flags[flag] & mask != 0
+
+        if new_value is not None:
+            if new_value:
+                self.header.flags[flag] |= mask
+            else:
+                self.header.flags[flag] &= ~mask
+
+        return old_value
+
+    def saved_for_previous(self, value: bool = None) -> bool:
+        """Was this VI saved for previous version"""
+        return self.__flag_value(*TypeLVSR.SAVE_FOR_PREVIOUS, value)
+
+    def separate_code(self, value: bool = None) -> bool:
+        """Was this VI saved with code separate"""
+        return self.__flag_value(*TypeLVSR.SEPARATE_CODE, value)
+
+    def to_bytes(self) -> bytes:
+        """Convert to resource data"""
+        return self.header.to_bytes() + self.extra
+
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """Take raw bytes from the file and interpret them.
+        offset - the offset in data to start parsing the bytes
+        """
+        self.header = HeaderLVSR().from_bytes(data, offset)
+        self.extra = data[offset + self.header.size() :]
+        return self
+
+    def size(self) -> int:
+        """Get the number of bytes for this vers resource"""
+        return self.header.size() + len(self.extra)
+
+    def to_string(self):
+        """Get a string representation of the vers resource information"""
+        return (
+            "{"
+            + f"version={self.header.version.to_string()}, "
+            + f"flags={','.join(bin(f) for f in self.header.flags)}, "
+            + f"extra={self.extra.hex()}"
+            + "}"
+        )
+
+    def __str__(self) -> str:
+        return self.to_string()
+
+    def __repr__(self) -> str:
+        return f"TypeLVSR({self.to_string()})"
+
+    # pylint: disable=unused-argument
+    def to_dict(self, encoder=None) -> dict:
+        """Create a dictionary of basic types of the vers"""
+        return {
+            "version": self.header.version.to_string(),
+            "flags": self.header.flags,
+            "extra": self.extra.hex(),
+        }
+
+    # pylint: disable=unused-argument
+    def from_dict(self, description: dict, encoder=None):
+        """Create the vers data from a dictionary describing it"""
+        self.header = HeaderLVSR()
+        # pylint: disable=attribute-defined-outside-init
+        self.header.version = Version(description.get("version", "0"))
+        flags = description.get("flags", [0] * 16)
+
+        for flag in range(0, 16):
+            self.header.flags[flag] = flags[flag]
+
+        self.extra = bytes.fromhex(description.get("extra", ""))
+        return self
+
+
 class Headervers(Structure):
     """Header for vers resource"""
 
