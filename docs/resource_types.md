@@ -458,7 +458,9 @@ Each resource type is identified by a four character ascii code.
 | Version  | 0        | 4     | unsigned int | LabVIEW [Version](data_types.md#version)    |
 | Unknown  | 4        | 4     | unsigned int | |
 | Flags    | 8        | 4     | unsigned int | [Flags](#lvsr-flags)                        |
-| Unknown  | 12       | 56    | unsigned int | |
+| Unknown  | 12       | 12    | unsigned int | |
+| Code     | 24       | 4     | unsigned int | [Code Flags](#lvsr-code-flags)              |
+| Unknown  | 28       | 40    | unsigned int | |
 | -------  | -------- | ----- | ------------ | End of some                                 |
 | Unknown  | 68       | 8     | unsigned int | |
 | -------  | -------- | ----- | ------------ | End of some                                 |
@@ -472,7 +474,7 @@ Each resource type is identified by a four character ascii code.
 | -------  | -------- | ----- | ------------ | End of some                                 |
 | Unknown  | 112      | 4     | unsigned int | |
 | -------  | -------- | ----- | ------------ | End of some                                 |
-| Unknown  | 116      | 4     | unsigned int | |
+| Breakpts | 116      | 4     | unsigned int | Number of breakpoints set |
 | -------  | -------- | ----- | ------------ | End of some                                 |
 | Unknown  | 120      | 16    | unsigned int | |
 | -------  | -------- | ----- | ------------ | End of some                                 |
@@ -487,14 +489,19 @@ Each resource type is identified by a four character ascii code.
 **Note:** The save record size varies depending on LabVIEW version.
 The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 160 bytes.
 
-
-
 #### LVSR Flags
 
 | Bit Mask | Description                        |
 |----------|------------------------------------|
 | 00000004 | Saved for previous                 |
 | 00000400 | Separate compiled code from source |
+| 20000000 | Automatic Error Handling           |
+
+#### LVSR Code Flags
+
+| Bit Mask | Description                        |
+|----------|------------------------------------|
+| 20000000 | Breakpoint(s) Set                  |
 
 
 ### MNGI
