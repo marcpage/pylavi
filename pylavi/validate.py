@@ -202,9 +202,11 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         if save_record_resources
         else None
     )
-    versions.append(save_record.header.version)
     problem_count = len(problems)
     invalid = False
+
+    if save_record:
+        versions.append(save_record.header.version)
 
     if (
         not invalid
