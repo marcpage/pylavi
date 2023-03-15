@@ -1,4 +1,4 @@
-[![status sheild](https://img.shields.io/static/v1?label=released&message=v0.1.0&color=active&style=plastic)](https://pypi.org/project/pylavi/)
+[![status sheild](https://img.shields.io/static/v1?label=released&message=v0.2.0&color=active&style=plastic)](https://pypi.org/project/pylavi/)
 ![status sheild](https://img.shields.io/static/v1?label=test+coverage&message=99%&color=active&style=plastic)
 ![GitHub](https://img.shields.io/github/license/marcpage/pylavi?style=plastic)
 [![commit sheild](https://img.shields.io/github/last-commit/marcpage/pylavi?style=plastic)](https://github.com/marcpage/pylavi/commits)
@@ -28,7 +28,7 @@ You could perform the same check using LabVIEW, but this tool can often verify t
 For a Pull Request build, you want to make sure your builds are as short as possible, hence, this tool.
 
 
-## Using to validate VIs
+## Validating VIs
 
 ### Install
 
@@ -36,17 +36,37 @@ For a Pull Request build, you want to make sure your builds are as short as poss
 
 ### Validate VIs
 
-This command will validate that all LabVIEW files in this directory (deep scan) were saved in a LabVIEW version greater than 21.0.0f0.
-If any VIs were saved in a previous version, it will print the path to the VI and return a non-zero exit code.
 
 `vi_validate --path lv_source --no_beta --gt 21.0`
 
+This command will validate that all LabVIEW files in this directory (deep scan) were saved in a LabVIEW version greater than 21.0.0f0.
+If any VIs were saved in a previous version, it will print the path to the VI and return a non-zero exit code.
+
+You can validate the following:
+
+- **version** greater than, less than, or equal to a specific version (any part of the version not specified is assumed to be zero or f (final))
+- **version phase** disallow VIs saved in developer, alpha, beta, or release version of LabVIEW.
+- **code** disallow VIs with or without the `Separate compiled code from source file` setting (--no-code means allow separted compiled code)
+- **breakpoints** disallow VIs with breakpoints saved
+- **locked** require all VIs to be locked (with or without a password) or not locked
+- **password** require VIs to be locked with a password or not locked with a password or require the be locked with a specific password
+- **clear indicators** require VIs be saved with the `Clear indiciators when called` or require they not be saved with this setting
+- **run on open** require VIs be saved with the `Run when opened` or require they not be saved with this setting
+- **suspend on run** require VIs be saved with the `Suspend when called` or require they not be saved with this setting
+- **debuggable** require VIs be saved with the `Allow debugging` or require they not be saved with this setting
+- **autoerror** require VIs have the `Enable automatic error handling` flag be turned off
+- **path length** require that the path to the VI (including the `--path` length) be less than the given length
+
+If none of these are specified, then the following settings are defaulted: `--no-beta` `--no-alpha` `--no-development` `--no-invalid` `--path-length 260`
+
+You may specify multiple `--path` or `--skip`. `--path` will never override `--skip`. 
 
 ```
 usage: vi_validate [-h] [-l LT] [-g GT] [-e EQ] [-r] [-b] [-a] [-d] [-i] [-c] [--code] [--breakpoints] [--locked]
                    [--not-locked] [--password-match PASSWORD_MATCH] [--password] [--no-password] [--clear-indicators]
                    [--no-clear-indicators] [--run-on-open] [--no-run-on-open] [--suspend-on-run] [--no-suspend-on-run]
-                   [--debuggable] [--not-debuggable] [--autoerror] [-p PATH] [-s SKIP] [-x EXTENSION] [-q]
+                   [--debuggable] [--not-debuggable] [--autoerror] [--path-length PATH_LENGTH] [-p PATH] [-s SKIP]
+                   [-x EXTENSION] [-q]
 
 Validates LabVIEW resource files
 
@@ -78,7 +98,9 @@ optional arguments:
   --no-suspend-on-run   VI will not suspend on run
   --debuggable          VI is debuggable
   --not-debuggable      VI is not debuggable
-  --autoerror           Saved with auto error handling turned on
+  --autoerror           Not saved with auto error handling turned on
+  --path-length PATH_LENGTH
+                        Maximum number of characters for the path
   -p PATH, --path PATH  Path to scan for files (or a file path) (defaults to current directory)
   -s SKIP, --skip SKIP  Path to not scan for files (or a file to ignore)
   -x EXTENSION, --extension EXTENSION
