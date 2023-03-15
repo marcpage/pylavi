@@ -57,7 +57,7 @@ def add_flag_options(parser):
     parser.add_argument("-c", "--no-code", action="count", help="Saved without code")
     parser.add_argument("--code", action="count", help="Saved with code")
     parser.add_argument(
-        "--breakpoints", action="store_true", help="Saved with breakpoints"
+        "--breakpoints", action="store_true", help="Not saved with breakpoints"
     )
     parser.add_argument(
         "--locked", action="count", help="File is locked (maybe with password)"
