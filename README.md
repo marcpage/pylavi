@@ -43,7 +43,10 @@ If any VIs were saved in a previous version, it will print the path to the VI an
 
 
 ```
-usage: vi_validate [-h] [-l LT] [-g GT] [-e EQ] [-r] [-b] [-a] [-d] [-i] [-p PATH] [-s SKIP] [-x EXTENSION] [-q]
+usage: vi_validate [-h] [-l LT] [-g GT] [-e EQ] [-r] [-b] [-a] [-d] [-i] [-c] [--code] [--breakpoints] [--locked]
+                   [--not-locked] [--password-match PASSWORD_MATCH] [--password] [--no-password] [--clear-indicators]
+                   [--no-clear-indicators] [--run-on-open] [--no-run-on-open] [--suspend-on-run] [--no-suspend-on-run]
+                   [--debuggable] [--not-debuggable] [--autoerror] [-p PATH] [-s SKIP] [-x EXTENSION] [-q]
 
 Validates LabVIEW resource files
 
@@ -57,6 +60,25 @@ optional arguments:
   -a, --no-alpha        LabVIEW version must not be alpha
   -d, --no-development  LabVIEW version must not be development
   -i, --no-invalid      LabVIEW version must be a valid phase
+  -c, --no-code         Saved without code
+  --code                Saved with code
+  --breakpoints         Saved with breakpoints
+  --locked              File is locked (maybe with password)
+  --not-locked          File is not locked
+  --password-match PASSWORD_MATCH
+                        Ensure the password is exactly
+  --password            File is locked with a password
+  --no-password         File is not saved with a password
+  --clear-indicators    VI will clear indicators on run
+  --no-clear-indicators
+                        VI will not clear indicators on run
+  --run-on-open         VI will run when opened
+  --no-run-on-open      VI will not run when opened
+  --suspend-on-run      VI will suspend on run
+  --no-suspend-on-run   VI will not suspend on run
+  --debuggable          VI is debuggable
+  --not-debuggable      VI is not debuggable
+  --autoerror           Saved with auto error handling turned on
   -p PATH, --path PATH  Path to scan for files (or a file path) (defaults to current directory)
   -s SKIP, --skip SKIP  Path to not scan for files (or a file to ignore)
   -x EXTENSION, --extension EXTENSION
