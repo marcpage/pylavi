@@ -37,7 +37,8 @@ def test_find_files():
 
 
 def test_run():
-    main(parse_args(['--path', os.path.join('tests', 'empty.vi')]))
+    assert main(parse_args(['--path', os.path.join('tests', 'empty.vi')])) ==0
+    assert main(parse_args(['--password', '--path', os.path.join('tests', 'empty.vi')])) == 1
     test_vi_set = [
         os.path.join('tests', 'empty.vi'),
         os.path.join('tests', 'empty_beta.vi'),

@@ -424,8 +424,10 @@ def main(args=None):
 
     if len(problems) > 0 and args.quiet < 3:
         print(f"{len(problems)} problems encounted")
-        sys.exit(1)
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":
-    main(parse_args())
+    sys.exit(main(parse_args()))
