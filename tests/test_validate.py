@@ -75,6 +75,10 @@ def test_run():
     assert len(problems) == 1, problems
     problems = find_problems(parse_args(['--no-code']), start_finding_files(os.path.join('tests', 'empty_separate_code.vi')))
     assert len(problems) == 0, problems
+    problems = find_problems(parse_args(['--breakpoints']), start_finding_files(os.path.join('tests', 'add.vi')))
+    assert len(problems) == 0, problems
+    problems = find_problems(parse_args(['--breakpoints']), start_finding_files(os.path.join('tests', 'add_breakpoints.vi')))
+    assert len(problems) == 1, problems
 
 
 EXPECTED_FILES = {
