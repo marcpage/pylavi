@@ -95,7 +95,7 @@ def add_flag_options(parser):
     parser.add_argument(
         "--autoerror",
         action="store_true",
-        help="Saved with auto error handling turned on",
+        help="Not saved with auto error handling turned on",
     )
 
 
