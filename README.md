@@ -24,7 +24,7 @@ You should validate that this tool will work for your use case and re-verify wit
 This tool is designed to quickly validate large groups of VIs for common problems.
 This could be used in a Pull Request build to verify the LabVIEW files are saved in the correct version.
 
-You could perform the same check using LabVIEW, but this tool can often verify thousands of files in the time it takes to launch LabVIEW (~1,200 files/second on an M2 macBook Pro).
+You could perform the same check using LabVIEW, but this tool can often verify thousands of files in the time it takes to launch LabVIEW (~1,200 files/second on an M2 macBook Pro while LabVIEW takes 1.8 seconds to launch and quit).
 For a Pull Request build, you want to make sure your builds are as short as possible, hence, this tool.
 
 
