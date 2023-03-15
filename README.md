@@ -62,7 +62,7 @@ optional arguments:
   -i, --no-invalid      LabVIEW version must be a valid phase
   -c, --no-code         Saved without code
   --code                Saved with code
-  --breakpoints         Saved with breakpoints
+  --breakpoints         Not saved with breakpoints
   --locked              File is locked (maybe with password)
   --not-locked          File is not locked
   --password-match PASSWORD_MATCH
