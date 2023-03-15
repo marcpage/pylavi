@@ -22,7 +22,7 @@ def test_arguments():
 
 
 def test_find_files():
-    files = start_finding_files("tests", "pylavi", __file__)
+    files = start_finding_files(("tests", "pylavi", __file__))
     file_list = set()
 
     while True:
@@ -45,39 +45,43 @@ def test_run():
         os.path.join('tests', 'empty_dev.vi'),
         os.path.join('tests', 'empty_invalid.vi'),
     ]
-    problems = find_problems(parse_args(['-x', '.py']), start_finding_files(__file__))
+    problems = find_problems(parse_args(['-x', '.py']), start_finding_files([__file__]))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-x', '.no way this exists']), start_finding_files(__file__))
+    problems = find_problems(parse_args(['-x', '.no way this exists']), start_finding_files([__file__]))
     assert len(problems) == 0, problems
-    problems = find_problems(parse_args(['-g', '99']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    problems = find_problems(parse_args(['-g', '99']), start_finding_files([os.path.join('tests', 'empty.vi')]))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-l', '2']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    problems = find_problems(parse_args(['-l', '2']), start_finding_files([os.path.join('tests', 'empty.vi')]))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-e', '6']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    problems = find_problems(parse_args(['-e', '6']), start_finding_files([os.path.join('tests', 'empty.vi')]))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-e', '21']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    problems = find_problems(parse_args(['-e', '21']), start_finding_files([os.path.join('tests', 'empty.vi')]))
     assert len(problems) == 0, problems
-    problems = find_problems(parse_args(['-r']), start_finding_files(*test_vi_set))
+    problems = find_problems(parse_args(['-r']), start_finding_files(test_vi_set))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-b']), start_finding_files(*test_vi_set))
+    problems = find_problems(parse_args(['-b']), start_finding_files(test_vi_set))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-d']), start_finding_files(*test_vi_set))
+    problems = find_problems(parse_args(['-d']), start_finding_files(test_vi_set))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-a']), start_finding_files(*test_vi_set))
+    problems = find_problems(parse_args(['-a']), start_finding_files(test_vi_set))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['-i']), start_finding_files(*test_vi_set))
+    problems = find_problems(parse_args(['-i']), start_finding_files(test_vi_set))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['--code']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    problems = find_problems(parse_args(['--code']), start_finding_files([os.path.join('tests', 'empty.vi')]))
     assert len(problems) == 0, problems
-    problems = find_problems(parse_args(['--code']), start_finding_files(os.path.join('tests', 'empty_separate_code.vi')))
+    problems = find_problems(parse_args(['--code']), start_finding_files([os.path.join('tests', 'empty_separate_code.vi')]))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['--no-code']), start_finding_files(os.path.join('tests', 'empty.vi')))
+    problems = find_problems(parse_args(['--no-code']), start_finding_files([os.path.join('tests', 'empty.vi')]))
     assert len(problems) == 1, problems
-    problems = find_problems(parse_args(['--no-code']), start_finding_files(os.path.join('tests', 'empty_separate_code.vi')))
+    problems = find_problems(parse_args(['--no-code']), start_finding_files([os.path.join('tests', 'empty_separate_code.vi')]))
     assert len(problems) == 0, problems
-    problems = find_problems(parse_args(['--breakpoints']), start_finding_files(os.path.join('tests', 'add.vi')))
+    problems = find_problems(parse_args(['--breakpoints']), start_finding_files([os.path.join('tests', 'add.vi')]))
     assert len(problems) == 0, problems
-    problems = find_problems(parse_args(['--breakpoints']), start_finding_files(os.path.join('tests', 'add_breakpoints.vi')))
+    problems = find_problems(parse_args(['--breakpoints']), start_finding_files([os.path.join('tests', 'add_breakpoints.vi')]))
+    assert len(problems) == 1, problems
+    problems = find_problems(parse_args(['--autoerr']), start_finding_files([os.path.join('tests', 'empty_no_auto_err.vi')]))
+    assert len(problems) == 0, problems
+    problems = find_problems(parse_args(['--autoerr']), start_finding_files([os.path.join('tests', 'empty.vi')]))
     assert len(problems) == 1, problems
 
 
