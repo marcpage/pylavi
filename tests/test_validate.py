@@ -38,8 +38,10 @@ def test_find_files():
 
 def test_run():
     assert main(parse_args(['--path', os.path.join('tests', 'empty.vi')])) ==0
-    assert main(parse_args(['--password', '--path', os.path.join('tests', 'empty.vi')])) == 1
-    assert main(parse_args(['--no-password', '--path', os.path.split(os.path.split(__file__)[0])[0]])) == 1
+    assert main(parse_args(['-q', '--password', '--path', os.path.join('tests', 'empty.vi')])) == 1
+    assert main(parse_args(['-q', '--no-password', '--path', os.path.split(os.path.split(__file__)[0])[0]])) == 1
+    assert main(parse_args(['--path-length', '14', '--path',  os.path.join('tests', 'empty.vi')])) == 0
+    assert main(parse_args(['-q', '--path-length', '13', '--path',  os.path.join('tests', 'empty.vi')])) == 1
     root_dir = os.path.split(os.path.split(__file__)[0])[0]
     assert main(parse_args(['--no-password', '--skip', os.path.join(root_dir, 'tests', '*'), '--path', os.path.split(os.path.split(__file__)[0])[0]])) == 0
     test_vi_set = [
