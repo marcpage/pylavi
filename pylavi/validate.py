@@ -106,6 +106,12 @@ def parse_args(command_line=None):
     parser = argparse.ArgumentParser(description="Validates LabVIEW resource files")
     add_version_options(parser)
     add_flag_options(parser)
+
+    parser.add_argument(
+        "--path-length",
+        type=int,
+        help="Maximum number of characters for the path",
+    )
     parser.add_argument(
         "-p",
         "--path",
@@ -164,13 +170,16 @@ def parse_args(command_line=None):
     has_password = args.password > 0 or args.no_password > 0
     has_debuggable = args.debuggable > 0 or args.not_debuggable > 0
     has_binary = has_code or has_locked or has_password or has_debuggable
-    has_other = args.autoerror or args.breakpoints or args.password_match
+    has_other = (
+        args.autoerror or args.breakpoints or args.password_match or args.path_length
+    )
 
     if not has_comparison and not has_phase and not has_binary and not has_other:
         args.no_beta = True
         args.no_alpha = True
         args.no_development = True
         args.no_invalid = True
+        args.path_length = 260
 
     if not args.extension:
         args.extension = Resources.EXTENSIONS
@@ -353,6 +362,12 @@ def validate(args, resources: Resources, problems: list, next_path: str):
 
     if save_record:
         versions.append(save_record.header.version)
+
+    if not invalid and args.path_length and len(next_path) > args.path_length:
+        problems.append(
+            (f"path length {len(next_path)} > {args.path_length}", "", next_path)
+        )
+        invalid = True
 
     if not invalid and args.breakpoints and save_record:
         if save_record.has_breakpoints():
