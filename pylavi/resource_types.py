@@ -5,8 +5,74 @@
 
 import ctypes
 import struct
+import hashlib
 
 from pylavi.data_types import Structure, Version, PString
+
+
+class TypeBDPW:
+    """handles 'BDPW' resources types"""
+
+    EMPTY_PASSWORD = "d41d8cd98f00b204e9800998ecf8427e"
+    MD5_SIZE = 16
+
+    def __init__(self):
+        self.password_md5 = None
+        self.extra = None
+
+    def has_password(self):
+        """Determines if a password was set"""
+        return self.password_md5.hex().lower() != TypeBDPW.EMPTY_PASSWORD
+
+    def password_matches(self, password: str) -> bool:
+        """checks the password to see if it matches"""
+        return hashlib.md5(password.encode("ascii")).digest() == self.password_md5
+
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """Take raw bytes from the file and interpret them.
+        offset - the offset in data to start parsing the bytes
+        """
+        self.password_md5 = data[offset : offset + TypeBDPW.MD5_SIZE]
+        self.extra = data[offset + TypeBDPW.MD5_SIZE :]
+        return self
+
+    def to_bytes(self) -> bytes:
+        """Convert to resource data"""
+        return self.password_md5 + self.extra
+
+    def size(self) -> int:
+        """Get the number of bytes for this vers resource"""
+        return len(self.password_md5) + len(self.extra)
+
+    def to_string(self):
+        """Get a string representation of the vers resource information"""
+        return (
+            "{"
+            + f"password_md5={self.password_md5.hex()}, "
+            + f"extra={self.extra.hex()}"
+            + "}"
+        )
+
+    def __str__(self) -> str:
+        return self.to_string()
+
+    def __repr__(self) -> str:
+        return f"TypeBDPW({self.to_string()})"
+
+    # pylint: disable=unused-argument
+    def to_dict(self, encoder=None) -> dict:
+        """Create a dictionary of basic types of the BDPW"""
+        return {
+            "password_md5": self.password_md5.hex(),
+            "extra": self.extra.hex(),
+        }
+
+    # pylint: disable=unused-argument
+    def from_dict(self, description: dict, encoder=None):
+        """Create the BDPW data from a dictionary describing it"""
+        self.password_md5 = bytes.fromhex(description.get("password_md5", None))
+        self.extra = bytes.fromhex(description.get("extra", None))
+        return self
 
 
 class HeaderLVSR(Structure):
@@ -22,6 +88,7 @@ class HeaderLVSR(Structure):
 class TypeLVSR:
     """handles 'LVSR' resource types"""
 
+    LOCKED = (0, 0x00002000)
     SAVE_FOR_PREVIOUS = (1, 0x00000004)
     SEPARATE_CODE = (1, 0x00000400)
     AUTO_ERROR_HANDLING = (1, 0x20000000)
@@ -54,6 +121,10 @@ class TypeLVSR:
                 TypeLVSR.BREAKPOINT_COUNT_OFFSET : TypeLVSR.BREAKPOINT_COUNT_OFFSET + 4
             ],
         )[0]
+
+    def locked(self, value: bool = None) -> bool:
+        """Was this VI locked (possibly with password)"""
+        return self.__flag_value(*TypeLVSR.LOCKED, value)
 
     def auto_error_handling(self, value: bool = None) -> bool:
         """Was this VI saved with auto error handling turned on"""
@@ -105,7 +176,7 @@ class TypeLVSR:
 
     # pylint: disable=unused-argument
     def to_dict(self, encoder=None) -> dict:
-        """Create a dictionary of basic types of the vers"""
+        """Create a dictionary of basic types of the LVSR"""
         return {
             "version": self.header.version.to_string(),
             "flags": self.header.flags,
@@ -114,7 +185,7 @@ class TypeLVSR:
 
     # pylint: disable=unused-argument
     def from_dict(self, description: dict, encoder=None):
-        """Create the vers data from a dictionary describing it"""
+        """Create the LVSR data from a dictionary describing it"""
         self.header = HeaderLVSR()
         # pylint: disable=attribute-defined-outside-init
         self.header.version = Version(description.get("version", "0"))

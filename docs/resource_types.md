@@ -108,9 +108,11 @@ Each resource type is identified by a four character ascii code.
 
 Not sure of the format, but this appears to be related to the password feature.
 It appears that it also changes based on other criteria.
-The first 32 bytes are the Hex MD5 digits of the password.
-If no password is set, the first 32 bytes are: d41d8cd98f00b204e9800998ecf8427e
+The first 16 bytes are the Hex MD5 digits of the password.
+If no password is set, the first 16 bytes are: d41d8cd98f00b204e9800998ecf8427e
 This is the MD5 hash of an empty string.
+
+The size is either 32 or 48.
 
 ### BDSE
 
