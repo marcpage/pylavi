@@ -1,6 +1,6 @@
 .PHONE:clean venv install upgrade uninstall check dist format lint test coverage report
 
-MIN_TEST_COVERAGE=95
+MIN_TEST_COVERAGE=99
 MODULE_NAME=pylavi
 SOURCES=$(MODULE_NAME)/*.py
 TEST_DIR=tests
