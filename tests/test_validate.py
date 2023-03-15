@@ -107,6 +107,14 @@ def test_run():
     assert len(problems) == 0, problems
     problems = find_problems(parse_args(['--locked']), start_finding_files([os.path.join('tests', 'empty_password.vi')]))
     assert len(problems) == 0, problems
+    problems = find_problems(parse_args(['--password-match', 'password']), start_finding_files([os.path.join('tests', 'empty_password.vi')]))
+    assert len(problems) == 0, problems
+    problems = find_problems(parse_args(['--password-match', 'Setec Astronomy']), start_finding_files([os.path.join('tests', 'empty_password.vi')]))
+    assert len(problems) == 1, problems
+    problems = find_problems(parse_args(['--password-match', 'password']), start_finding_files([os.path.join('tests', 'empty.vi')]))
+    assert len(problems) == 1, problems
+    problems = find_problems(parse_args(['--password-match', '']), start_finding_files([os.path.join('tests', 'empty.vi')]))
+    assert len(problems) == 0, problems
 
 
 EXPECTED_FILES = {

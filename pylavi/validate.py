@@ -62,6 +62,9 @@ def parse_args(command_line=None):
     )
     parser.add_argument("--not-locked", action="count", help="File is not locked")
     parser.add_argument(
+        "--password-match", type=str, help="Ensure the password is exactly"
+    )
+    parser.add_argument(
         "--password", action="count", help="File is locked with a password"
     )
     parser.add_argument(
@@ -121,7 +124,7 @@ def parse_args(command_line=None):
     has_locked = args.locked > 0 or args.not_locked > 0
     has_password = args.password > 0 or args.no_password > 0
     has_binary = has_code or has_locked or has_password
-    has_other = args.autoerror or args.breakpoints
+    has_other = args.autoerror or args.breakpoints or args.password_match
 
     if not has_comparison and not has_phase and not has_binary and not has_other:
         args.no_beta = True
@@ -174,6 +177,10 @@ def validate_locked_password(
     args, save_record: TypeLVSR, password: TypeBDPW, problems: list, next_path: str
 ) -> bool:
     """Validates if the separate code flags matches the command line arguments"""
+    if args.password_match and not password.password_matches(args.password_match):
+        problems.append((f"password not {args.password_match}", "", next_path))
+        return True
+
     if args.password - args.no_password > 0:
         if not save_record.locked() or not password.has_password():
             problems.append(("no password", "", next_path))
