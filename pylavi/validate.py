@@ -4,6 +4,7 @@
 
 
 import argparse
+import fnmatch
 import os
 import queue
 import sys
@@ -133,7 +134,7 @@ def parse_args(command_line=None):
         help="Reduce the output (multiple times reduces output more)",
     )
     args = parser.parse_args(args=command_line)
-    args.path = args.path or [""]
+    args.path = args.path or ["."]
     args.skip = args.skip or []
     args.quiet = args.quiet or 0
     args.no_code = args.no_code or 0
@@ -390,6 +391,13 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         )
 
 
+def should_skip(args, path):
+    if os.path.splitext(path)[1] not in args.extension:
+        return True
+
+    return any(fnmatch.fnmatch(path, p) for p in ([] if not args.skip else args.skip))
+
+
 def find_problems(args, files):
     """Searchs for problems files and returns them"""
     problems = []
@@ -400,7 +408,7 @@ def find_problems(args, files):
         if next_path is None:
             break
 
-        if os.path.splitext(next_path)[1] not in args.extension:
+        if should_skip(args, next_path):
             continue
 
         try:
