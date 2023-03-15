@@ -55,6 +55,9 @@ def parse_args(command_line=None):
     parser.add_argument("-c", "--no-code", action="count", help="Saved without code")
     parser.add_argument("--code", action="count", help="Saved with code")
     parser.add_argument(
+        "--breakpoints", action="store_true", help="Saved with breakpoints"
+    )
+    parser.add_argument(
         "-p",
         "--path",
         type=str,
@@ -97,7 +100,7 @@ def parse_args(command_line=None):
     )
     has_code = args.no_code > 0 or args.code > 0
 
-    if not has_comparison and not has_phase and not has_code:
+    if not has_comparison and not has_phase and not has_code and not args.breakpoints:
         args.no_beta = True
         args.no_alpha = True
         args.no_development = True
@@ -147,27 +150,9 @@ def validate_code(
     return False
 
 
-def validate(args, resources: Resources, problems: list, next_path: str):
-    """Validate that the given resources file is valid"""
-    version_resources = resources.get_resources("vers")
-    save_record_resources = resources.get_resources("LVSR")
-    assert len(save_record_resources) < 2
-    versions = [Typevers().from_bytes(r[2]).version for r in version_resources]
-    versions.extend(
-        [TypeLVSR().from_bytes(r[2]).header.version for r in save_record_resources]
-    )
-    problem_count = len(problems)
-    invalid = False
-
-    if args.code - args.no_code != 0 and save_record_resources:
-        invalid = validate_code(
-            args,
-            save_record_resources[0][2],
-            problems,
-            next_path,
-        )
-
-    for version in [] if invalid else versions:
+def validate_version(args, versions, problems, next_path):
+    """Validates the version checking logic"""
+    for version in versions:
         version_string = version.to_string()
         phase = version.phase()
 
@@ -202,6 +187,40 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         if args.no_invalid and (phase > Version.RELEASE or phase == 0):
             problems.append(("no-invalid", version_string, next_path))
             break
+
+
+def validate(args, resources: Resources, problems: list, next_path: str):
+    """Validate that the given resources file is valid"""
+    version_resources = resources.get_resources("vers")
+    save_record_resources = resources.get_resources("LVSR")
+    assert len(save_record_resources) < 2
+    versions = [Typevers().from_bytes(r[2]).version for r in version_resources]
+    versions.extend(
+        [TypeLVSR().from_bytes(r[2]).header.version for r in save_record_resources]
+    )
+    problem_count = len(problems)
+    invalid = False
+
+    if args.breakpoints and save_record_resources:
+        lvsr = TypeLVSR().from_bytes(save_record_resources[0][2])
+
+        if lvsr.has_breakpoints():
+            number = lvsr.breakpoint_count()
+            plural = "" if number == 1 else "s"
+            number = "" if number is None else f"{number} "
+            problems.append((f"{number}breakpoint{plural} found", "", next_path))
+            invalid = True
+
+    if not invalid and args.code - args.no_code != 0 and save_record_resources:
+        invalid = validate_code(
+            args,
+            save_record_resources[0][2],
+            problems,
+            next_path,
+        )
+
+    if not invalid:
+        validate_version(args, versions, problems, next_path)
 
     if len(problems) > problem_count and args.quiet < 1:
         print(

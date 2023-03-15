@@ -4,6 +4,7 @@
 
 
 import ctypes
+import struct
 
 from pylavi.data_types import Structure, Version, PString
 
@@ -23,6 +24,8 @@ class TypeLVSR:
 
     SEPARATE_CODE = (1, 0x00000400)
     SAVE_FOR_PREVIOUS = (1, 0x00000004)
+    BREAKPOINTS_SET = (5, 0x20000000)
+    BREAKPOINT_COUNT_OFFSET = 48
 
     def __init__(self):
         self.header = HeaderLVSR()
@@ -39,9 +42,25 @@ class TypeLVSR:
 
         return old_value
 
+    def breakpoint_count(self):
+        """returns the number of breakpoints or None if not supported"""
+        if len(self.extra) < 52:
+            return None
+
+        return struct.unpack(
+            ">I",
+            self.extra[
+                TypeLVSR.BREAKPOINT_COUNT_OFFSET : TypeLVSR.BREAKPOINT_COUNT_OFFSET + 4
+            ],
+        )[0]
+
     def saved_for_previous(self, value: bool = None) -> bool:
         """Was this VI saved for previous version"""
         return self.__flag_value(*TypeLVSR.SAVE_FOR_PREVIOUS, value)
+
+    def has_breakpoints(self, value: bool = None) -> bool:
+        """Was this VI saved for previous version"""
+        return self.__flag_value(*TypeLVSR.BREAKPOINTS_SET, value)
 
     def separate_code(self, value: bool = None) -> bool:
         """Was this VI saved with code separate"""
