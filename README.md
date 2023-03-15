@@ -46,7 +46,7 @@ You can validate the following:
 
 - **version** greater than, less than, or equal to a specific version (any part of the version not specified is assumed to be zero or f (final))
 - **version phase** disallow VIs saved in developer, alpha, beta, or release version of LabVIEW.
-- **code** disallow VIs with or without the `Separate compiled code from source file` setting (--no-code means allow separted compiled code)
+- **code** disallow VIs with or without the `Separate compiled code from source file` setting (--no-code means only allow VIs with separated compiled code set)
 - **breakpoints** disallow VIs with breakpoints saved
 - **locked** require all VIs to be locked (with or without a password) or not locked
 - **password** require VIs to be locked with a password or not locked with a password or require the be locked with a specific password
