@@ -5,7 +5,7 @@ Each resource type is identified by a four character ascii code.
 
 - [Resource Types](#resource-types)
   * [Common to many file types](#common-to-many-file-types)
-    + [BDEx](#bdex), [BDHB](#bdhb), [BDHP](#bdhp), [BDHX](#bdhx), [BDHb](#bdhb), [BDHc](#bdhc), [BDPW](#bdpw), [BDSE](#bdse), [BDTS](#bdts)
+    + [BDEx](#bdex), [BDHB](#bdhb), [BDHP](#bdhp), [BDHX](#bdhx), [BDHb](#bdhb), [BDHc](#bdhc), [BDSE](#bdse), [BDTS](#bdts)
       [BFAL](#bfal), [BKMK](#bkmk), [BNID](#bnid), [CCSG](#ccsg), [CCST](#ccst), [CGRS](#cgrs), [CNST](#cnst), [CONP](#conp), [COUT](#cout)
       [CPC2](#cpc2), [CPCT](#cpct), [CPD2](#cpd2), [CPDI](#cpdi), [CPMp](#cpmp), [CPSP](#cpsp), [CPST](#cpst), [CPTM](#cptm), [DFDS](#dfds)
       [DLDR](#dldr), [DLLP](#dllp), [DSIM](#dsim), [DSTM](#dstm), [DTHP](#dthp), [DsEL](#dsel), [EXPR](#expr), [FPEx](#fpex), [FPHB](#fphb)
@@ -17,6 +17,7 @@ Each resource type is identified by a four character ascii code.
       [PRT](#prt), [PsEL](#psel), [RSID](#rsid), [RTMP](#rtmp), [RTSG](#rtsg), [SBSP](#sbsp), [SCSR](#scsr), [STR](#str), [STRG](#strg)
       [SUID](#suid), [TITL](#titl), [TM80](#tm80), [TRec](#trec), [VAST](#vast), [VCTP](#vctp), [VICD](#vicd), [VIMS](#vims), [VINS](#vins)
       [VITS](#vits), [VPDP](#vpdp), [WEMF](#wemf), [XFlg](#xflg), [icl4](#icl4), [icl8](#icl8)
+    + [BDPW - Block Diagram Password](#bdpw---block-diagram-password)
     + [LVSR - Save Record](#lvsr---save-record)
     + [vers - LabVIEW Editor Version](#vers---labview-editor-version)
   * [Non-VI types](#non-vi-types)
@@ -100,10 +101,16 @@ Each resource type is identified by a four character ascii code.
 - **extensions** .ctl, .vi, .vit
 - **file types** LVCC, LVIN
 
-### BDPW
+### BDPW - Block Diagram Password
 
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVIN
+
+Not sure of the format, but this appears to be related to the password feature.
+It appears that it also changes based on other criteria.
+The first 32 bytes are the Hex MD5 digits of the password.
+If no password is set, the first 32 bytes are: d41d8cd98f00b204e9800998ecf8427e
+This is the MD5 hash of an empty string.
 
 ### BDSE
 
@@ -456,7 +463,7 @@ Each resource type is identified by a four character ascii code.
 | Field    | Offset   | Size  | Type         | Description                                 |
 |----------|---------:|------:|--------------|---------------------------------------------|
 | Version  | 0        | 4     | unsigned int | LabVIEW [Version](data_types.md#version)    |
-| Unknown  | 4        | 4     | unsigned int | |
+| Basic    | 4        | 4     | unsigned int | [Basic Flags](#lvsr-basic-flags)            |
 | Flags    | 8        | 4     | unsigned int | [Flags](#lvsr-flags)                        |
 | Unknown  | 12       | 12    | unsigned int | |
 | Code     | 24       | 4     | unsigned int | [Code Flags](#lvsr-code-flags)              |
@@ -488,6 +495,13 @@ Each resource type is identified by a four character ascii code.
 
 **Note:** The save record size varies depending on LabVIEW version.
 The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 160 bytes.
+
+#### LVSR Basic Flags
+
+| Bit Mask | Description                                                                       |
+|----------|-----------------------------------------------------------------------------------|
+| 00002000 | VI is locked (possibly with password, see [BDPW](#bdpw---block-diagram-password)) |
+
 
 #### LVSR Flags
 
