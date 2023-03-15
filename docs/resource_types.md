@@ -471,7 +471,7 @@ The size is either 32 or 48.
 | Code     | 24       | 4     | unsigned int | [Code Flags](#lvsr-code-flags)              |
 | Unknown  | 28       | 40    | unsigned int | |
 | -------  | -------- | ----- | ------------ | End of some                                 |
-| Run      | 68       | 4     | unsigned int | [Run Flags](#lvsr-run-flags)                |
+| Unknown  | 68       | 4     | unsigned int | |
 | Unknown  | 72       | 4     | unsigned int | |
 | -------  | -------- | ----- | ------------ | End of some                                 |
 | Unknown  | 76       | 4     | unsigned int | |
@@ -503,9 +503,9 @@ The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 
 
 | Bit Mask | Description                                                                       |
 |----------|-----------------------------------------------------------------------------------|
+| 00001000 | VI was marked as Suspend when called                                              |
 | 00002000 | VI is locked (possibly with password, see [BDPW](#bdpw---block-diagram-password)) |
 | 00004000 | VI was marked as Run on Open                                                      |
-| 00001000 | VI was marked as Suspend when called                                              |
 
 #### LVSR Flags
 
@@ -513,20 +513,15 @@ The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 
 |----------|------------------------------------|
 | 00000004 | Saved for previous                 |
 | 00000400 | Separate compiled code from source |
-| 20000000 | Automatic Error Handling           |
 | 01000000 | Clear indicators when called       |
+| 20000000 | Automatic Error Handling           |
 
 #### LVSR Code Flags
 
 | Bit Mask | Description                        |
 |----------|------------------------------------|
-| 20000000 | Breakpoint(s) Set                  |
-
-#### LVSR Run Flags
-
-| Bit Mask | Description                        |
-|----------|------------------------------------|
 | 40000200 | Debuggable                         |
+| 20000000 | Breakpoint(s) Set                  |
 
 
 ### MNGI

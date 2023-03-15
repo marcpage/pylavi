@@ -88,19 +88,36 @@ class HeaderLVSR(Structure):
 class TypeLVSR:
     """handles 'LVSR' resource types"""
 
+    SUSPEND_ON_RUN = (0, 0x00001000)
     LOCKED = (0, 0x00002000)
+    RUN_ON_OPEN = (0, 0x00004000)
     SAVE_FOR_PREVIOUS = (1, 0x00000004)
     SEPARATE_CODE = (1, 0x00000400)
+    CLEAR_INDICATORS = (1, 0x01000000)
     AUTO_ERROR_HANDLING = (1, 0x20000000)
     BREAKPOINTS_SET = (5, 0x20000000)
-    BREAKPOINT_COUNT_OFFSET = 48
+    DEBUGGABLE = (5, 0x40000200)
+    BREAKPOINT_COUNT_INDEX = 28
 
     def __init__(self):
         self.header = HeaderLVSR()
         self.extra = b""
 
+    def __flag_at_index(self, flag: int) -> int:
+        if flag < len(self.header.flags):
+            return self.header.flags[flag]
+
+        flag -= len(self.header.flags)
+        offset = flag * 4
+
+        if offset + 4 > len(self.extra):
+            return None
+
+        return struct.unpack(">I", self.extra[offset : offset + 4])[0]
+
     def __flag_value(self, flag: int, mask: int, new_value: bool) -> bool:
-        old_value = self.header.flags[flag] & mask != 0
+        flag_value = self.__flag_at_index(flag)
+        old_value = None if flag_value is None else (flag_value & mask != 0)
 
         if new_value is not None:
             if new_value:
@@ -112,15 +129,23 @@ class TypeLVSR:
 
     def breakpoint_count(self):
         """returns the number of breakpoints or None if not supported"""
-        if len(self.extra) < 52:
-            return None
+        return self.__flag_at_index(TypeLVSR.BREAKPOINT_COUNT_INDEX)
 
-        return struct.unpack(
-            ">I",
-            self.extra[
-                TypeLVSR.BREAKPOINT_COUNT_OFFSET : TypeLVSR.BREAKPOINT_COUNT_OFFSET + 4
-            ],
-        )[0]
+    def debuggable(self, value: bool = None) -> bool:
+        """VI was marked as debuggable"""
+        return self.__flag_value(*TypeLVSR.DEBUGGABLE, value)
+
+    def clear_indicators(self, value: bool = None) -> bool:
+        """When run the unwired indicators will be cleared"""
+        return self.__flag_value(*TypeLVSR.CLEAR_INDICATORS, value)
+
+    def run_on_open(self, value: bool = None) -> bool:
+        """Was this VI marked as run-on-open"""
+        return self.__flag_value(*TypeLVSR.RUN_ON_OPEN, value)
+
+    def suspend_on_run(self, value: bool = None) -> bool:
+        """Was this VI marked as suspend on run"""
+        return self.__flag_value(*TypeLVSR.SUSPEND_ON_RUN, value)
 
     def locked(self, value: bool = None) -> bool:
         """Was this VI locked (possibly with password)"""
