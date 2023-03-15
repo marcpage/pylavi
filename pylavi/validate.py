@@ -14,10 +14,8 @@ from pylavi.resource_types import Typevers, TypeLVSR, TypeBDPW
 from pylavi.data_types import Version
 
 
-def parse_args(command_line=None):
-    """Interpret command line arguments"""
-    command_line = command_line or sys.argv[1:]
-    parser = argparse.ArgumentParser(description="Validates LabVIEW resource files")
+def add_version_options(parser):
+    """adds options related to LabVIEW version that saved the file"""
     parser.add_argument(
         "-l", "--lt", type=str, help="LabVIEW version must be less than this"
     )
@@ -52,6 +50,10 @@ def parse_args(command_line=None):
         action="store_true",
         help="LabVIEW version must be a valid phase",
     )
+
+
+def add_flag_options(parser):
+    """add options for checking flags"""
     parser.add_argument("-c", "--no-code", action="count", help="Saved without code")
     parser.add_argument("--code", action="count", help="Saved with code")
     parser.add_argument(
@@ -71,10 +73,38 @@ def parse_args(command_line=None):
         "--no-password", action="count", help="File is not saved with a password"
     )
     parser.add_argument(
+        "--clear-indicators", action="count", help="VI will clear indicators on run"
+    )
+    parser.add_argument(
+        "--no-clear-indicators",
+        action="count",
+        help="VI will not clear indicators on run",
+    )
+    parser.add_argument("--run-on-open", action="count", help="VI will run when opened")
+    parser.add_argument(
+        "--no-run-on-open", action="count", help="VI will not run when opened"
+    )
+    parser.add_argument(
+        "--suspend-on-run", action="count", help="VI will suspend on run"
+    )
+    parser.add_argument(
+        "--no-suspend-on-run", action="count", help="VI will not suspend on run"
+    )
+    parser.add_argument("--debuggable", action="count", help="VI is debuggable")
+    parser.add_argument("--not-debuggable", action="count", help="VI is not debuggable")
+    parser.add_argument(
         "--autoerror",
         action="store_true",
         help="Saved with auto error handling turned on",
     )
+
+
+def parse_args(command_line=None):
+    """Interpret command line arguments"""
+    command_line = command_line or sys.argv[1:]
+    parser = argparse.ArgumentParser(description="Validates LabVIEW resource files")
+    add_version_options(parser)
+    add_flag_options(parser)
     parser.add_argument(
         "-p",
         "--path",
@@ -112,6 +142,14 @@ def parse_args(command_line=None):
     args.password = args.password or 0
     args.not_locked = args.not_locked or 0
     args.locked = args.locked or 0
+    args.not_debuggable = args.not_debuggable or 0
+    args.debuggable = args.debuggable or 0
+    args.no_clear_indicators = args.no_clear_indicators or 0
+    args.clear_indicators = args.clear_indicators or 0
+    args.no_run_on_open = args.no_run_on_open or 0
+    args.run_on_open = args.run_on_open or 0
+    args.no_suspend_on_run = args.no_suspend_on_run or 0
+    args.suspend_on_run = args.suspend_on_run or 0
     has_comparison = args.lt or args.gt or args.eq
     has_phase = (
         args.no_release
@@ -123,7 +161,8 @@ def parse_args(command_line=None):
     has_code = args.no_code > 0 or args.code > 0
     has_locked = args.locked > 0 or args.not_locked > 0
     has_password = args.password > 0 or args.no_password > 0
-    has_binary = has_code or has_locked or has_password
+    has_debuggable = args.debuggable > 0 or args.not_debuggable > 0
+    has_binary = has_code or has_locked or has_password or has_debuggable
     has_other = args.autoerror or args.breakpoints or args.password_match
 
     if not has_comparison and not has_phase and not has_binary and not has_other:
@@ -159,6 +198,41 @@ def start_finding_files(paths):
     return found
 
 
+def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str) -> bool:
+    """validate run flags"""
+
+    if (
+        args.clear_indicators - args.no_clear_indicators < 0
+        and save_record.clear_indicators()
+    ):
+        problems.append(("clear indicators", "", next_path))
+        return True
+
+    if args.run_on_open - args.no_run_on_open > 0 and not save_record.run_on_open():
+        problems.append(("no run on open", "", next_path))
+        return True
+
+    if args.run_on_open - args.no_run_on_open < 0 and save_record.run_on_open():
+        problems.append(("run on open", "", next_path))
+        return True
+
+    if (
+        args.suspend_on_run - args.no_suspend_on_run > 0
+        and not save_record.suspend_on_run()
+    ):
+        problems.append(("no suspend on run", "", next_path))
+        return True
+
+    if (
+        args.suspend_on_run - args.no_suspend_on_run < 0
+        and save_record.suspend_on_run()
+    ):
+        problems.append(("suspend on run", "", next_path))
+        return True
+
+    return False
+
+
 def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str) -> bool:
     """Validates if the separate code flags matches the command line arguments"""
 
@@ -168,6 +242,21 @@ def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str) -
 
     if args.code - args.no_code < 0 and not save_record.separate_code():
         problems.append(("has code", "", next_path))
+        return True
+
+    if (
+        args.clear_indicators - args.no_clear_indicators > 0
+        and not save_record.clear_indicators()
+    ):
+        problems.append(("no clear indicators", "", next_path))
+        return True
+
+    if args.debuggable - args.not_debuggable > 0 and not save_record.debuggable():
+        problems.append(("not debuggable", "", next_path))
+        return True
+
+    if args.debuggable - args.not_debuggable < 0 and save_record.debuggable():
+        problems.append(("debuggable", "", next_path))
         return True
 
     return False
@@ -283,6 +372,9 @@ def validate(args, resources: Resources, problems: list, next_path: str):
 
     if not invalid and save_record_resources:
         invalid = validate_code(args, save_record, problems, next_path)
+
+    if not invalid and save_record_resources:
+        invalid = validate_run(args, save_record, problems, next_path)
 
     if not invalid and save_record_resources and password_record:
         invalid = validate_locked_password(
