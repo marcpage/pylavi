@@ -16,7 +16,7 @@ def test_arguments():
     assert args.no_alpha
     assert args.no_development
     assert args.no_invalid
-    assert args.path == ['']
+    assert args.path == ['.']
     assert args.skip == []
     assert args.extension == Resources.EXTENSIONS
 
@@ -39,6 +39,9 @@ def test_find_files():
 def test_run():
     assert main(parse_args(['--path', os.path.join('tests', 'empty.vi')])) ==0
     assert main(parse_args(['--password', '--path', os.path.join('tests', 'empty.vi')])) == 1
+    assert main(parse_args(['--no-password', '--path', os.path.split(os.path.split(__file__)[0])[0]])) == 1
+    root_dir = os.path.split(os.path.split(__file__)[0])[0]
+    assert main(parse_args(['--no-password', '--skip', os.path.join(root_dir, 'tests', '*'), '--path', os.path.split(os.path.split(__file__)[0])[0]])) == 0
     test_vi_set = [
         os.path.join('tests', 'empty.vi'),
         os.path.join('tests', 'empty_beta.vi'),

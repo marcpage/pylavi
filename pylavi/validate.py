@@ -392,6 +392,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
 
 
 def should_skip(args, path):
+    """Determine if the file should be skipped"""
     if os.path.splitext(path)[1] not in args.extension:
         return True
 
