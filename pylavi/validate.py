@@ -58,6 +58,11 @@ def parse_args(command_line=None):
         "--breakpoints", action="store_true", help="Saved with breakpoints"
     )
     parser.add_argument(
+        "--autoerror",
+        action="store_true",
+        help="Saved with auto error handling turned on",
+    )
+    parser.add_argument(
         "-p",
         "--path",
         type=str,
@@ -99,8 +104,9 @@ def parse_args(command_line=None):
         or args.no_invalid
     )
     has_code = args.no_code > 0 or args.code > 0
+    has_other = args.autoerror or args.breakpoints
 
-    if not has_comparison and not has_phase and not has_code and not args.breakpoints:
+    if not has_comparison and not has_phase and not has_code and not has_other:
         args.no_beta = True
         args.no_alpha = True
         args.no_development = True
@@ -125,7 +131,7 @@ def find_files(found_queue, paths):
     found_queue.put(None)
 
 
-def start_finding_files(*paths):
+def start_finding_files(paths):
     """Start the find_files function running in the background finding files"""
     found = queue.Queue()
     thread = threading.Thread(target=find_files, args=(found, paths), daemon=True)
@@ -133,12 +139,8 @@ def start_finding_files(*paths):
     return found
 
 
-def validate_code(
-    args, save_record_bytes: bytes, problems: list, next_path: str
-) -> bool:
+def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str) -> bool:
     """Validates if the separate code flags matches the command line arguments"""
-    save_record = TypeLVSR().from_bytes(save_record_bytes)
-
     if args.code - args.no_code > 0 and save_record.separate_code():
         problems.append(("no code", "", next_path))
         return True
@@ -195,29 +197,38 @@ def validate(args, resources: Resources, problems: list, next_path: str):
     save_record_resources = resources.get_resources("LVSR")
     assert len(save_record_resources) < 2
     versions = [Typevers().from_bytes(r[2]).version for r in version_resources]
-    versions.extend(
-        [TypeLVSR().from_bytes(r[2]).header.version for r in save_record_resources]
+    save_record = (
+        TypeLVSR().from_bytes(save_record_resources[0][2])
+        if save_record_resources
+        else None
     )
+    versions.append(save_record.header.version)
     problem_count = len(problems)
     invalid = False
 
-    if args.breakpoints and save_record_resources:
-        lvsr = TypeLVSR().from_bytes(save_record_resources[0][2])
+    if (
+        not invalid
+        and args.breakpoints
+        and save_record
+        and save_record.has_breakpoints()
+    ):
+        number = save_record.breakpoint_count()
+        plural = "" if number == 1 else "s"
+        number = "" if number is None else f"{number} "
+        problems.append((f"{number}breakpoint{plural} found", "", next_path))
+        invalid = True
 
-        if lvsr.has_breakpoints():
-            number = lvsr.breakpoint_count()
-            plural = "" if number == 1 else "s"
-            number = "" if number is None else f"{number} "
-            problems.append((f"{number}breakpoint{plural} found", "", next_path))
-            invalid = True
+    if (
+        not invalid
+        and args.autoerror
+        and save_record
+        and save_record.auto_error_handling()
+    ):
+        problems.append(("auto error handling turned on", "", next_path))
+        invalid = True
 
     if not invalid and args.code - args.no_code != 0 and save_record_resources:
-        invalid = validate_code(
-            args,
-            save_record_resources[0][2],
-            problems,
-            next_path,
-        )
+        invalid = validate_code(args, save_record, problems, next_path)
 
     if not invalid:
         validate_version(args, versions, problems, next_path)
@@ -257,7 +268,7 @@ def find_problems(args, files):
 def main(args=None):
     """run the (dis)assembler"""
     args = args or parse_args()
-    files = start_finding_files(*args.path)
+    files = start_finding_files(args.path)
     problems = find_problems(args, files)
 
     if len(problems) > 0 and args.quiet < 3:

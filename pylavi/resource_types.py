@@ -22,8 +22,9 @@ class HeaderLVSR(Structure):
 class TypeLVSR:
     """handles 'LVSR' resource types"""
 
-    SEPARATE_CODE = (1, 0x00000400)
     SAVE_FOR_PREVIOUS = (1, 0x00000004)
+    SEPARATE_CODE = (1, 0x00000400)
+    AUTO_ERROR_HANDLING = (1, 0x20000000)
     BREAKPOINTS_SET = (5, 0x20000000)
     BREAKPOINT_COUNT_OFFSET = 48
 
@@ -53,6 +54,10 @@ class TypeLVSR:
                 TypeLVSR.BREAKPOINT_COUNT_OFFSET : TypeLVSR.BREAKPOINT_COUNT_OFFSET + 4
             ],
         )[0]
+
+    def auto_error_handling(self, value: bool = None) -> bool:
+        """Was this VI saved with auto error handling turned on"""
+        return self.__flag_value(*TypeLVSR.AUTO_ERROR_HANDLING, value)
 
     def saved_for_previous(self, value: bool = None) -> bool:
         """Was this VI saved for previous version"""
