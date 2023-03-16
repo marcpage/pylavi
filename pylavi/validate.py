@@ -11,7 +11,7 @@ import sys
 import threading
 
 from pylavi.file import Resources
-from pylavi.resource_types import Typevers, TypeLVSR, TypeBDPW
+from pylavi.resource_types import Typevers, TypeLVSR, TypeBDPW, TypeLIvi
 from pylavi.data_types import Version
 
 
@@ -344,6 +344,10 @@ def validate_version(args, versions, problems, next_path):
 
 def validate(args, resources: Resources, problems: list, next_path: str):
     """Validate that the given resources file is valid"""
+    links = resources.get_resources("LIvi")
+    if links:
+        livi = TypeLIvi().from_bytes(links[0][2])
+        print(livi.get_type(), livi.get_name(), livi.get_count(), livi.data)
     version_resources = resources.get_resources("vers")
     save_record_resources = resources.get_resources("LVSR")
     password_resources = resources.get_resources("BDPW")
@@ -431,6 +435,7 @@ def find_problems(args, files):
             validate(args, Resources.load(next_path), problems, next_path)
 
         except AssertionError as error:
+            raise
             problems.append((error, "", next_path))
             if args.quiet < 2:
                 print(

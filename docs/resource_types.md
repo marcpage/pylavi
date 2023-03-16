@@ -425,10 +425,15 @@ The size is either 32 or 48.
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
 
+
+Link Identity Front Panel?
+
 ### LIds
 
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
+
+Link Identity Data Space?
 
 **Note:** This resources is missing when **Separate compiled code from source** is turned on
 
@@ -437,10 +442,79 @@ The size is either 32 or 48.
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
 
+Link Identity front panel?
+
 ### LIvi
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
+
+Link Identity VI?
+
+Always Resource #0 and never has a name.
+
+| Field | Size  | Value | Type          | Description               |
+|-------|------:|-------|---------------|---------------------------|
+| ???   |  2    |   1   | unsigned int  | Unknown                   |
+| Type  |  4    |       | FourCharCode  | See types                 |
+| Name  | L + 1 |       | PString       | Name                      |
+| ???   |  4    |   0   | unsigned int  | ???                       |
+| Count |  2    |       | unsigned int  | Number of Link Identities |
+| List  |       |       | Link Identity | ???                       |
+
+#### Link Types
+
+| Type  | Description  |
+|-------|--------------|
+| LVIN  | Control link |
+| LVCC  | VI link      |
+
+#### Link Identity
+
+##### Link to Library
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VILB  | FourCharCode | Library link    |
+|  ???  |  4   |  0    | unsigned int | ???             |
+| Path  |      |       | Path         | Path to library |
+...
+
+##### Link to Class
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VIPI  | FourCharCode | Library link    |
+|  ???  |  4   |  0    | unsigned int | ???             |
+|  ???  |  3   |       | unsigned int | ???             |
+| Name  | L+1  |       | PString      | Class Name      |
+|  ???  |  4   |       | unsigned int | ???             |
+| Path  |      |       | Path         | Path to library |
+...
+
+##### Link to Class
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VICC  | FourCharCode | Library link    |
+|  ???  |  4   |  0    | unsigned int | ???             |
+| Name  | L+1  |       | PString      | Class Name      |
+...
+
+##### Link to VI
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VIVI  | FourCharCode | Library link    |
+|  ???  |  4   |  0    | unsigned int | ???             |
+| Name  | L+1  |       | PString      | Class Name      |
+...
+
+
 
 ### LPIN
 

@@ -7,7 +7,73 @@ import ctypes
 import struct
 import hashlib
 
-from pylavi.data_types import Structure, Version, PString
+from pylavi.data_types import Structure, Version, PString, FourCharCode
+
+class TypeLIvi:
+    def __init__(self):
+        self.data = None
+
+    def get_type(self) -> FourCharCode:
+        return FourCharCode().from_bytes(self.data, 2)
+
+    def get_name(self) -> PString:
+        return PString().from_bytes(self.data, 6)
+
+    def get_count(self) -> int:
+        offset = self.get_name().size() + 10
+        print(f"name = {self.get_name()}")
+        print(f"offset = {offset} length = {len(self.data)} data = {self.data}")
+        return struct.unpack(">H", self.data[offset : offset + 2])[0]
+
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """Take raw bytes from the file and interpret them.
+        offset - the offset in data to start parsing the bytes
+        """
+        self.data = data[offset:]
+        assert struct.unpack(">H", self.data[:2])[0] == 1, self.data[:4]
+        assert self.get_type().to_string() in ['LVIN', 'LVCC']
+        offset = self.get_name().size() + 6
+        assert struct.unpack(">I", self.data[offset : offset + 4])[0] == 0
+        return self
+
+    def to_bytes(self) -> bytes:
+        """Convert to resource data"""
+        return self.data
+
+    def size(self) -> int:
+        """Get the number of bytes for this vers resource"""
+        return len(self.data)
+
+    def to_string(self):
+        """Get a string representation of the vers resource information"""
+        return (
+            "{"
+            + f"{self.data.hex()}"
+            + "}"
+        )
+
+    def __str__(self) -> str:
+        return self.to_string()
+
+    def __repr__(self) -> str:
+        return f"TypeLVvi({self.to_string()})"
+
+    # pylint: disable=unused-argument
+    def to_dict(self, encoder=None) -> dict:
+        """Create a dictionary of basic types of the BDPW"""
+        return {
+            "password_md5": self.password_md5.hex(),
+            "extra": self.extra.hex(),
+        }
+
+    # pylint: disable=unused-argument
+    def from_dict(self, description: dict, encoder=None):
+        """Create the BDPW data from a dictionary describing it"""
+        self.password_md5 = bytes.fromhex(description.get("password_md5", None))
+        self.extra = bytes.fromhex(description.get("extra", None))
+        return self
+
+
 
 
 class TypeBDPW:
