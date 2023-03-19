@@ -179,6 +179,12 @@ class PString(Description):
         return f"PString('{self.to_string()}')"
 
     def __eq__(self, other) -> bool:
+        if isinstance(other, str):
+            return self.to_string() == other
+
+        if isinstance(other, bytes):
+            return self.value == other
+
         return self.value == other.value
 
 class Structure(Description):

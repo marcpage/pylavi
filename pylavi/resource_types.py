@@ -234,14 +234,6 @@ class Typevers(Structure):
     CHINESE = 33
     LANGUAGES = [0, 1, 3, 14, 23, 33]
 
-    @staticmethod
-    def __decode_byte_string(string: bytes) -> str:
-        return string.decode("ascii")
-
-    @staticmethod
-    def __encode_byte_string(string: str) -> bytes:
-        return string.encode("ascii")
-
     def __init__(
         self,
         version: any = None,
@@ -271,39 +263,17 @@ class Typevers(Structure):
             "{"
             + f"version={self.version.to_string()}, "
             + f"language={self.language}, "
-            + f"text={self.text}, "
-            + f"name={self.name}"
+            + f"text='{self.text}', "
+            + f"name='{self.name}'"
             + "}"
         )
-
-    def __str__(self) -> str:
-        return self.to_string()
 
     def __repr__(self) -> str:
         return f"Typevers({self.to_string()})"
 
-    def to_dict(self, encoder=None) -> dict:
-        """Create a dictionary of basic types of the vers"""
-        encoder_func = (
-            Typevers.__decode_byte_string if encoder is None else encoder.byte_string
-        )
-        return {
-            "version": self.version.to_string(),
-            "language": self.language,
-            "text": encoder_func(self.text),
-            "name": encoder_func(self.name),
-        }
-
-    def from_dict(self, description: dict, encoder=None):
-        """Create the vers data from a dictionary describing it"""
-        encoder_func = (
-            Typevers.__encode_byte_string if encoder is None else encoder.string_byte
-        )
-        self.version = Version(description.get("version", "0"))
-        self.language = description.get("language", Typevers.ENGLISH)
+    def from_value(self, description:any):
+        super().from_value(description)
         assert self.language in Typevers.LANGUAGES
-        self.text = encoder_func(description.get("text", ""))
-        self.name = encoder_func(description.get("name", ""))
         return self
 
     def __lt__(self, other):
