@@ -8,6 +8,7 @@ import ctypes
 from pylavi.data_types import Structure, Array, FourCharCode, PString, Integer, IntSize
 
 
+# pylint: disable=no-member
 class Header(Structure):
     """Resource header."""
 
@@ -30,19 +31,28 @@ class Header(Structure):
     SIGNATURE = FourCharCode().from_bytes(b"RSRC")
     CORRUPTION_CHECK = b"\r\n"
 
-    def __init__(self, file_type:str=None, file_creator:str=None):
+    def __init__(self, file_type: str = None, file_creator: str = None):
         file_type = file_type or Header.FILE_TYPES[0]
         file_creator = file_creator or Header.FILE_CREATORS[0]
         super().__init__(
-            'file_format', FourCharCode(),
-            'corruption_check', Integer(byte_count=IntSize.INT16),
-            "format_version", Integer(byte_count=IntSize.INT16),
-            "file_type", FourCharCode(file_type),
-            "file_creator", FourCharCode(file_creator),
-            "metadata_offset", Integer(),
-            "metadata_size", Integer(),
-            "data_offset", Integer(),
-            "data_size", Integer(),
+            "file_format",
+            FourCharCode(),
+            "corruption_check",
+            Integer(byte_count=IntSize.INT16),
+            "format_version",
+            Integer(byte_count=IntSize.INT16),
+            "file_type",
+            FourCharCode(file_type),
+            "file_creator",
+            FourCharCode(file_creator),
+            "metadata_offset",
+            Integer(),
+            "metadata_size",
+            Integer(),
+            "data_offset",
+            Integer(),
+            "data_size",
+            Integer(),
         )
 
     def to_string(self):
@@ -109,11 +119,16 @@ class MetadataHeader(Structure):
     def __init__(self):
         header_size = Header().size()
         super().__init__(
-            "unused_8", Integer(0),
-            "unused_16", Integer(0),
-            "file_header_size", Integer(header_size),
-            "metadata_header_size", Integer(),
-            "names_offset", Integer(),
+            "unused_8",
+            Integer(0),
+            "unused_16",
+            Integer(0),
+            "file_header_size",
+            Integer(header_size),
+            "metadata_header_size",
+            Integer(),
+            "names_offset",
+            Integer(),
         )
         self.metadata_header_size.value = header_size + self.size()
 
@@ -142,7 +157,9 @@ class MetadataHeader(Structure):
         ), f"type info not where it should be {self.metadata_header_size}"
         print(f"file_header     = {repr(file_header)}")
         print(f"metadata header = {repr(self)}")
-        assert file_size >= (file_header.metadata_offset.value + self.names_offset.value), (
+        assert file_size >= (
+            file_header.metadata_offset.value + self.names_offset.value
+        ), (
             f"File too small {file_size} <"
             + f" {file_header.metadata_offset + self.names_offset}"
             + f" file_header.metadata_offset = {file_header.metadata_offset}"
@@ -161,9 +178,12 @@ class TypeInfo(Structure):
         list_offset: int = 0,
     ):
         super().__init__(
-            "resource_type", FourCharCode(resource_type),
-            "resource_count", Integer(resource_count - 1),
-            "list_offset", Integer(list_offset),
+            "resource_type",
+            FourCharCode(resource_type),
+            "resource_count",
+            Integer(resource_count - 1),
+            "list_offset",
+            Integer(list_offset),
         )
 
     def to_string(self):
@@ -214,7 +234,8 @@ class DataSize(Integer):
 
 class TypeList(Array):
     """Fixed size list of types"""
-    def __init__(self, *elements, length:int=0):
+
+    def __init__(self, *elements, length: int = 0):
         assert not elements or all(isinstance(e, TypeInfo) for e in elements)
         super().__init__(TypeInfo, *elements, data_count=length)
 
@@ -227,20 +248,27 @@ class ResourceMetadata(Structure):
 
     NO_NAME = 0xFFFFFFFF
 
-    def __init__(self, res_id:int=None, name_offset:int=None, data_offset:int=None):
+    def __init__(
+        self, res_id: int = None, name_offset: int = None, data_offset: int = None
+    ):
         super().__init__(
-            "resource_id", Integer(res_id),
-            "name_offset", Integer(ResourceMetadata.NO_NAME if name_offset is None else name_offset),
-            "unused_8", Integer(0),
-            "data_offset", Integer(data_offset),
-            "unused_16", Integer(0),
+            "resource_id",
+            Integer(res_id),
+            "name_offset",
+            Integer(ResourceMetadata.NO_NAME if name_offset is None else name_offset),
+            "unused_8",
+            Integer(0),
+            "data_offset",
+            Integer(data_offset),
+            "unused_16",
+            Integer(0),
         )
         assert (
             self.name_offset.value is None
             or self.name_offset.value % 4 == 0
             or self.name_offset.value == ResourceMetadata.NO_NAME
         )
-        assert self.data_offset.value is None or self.data_offset.value%4 == 0
+        assert self.data_offset.value is None or self.data_offset.value % 4 == 0
 
     def to_string(self):
         """Convert to a string"""
@@ -261,7 +289,7 @@ class ResourceMetadata(Structure):
 class ResourceList(Array):
     """Fixed size list of types"""
 
-    def __init__(self, *elements, length:int=0):
+    def __init__(self, *elements, length: int = 0):
         assert not elements or all(isinstance(e, ResourceMetadata) for e in elements)
         super().__init__(ResourceMetadata, *elements, data_count=length)
 

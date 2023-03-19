@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from pylavi.data_types import Array, PString
+from pylavi.data_types import Array, PString, Description
 
 
 def test_basic():
@@ -21,5 +21,10 @@ def test_basic():
     assert a != a2
 
 
+def test_Description():
+    assert Description().to_string() == ''
+
+
 if __name__ == "__main__":
     test_basic()
+    test_Description()

@@ -14,66 +14,103 @@ ESCAPE_CHARS = re.compile(b"[^ -[\\]-~]")
 
 
 def unescape_bytes(matchobj) -> bytes:
-    return Integer(int(matchobj.group(0)[2:], 16), byte_count=IntSize.INT8, signed=False).to_bytes()
+    """unescape non-ascii bytes"""
+    return Integer(
+        int(matchobj.group(0)[2:], 16), byte_count=IntSize.INT8, signed=False
+    ).to_bytes()
+
 
 def escape_bytes(matchobj) -> bytes:
-    return b'\\x' + matchobj.group(0).hex().encode('ascii')
+    """escape non-ascii bytes"""
+    return b"\\x" + matchobj.group(0).hex().encode("ascii")
 
 
 class Description:
+    """Base class for all descriptions"""
+
+    def to_string(self) -> str:
+        """Get a string representation"""
+        return ""
+
     def __str__(self):
         return self.to_string()
 
 
 class Endian(enum.Enum):
-    BIG = '>'
-    LITTLE = '<'
+    """integer endian type"""
+
+    BIG = ">"
+    LITTLE = "<"
 
 
 class IntSize(enum.Enum):
-    INT8 = 'b'
-    INT16 = 'h'
-    INT32 = 'i'
+    """struct pack characters"""
+
+    INT8 = "b"
+    INT16 = "h"
+    INT32 = "i"
 
 
 @total_ordering
 class Integer(Description):
+    """Integer type"""
+
     SIZES = {
         IntSize.INT8: 1,
         IntSize.INT16: 2,
         IntSize.INT32: 4,
     }
-    def __init__(self, value:int=None, endian:Endian=Endian.BIG, byte_count:IntSize=IntSize.INT32, signed:bool=False):
+
+    def __init__(
+        self,
+        value: int = None,
+        endian: Endian = Endian.BIG,
+        byte_count: IntSize = IntSize.INT32,
+        signed: bool = False,
+    ):
         self.value = value
         self.endian = endian
         self.signed = signed
         self.byte_count = byte_count
 
     def size(self) -> int:
+        """Get the size of the bytes representation"""
         return Integer.SIZES[self.byte_count]
 
     def __struct_description(self):
-        return self.endian.value + (self.byte_count.value if self.signed else self.byte_count.value.upper())
+        return self.endian.value + (
+            self.byte_count.value if self.signed else self.byte_count.value.upper()
+        )
 
-    def from_bytes(self, data:bytes, offset:int=0):
-        self.value = struct.unpack(self.__struct_description(), data[offset:offset + self.size()])[0]
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
+        self.value = struct.unpack(
+            self.__struct_description(), data[offset : offset + self.size()]
+        )[0]
         return self
 
     def to_bytes(self) -> bytes:
+        """get the binary version"""
         return struct.pack(self.__struct_description(), self.value)
 
-    def from_value(self, description:any):
+    def from_value(self, description: any):
+        """Get a Python basic type to represent this value"""
         self.value = description
         return self
 
     def to_value(self) -> any:
+        """restore from a basic python type"""
         return self.value
 
     def to_string(self) -> str:
+        """Get a string representation"""
         return str(self.value)
 
     def __repr__(self) -> str:
-        return f"Integer({self.to_string()}, {self.endian}, signed={self.signed}, {self.byte_count})"
+        return (
+            f"Integer({self.to_string()}, {self.endian}, "
+            + f"signed={self.signed}, {self.byte_count})"
+        )
 
     def __lt__(self, other) -> bool:
         if isinstance(other, int):
@@ -104,42 +141,52 @@ class Integer(Description):
 
 
 class Bytes(Description):
-    def __init__(self, value:bytes=None, byte_count:int=0):
+    """Collection of Bytes"""
+
+    def __init__(self, value: bytes = None, byte_count: int = 0):
         if isinstance(value, str):
-            value = value.encode('ascii')
+            value = value.encode("ascii")
 
         elif value is None and byte_count > 0:
-            value = b'\x00'*byte_count
+            value = b"\x00" * byte_count
 
         self.value = value
 
     def size(self) -> int:
+        """Get the size of the bytes representation"""
         return len(self.value)
 
-    def from_bytes(self, data:bytes, offset:int=0):
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
         assert self.value is not None, "You must specify byte_count in constructor"
-        self.value = data[offset:offset + self.size()]
+        self.value = data[offset : offset + self.size()]
         assert len(self.value) == self.size()
         return self
 
     def to_bytes(self) -> bytes:
+        """get the binary version"""
         return self.value
 
-    def from_value(self, description:any):
+    def from_value(self, description: any):
+        """Get a Python basic type to represent this value"""
         if description is None:
             self.value = description
         else:
-            self.value = ESCAPED_PATTERN.sub(unescape_bytes, description.encode('ascii'))
+            self.value = ESCAPED_PATTERN.sub(
+                unescape_bytes, description.encode("ascii")
+            )
 
         return self
 
     def to_value(self) -> any:
+        """restore from a basic python type"""
         if self.value is None:
             return None
 
-        return ESCAPE_CHARS.sub(escape_bytes, self.value).decode('ascii')
+        return ESCAPE_CHARS.sub(escape_bytes, self.value).decode("ascii")
 
     def to_string(self):
+        """Get a string representation"""
         return self.to_value()
 
     def __len__(self):
@@ -159,7 +206,9 @@ class Bytes(Description):
 
 
 class FourCharCode(Bytes):
-    def __init__(self, value:bytes=None):
+    """Four character identifier"""
+
+    def __init__(self, value: bytes = None):
         assert value is None or len(value) == 4
         super().__init__(value, byte_count=4)
 
@@ -168,21 +217,32 @@ class FourCharCode(Bytes):
 
 
 class PString(Bytes):
-    def __init__(self, value:bytes=None):
+    """byte-length-prefixed string"""
+
+    def __init__(self, value: bytes = None):
         assert value is None or len(value) < 256
         super().__init__(value)
 
     def size(self) -> int:
+        """Get the size of the bytes representation"""
         return 1 + super().size()
 
-    def from_bytes(self, data:bytes, offset:int=0):
-        byte_count = Integer(byte_count=IntSize.INT8, signed=False).from_bytes(data, offset)
-        self.value = data[offset + 1:offset + byte_count.value + 1]
-        assert len(self.value) == byte_count.value, f"{[len(self.value), byte_count]} {data}"
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
+        byte_count = Integer(byte_count=IntSize.INT8, signed=False).from_bytes(
+            data, offset
+        )
+        self.value = data[offset + 1 : offset + byte_count.value + 1]
+        assert (
+            len(self.value) == byte_count.value
+        ), f"{[len(self.value), byte_count]} {data}"
         return self
 
     def to_bytes(self) -> bytes:
-        prefix = Integer(len(self.value), byte_count=IntSize.INT8, signed=False).to_bytes()
+        """get the binary version"""
+        prefix = Integer(
+            len(self.value), byte_count=IntSize.INT8, signed=False
+        ).to_bytes()
         return prefix + self.value
 
     def __repr__(self):
@@ -190,16 +250,20 @@ class PString(Bytes):
 
 
 class Structure(Description):
+    """A collection of heterogeneous, named data"""
+
     def __init__(self, *value):
-        self.__fields = [n for n in value[0::2]]
+        self.__fields = list(value[0::2])
         assert all(isinstance(n, str) for n in self.__fields)
         assert all(isinstance(v, Description) for v in value[1::2])
-        self.__dict__.update({n:v for n, v in zip(self.__fields, value[1::2])})
+        self.__dict__.update(dict(zip(self.__fields, value[1::2])))
 
     def size(self):
+        """Get the size of the bytes representation"""
         return sum(self.__dict__[n].size() for n in self.__fields)
 
-    def from_bytes(self, data:bytes, offset:int=0):
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
         for name in self.__fields:
             self.__dict__[name].from_bytes(data, offset)
             offset += self.__dict__[name].size()
@@ -207,9 +271,11 @@ class Structure(Description):
         return self
 
     def to_bytes(self) -> bytes:
-        return b''.join(self.__dict__[n].to_bytes() for n in self.__fields)
+        """get the binary version"""
+        return b"".join(self.__dict__[n].to_bytes() for n in self.__fields)
 
-    def from_value(self, description:any):
+    def from_value(self, description: any):
+        """Get a Python basic type to represent this value"""
         assert set(description.keys()) <= set(self.__fields)
 
         for name in self.__fields:
@@ -219,9 +285,11 @@ class Structure(Description):
         return self
 
     def to_value(self) -> any:
-        return {n:self.__dict__[n].to_value() for n in self.__fields}
+        """restore from a basic python type"""
+        return {n: self.__dict__[n].to_value() for n in self.__fields}
 
     def to_string(self):
+        """Get a string representation"""
         return str(self.to_value())
 
     def __repr__(self):
@@ -234,8 +302,8 @@ class Structure(Description):
 
         return None
 
+    # pylint: disable=protected-access
     def __eq__(self, other):
-
         if not isinstance(other, Structure) or self.__fields != other.__fields:
             return False
 
@@ -243,23 +311,29 @@ class Structure(Description):
 
 
 class Array(Description):
+    """A list of data of the same type"""
+
     def __init__(self, data_type, *value, data_count=0):
         assert all(isinstance(v, data_type) for v in value)
         self.data_type = data_type
         self.value = value if value else [data_type() for _ in range(0, data_count)]
 
     def size(self) -> int:
+        """Get the size of the bytes representation"""
         assert self.length() > 0
         return sum(v.size() for v in self.value)
 
     def length(self) -> int:
+        """Get the number of elements in the array"""
         return len(self.value)
 
     def set_length(self, data_count):
+        """Clear the array and fill it with data_count empty data elements"""
         self.value = [self.data_type() for _ in range(0, data_count)]
         return self
 
-    def from_bytes(self, data:bytes, offset:int=0):
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
         for value in self.value:
             value.from_bytes(data, offset)
             offset += value.size()
@@ -267,16 +341,20 @@ class Array(Description):
         return self
 
     def to_bytes(self) -> bytes:
-        return b''.join(v.to_bytes() for v in self.value)
+        """get the binary version"""
+        return b"".join(v.to_bytes() for v in self.value)
 
-    def from_value(self, description:any):
+    def from_value(self, description: any):
+        """Get a Python basic type to represent this value"""
         self.value = [self.data_type().from_value(v) for v in description]
         return self
 
     def to_value(self) -> any:
+        """restore from a basic python type"""
         return [v.to_value() for v in self.value]
 
     def to_string(self):
+        """Get a string representation"""
         return str(self.to_value())
 
     def __repr__(self):
@@ -292,11 +370,13 @@ class Array(Description):
         if len(self) != len(other):
             return False
 
-        return all(a == b for a,b in zip(self, other))
+        return all(a == b for a, b in zip(self, other))
 
 
 @total_ordering
 class Version(Integer):
+    """LabVIEW version number"""
+
     DEVELOPMENT = 1
     ALPHA = 2
     BETA = 3
@@ -305,16 +385,14 @@ class Version(Integer):
     PATTERN = re.compile(r"((\d+)(\.(\d+)(\.(\d+))?)?)(([abdfABDF]|{\d})(\d+)?)?")
 
     @staticmethod
-    def __from_string(version:str) -> (int, int, int, int, int):
+    def __from_string(version: str) -> (int, int, int, int, int):
         final = Version.PHASES[Version.RELEASE]
         correct_format = Version.PATTERN.match(version)
         assert correct_format, f"Incorrect version string: '{version}'"
         major = int(correct_format.group(2))
         minor = int(correct_format.group(4)) if correct_format.group(4) else 0
         patch = int(correct_format.group(6)) if correct_format.group(6) else 0
-        phase_str = (
-            correct_format.group(8) if correct_format.group(8) else final
-        )
+        phase_str = correct_format.group(8) if correct_format.group(8) else final
         build = int(correct_format.group(9)) if correct_format.group(9) else 0
 
         if phase_str.startswith("{") and phase_str.endswith("}"):
@@ -324,23 +402,24 @@ class Version(Integer):
         return major, minor, patch, phase, build
 
     @staticmethod
-    def __compose(major:int, minor:int, patch:int, phase:int, build:int) -> int:
-        assert major <= 99, major_or_str
-        assert minor <= 9, major_or_str
-        assert patch <= 9, major_or_str
-        assert build <= 1999, major_or_str
+    def __compose(major: int, minor: int, patch: int, phase: int, build: int) -> int:
+        assert major <= 99, major
+        assert minor <= 9, minor
+        assert patch <= 9, patch
+        assert build <= 1999, build
         return (
-                (int(major / 10) << 28)
-                + ((major % 10) << 24)
-                + (minor << 20)
-                + (patch << 16)
-                + (phase << 13)
-                + (int(build / 1000) << 12)
-                + (int(build % 1000 / 100) << 8)
-                + (int(build % 100 / 10) << 4)
-                + ((build % 10) << 0)
-            )
+            (int(major / 10) << 28)
+            + ((major % 10) << 24)
+            + (minor << 20)
+            + (patch << 16)
+            + (phase << 13)
+            + (int(build / 1000) << 12)
+            + (int(build % 1000 / 100) << 8)
+            + (int(build % 100 / 10) << 4)
+            + ((build % 10) << 0)
+        )
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         major_or_str: any = None,
@@ -383,13 +462,16 @@ class Version(Integer):
         super().__init__(version_value, Endian.BIG, IntSize.INT32, signed=False)
 
     def size(self) -> int:
+        """Get the size of the bytes representation"""
         return Integer.SIZES[self.byte_count]
 
-    def from_value(self, description:any):
+    def from_value(self, description: any):
+        """Get a Python basic type to represent this value"""
         self.value = Version.__compose(*Version.__from_string(description))
         return self
 
     def to_value(self) -> any:
+        """restore from a basic python type"""
         major = self.major()
         minor = self.minor()
         patch = self.patch()
@@ -416,6 +498,7 @@ class Version(Integer):
         return version_string
 
     def to_string(self):
+        """Get a string representation"""
         return self.to_value()
 
     def __repr__(self):
@@ -460,4 +543,3 @@ class Version(Integer):
             + 10 * int(self.value >> 4 & 0xF)
             + (self.value >> 0 & 0xF)
         )
-

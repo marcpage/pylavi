@@ -3,11 +3,17 @@
 """
 
 
-import ctypes
-import struct
 import hashlib
 
-from pylavi.data_types import Structure, Version, PString, Integer, IntSize, Array, Bytes
+from pylavi.data_types import (
+    Structure,
+    Version,
+    PString,
+    Integer,
+    IntSize,
+    Array,
+    Bytes,
+)
 
 
 class TypeBDPW(Array):
@@ -40,7 +46,7 @@ class TypeBDPW(Array):
         self.value = [Bytes(byte_count=TypeBDPW.MD5_SIZE) for _ in range(0, md5_count)]
         return super().from_bytes(data, offset)
 
-    def from_value(self, description:any):
+    def from_value(self, description: any):
         self.value = [Bytes(bytes.fromhex(v)) for v in description]
         assert all(len(b.value) == TypeBDPW.MD5_SIZE for b in self.value)
         return self
@@ -52,6 +58,7 @@ class TypeBDPW(Array):
         return f"TypeBDPW({self.to_string()})"
 
 
+# pylint: disable=no-member
 class TypeLVSR(Structure):
     """handles 'LVSR' resource types"""
 
@@ -68,11 +75,13 @@ class TypeLVSR(Structure):
 
     def __init__(self):
         super().__init__(
-            'version', Version(),
-            'flags', Bytes(),
+            "version",
+            Version(),
+            "flags",
+            Bytes(),
         )
 
-    def __get_flag_set(self, flag:int) -> int:
+    def __get_flag_set(self, flag: int) -> int:
         value = Integer()
 
         if flag * value.size() + value.size() > self.flags.size():
@@ -80,12 +89,12 @@ class TypeLVSR(Structure):
 
         return value.from_bytes(self.flags.value, flag * value.size()).value
 
-    def __set_flag_set(self, flag:int, new_value:int):
+    def __set_flag_set(self, flag: int, new_value: int):
         value = Integer(new_value)
 
         if flag * value.size() + value.size() <= self.flags.size():
-            prefix = self.flags.value[:flag * value.size()]
-            suffix = self.flags.value[(flag+1) * value.size():]
+            prefix = self.flags.value[: flag * value.size()]
+            suffix = self.flags.value[(flag + 1) * value.size() :]
             self.flags.value = prefix + value.to_bytes() + suffix
 
     def __flag_value(self, flag: int, mask: int, new_value: bool) -> bool:
@@ -142,13 +151,13 @@ class TypeLVSR(Structure):
         """Was this VI saved with code separate"""
         return self.__flag_value(*TypeLVSR.SEPARATE_CODE, value)
 
+    # pylint: disable=attribute-defined-outside-init
     def from_bytes(self, data: bytes, offset: int = 0):
         """Take raw bytes from the file and interpret them.
         offset - the offset in data to start parsing the bytes
         """
         self.flags = Bytes(byte_count=len(data) - offset - self.version.size())
         return super().from_bytes(data, offset)
-
 
     def __repr__(self) -> str:
         return f"TypeLVSR({self.to_string()})"
@@ -173,10 +182,14 @@ class Typevers(Structure):
         name: bytes = None,
     ):
         super().__init__(
-            'version', version if isinstance(version, Version) else Version(version),
-            'language', Integer(language or Typevers.ENGLISH, byte_count=IntSize.INT16),
-            'text', PString(text or b""),
-            'name', PString(name or b""),
+            "version",
+            version if isinstance(version, Version) else Version(version),
+            "language",
+            Integer(language or Typevers.ENGLISH, byte_count=IntSize.INT16),
+            "text",
+            PString(text or b""),
+            "name",
+            PString(name or b""),
         )
         assert self.language in Typevers.LANGUAGES
 
@@ -202,7 +215,7 @@ class Typevers(Structure):
     def __repr__(self) -> str:
         return f"Typevers({self.to_string()})"
 
-    def from_value(self, description:any):
+    def from_value(self, description: any):
         super().from_value(description)
         assert self.language in Typevers.LANGUAGES
         return self
