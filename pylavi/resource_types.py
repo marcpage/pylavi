@@ -7,7 +7,7 @@ import ctypes
 import struct
 import hashlib
 
-from pylavi.data_types import Structure, Version, PString
+from pylavi.data_types import Structure, Version, PString, Integer, IntSize
 
 
 class TypeBDPW:
@@ -223,17 +223,7 @@ class TypeLVSR:
         return self
 
 
-class Headervers(Structure):
-    """Header for vers resource"""
-
-    _pack_ = 1
-    _fields_ = [
-        ("version", Version),
-        ("language", ctypes.c_short),
-    ]
-
-
-class Typevers:
+class Typevers(Structure):
     """handles 'vers' resource types"""
 
     ENGLISH = 0
@@ -259,38 +249,21 @@ class Typevers:
         text: bytes = None,
         name: bytes = None,
     ):
-        self.version = version if isinstance(version, Version) else Version(version)
-        self.language = language or Typevers.ENGLISH
+        super().__init__(
+            'version', version if isinstance(version, Version) else Version(version),
+            'language', Integer(language or Typevers.ENGLISH, byte_count=IntSize.INT16),
+            'text', PString(text or b""),
+            'name', PString(name or b""),
+        )
         assert self.language in Typevers.LANGUAGES
-        self.text = text or b""
-        PString(self.text)
-        self.name = name or b""
-        PString(self.name)
-
-    def to_bytes(self) -> bytes:
-        """Convert to resource data"""
-        header = Headervers(version=self.version, language=self.language).to_bytes()
-        return header + PString(self.text).to_bytes() + PString(self.name).to_bytes()
 
     def from_bytes(self, data: bytes, offset: int = 0):
         """Take raw bytes from the file and interpret them.
         offset - the offset in data to start parsing the bytes
         """
-        header = Headervers().from_bytes(data, offset)
-        text = PString().from_bytes(data, offset + header.size())
-        name = PString().from_bytes(data, offset + header.size() + text.size())
-        self.version = header.version
-        self.language = header.language
-        self.text = text.string
-        self.name = name.string
+        super().from_bytes(data, offset)
         assert self.language in Typevers.LANGUAGES
         return self
-
-    def size(self) -> int:
-        """Get the number of bytes for this vers resource"""
-        return (
-            Headervers().size() + PString(self.text).size() + PString(self.name).size()
-        )
 
     def to_string(self):
         """Get a string representation of the vers resource information"""

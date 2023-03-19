@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pylavi.file import create_type_list, TypeInfo
+from pylavi.file import TypeList, TypeInfo
 
 def test_type_list():
     type_info_size = TypeInfo().size()
@@ -8,10 +8,10 @@ def test_type_list():
     for test_bytes in TEST_SET:
         assert len(test_bytes)%type_info_size == 0
         info_count = int(len(test_bytes) / type_info_size)
-        type_list = create_type_list(info_count).from_bytes(test_bytes)
-        assert len(type_list.type) == len(TEST_SET[test_bytes])
+        type_list = TypeList(length=info_count).from_bytes(test_bytes)
+        assert len(type_list) == len(TEST_SET[test_bytes])
 
-        for type_info in type_list.type:
+        for type_info in type_list:
             type_code = type_info.resource_type.to_string()
             assert type_code in TEST_SET[test_bytes]
             expected_values = TEST_SET[test_bytes][type_code]
@@ -24,8 +24,8 @@ def test_single_type_info():
     info = TypeInfo().from_bytes(data)
     assert repr(info) == "TypeInfo(TypeInfo{resource_type = ADir, resource_count = 0 (+1), list_offset = 112})"
     assert info.number_of_resources() == 1
-    type_list = create_type_list(1).from_bytes(data)
-    assert repr(type_list) == "TypeList([TypeInfo{resource_type = ADir, resource_count = 0 (+1), list_offset = 112}])"
+    type_list = TypeList(length=1).from_bytes(data)
+    assert repr(type_list) == "TypeList(TypeInfo(TypeInfo{resource_type = ADir, resource_count = 0 (+1), list_offset = 112}))", repr(type_list)
 
 
 TEST_SET = {

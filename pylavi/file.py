@@ -140,7 +140,9 @@ class MetadataHeader(Structure):
         assert (
             self.metadata_header_size == Header().size() + self.size()
         ), f"type info not where it should be {self.metadata_header_size}"
-        assert file_size.value >= (file_header.metadata_offset.value + self.names_offset.value), (
+        print(f"file_header     = {repr(file_header)}")
+        print(f"metadata header = {repr(self)}")
+        assert file_size >= (file_header.metadata_offset.value + self.names_offset.value), (
             f"File too small {file_size} <"
             + f" {file_header.metadata_offset + self.names_offset}"
             + f" file_header.metadata_offset = {file_header.metadata_offset}"
@@ -182,7 +184,7 @@ class TypeInfo(Structure):
         return self.resource_count + 1
 
 
-class TypeCount(Structure):
+class TypeCount(Integer):
     """Header for the list of type lists."""
 
     _pack_ = 1
@@ -191,14 +193,14 @@ class TypeCount(Structure):
     ]
 
     def __init__(self, num_types: int = 0):
-        super().__init__(num_types=num_types - 1)
+        super().__init__(num_types - 1)
 
     def number_of_types(self) -> int:
         """Get the number of types"""
-        return self.num_types + 1
+        return self.value + 1
 
 
-class DataSize(Structure):
+class DataSize(Integer):
     """Header for the resource data block."""
 
     _pack_ = 1
@@ -207,28 +209,17 @@ class DataSize(Structure):
     ]
 
     def __init__(self, byte_count: int = 0):
-        super().__init__(byte_count=byte_count)
+        super().__init__(byte_count)
 
 
-def create_type_list(count: int):
-    """Create a structure for a list Resource types based on the count found in the type map."""
+class TypeList(Array):
+    """Fixed size list of types"""
+    def __init__(self, *elements, length:int=0):
+        assert not elements or all(isinstance(e, TypeInfo) for e in elements)
+        super().__init__(TypeInfo, *elements, data_count=length)
 
-    class TypeList(Structure):
-        """Fixed size list of types"""
-
-        _pack_ = 1
-        _fields_ = [
-            ("type", TypeInfo * count),
-        ]
-
-        def to_string(self):
-            """Convert to string"""
-            return f"[{', '.join(e.to_string() for e in self.type)}]"
-
-        def __repr__(self) -> str:
-            return f"TypeList({self.to_string()})"
-
-    return TypeList()
+    def __repr__(self):
+        return f"TypeList({', '.join(repr(v) for v in self.value)})"
 
 
 class ResourceMetadata(Structure):
@@ -362,7 +353,7 @@ class Resources:
 
     @staticmethod
     def __validate_2nd_file_header(contents: bytes, header: Header) -> int:
-        offset = header.metadata_offset
+        offset = header.metadata_offset.value
         second_header = Header().from_bytes(contents[offset:]).validate(len(contents))
         assert (
             second_header == header
@@ -385,7 +376,7 @@ class Resources:
     def __load_typelist(contents: bytes, offset: int) -> any:
         type_count = TypeCount().from_bytes(contents[offset:])
         offset += type_count.size()
-        return create_type_list(type_count.number_of_types()).from_bytes(
+        return TypeList(length=type_count.number_of_types()).from_bytes(
             contents[offset:]
         )
 
@@ -398,13 +389,13 @@ class Resources:
     ) -> str:
         if resource_info.name_offset != ResourceMetadata.NO_NAME:
             name_offset = (
-                header.metadata_offset
-                + metadata_header.names_offset
-                + resource_info.name_offset
+                header.metadata_offset.value
+                + metadata_header.names_offset.value
+                + resource_info.name_offset.value
             )
             name = PString().from_bytes(contents[name_offset:])
-            assert len(name.string) > 0, f"name_size = {len(name.string)}"
-            return name.string
+            assert len(name.value) > 0, f"name_size = {len(name.value)}"
+            return name.value
 
         return None
 
@@ -413,7 +404,7 @@ class Resources:
         data_offset = header.data_offset + resource_info.data_offset
         data_size = DataSize().from_bytes(contents[data_offset:])
         data_offset += data_size.size()
-        offset_past_data = data_offset + data_size.byte_count
+        offset_past_data = data_offset + data_size.value
         return contents[data_offset:offset_past_data]
 
     @staticmethod
@@ -432,13 +423,13 @@ class Resources:
         resource_types = []
         last_offset = 0
 
-        for entry in data_types.type:
+        for entry in data_types:
             assert entry.list_offset > last_offset, "Unordered type table"
             last_offset = entry.list_offset
             resource_list = ResourceList(length=entry.number_of_resources())
             offset = header.metadata_offset
             offset += Header().size() + MetadataHeader().size()
-            offset += entry.list_offset
+            offset += entry.list_offset.value
             resource_list.from_bytes(contents[offset:])
             resources = [
                 (
@@ -448,7 +439,7 @@ class Resources:
                     ),
                     Resources.__load_resource_data(header, r, contents),
                 )
-                for r in resource_list.resources
+                for r in resource_list
             ]
             resource_types.append((entry.resource_type.to_string(), resources))
 

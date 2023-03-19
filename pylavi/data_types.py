@@ -5,6 +5,7 @@
 
 import struct
 import enum
+from functools import total_ordering
 import re
 
 
@@ -37,6 +38,7 @@ class IntSize(enum.Enum):
     INT64 = 'q'
 
 
+@total_ordering
 class Integer(Description):
     SIZES = {
         IntSize.INT8: 1,
@@ -76,6 +78,15 @@ class Integer(Description):
     def __repr__(self) -> str:
         return f"Integer({self.to_string()}, {self.endian}, signed={self.signed}, {self.byte_count})"
 
+    def __lt__(self, other) -> bool:
+        if isinstance(other, int):
+            return self.value < other
+
+        if isinstance(other, bytes):
+            return self.value < struct.unpack(self.__struct_description(), other)[0]
+
+        return self.value < other.value
+
     def __eq__(self, other) -> bool:
         if isinstance(other, int):
             return self.value == other
@@ -90,6 +101,10 @@ class Integer(Description):
             return self.value + other
 
         return self.value + other.value
+
+    def __hash__(self):
+        return self.value
+
 
 class FourCharCode(Description):
     def __init__(self, value:bytes=None):
@@ -258,7 +273,14 @@ class Array(Description):
     def __repr__(self):
         return f"List({', '.join(repr(v) for v in self.value)})"
 
+    def __len__(self):
+        return self.length()
 
+    def __getitem__(self, item_index):
+        return self.value[item_index]
+
+
+@total_ordering
 class Version(Integer):
     DEVELOPMENT = 1
     ALPHA = 2
