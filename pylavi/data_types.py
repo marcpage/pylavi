@@ -14,7 +14,7 @@ ESCAPE_CHARS = re.compile(b"[^ -[\\]-~]")
 
 
 def unescape_bytes(matchobj) -> bytes:
-    return Integer.to_bytes(int(matchobj.group(0)[2:], 16), IntSize.INT8, signed=False)
+    return Integer(int(matchobj.group(0)[2:], 16), byte_count=IntSize.INT8, signed=False).to_bytes()
 
 def escape_bytes(matchobj) -> bytes:
     return b'\\x' + matchobj.group(0).hex().encode('ascii')
@@ -28,14 +28,12 @@ class Description:
 class Endian(enum.Enum):
     BIG = '>'
     LITTLE = '<'
-    NATIVE = '='
 
 
 class IntSize(enum.Enum):
     INT8 = 'b'
     INT16 = 'h'
     INT32 = 'i'
-    INT64 = 'q'
 
 
 @total_ordering
@@ -44,7 +42,6 @@ class Integer(Description):
         IntSize.INT8: 1,
         IntSize.INT16: 2,
         IntSize.INT32: 4,
-        IntSize.INT64: 8,
     }
     def __init__(self, value:int=None, endian:Endian=Endian.BIG, byte_count:IntSize=IntSize.INT32, signed:bool=False):
         self.value = value
@@ -56,7 +53,7 @@ class Integer(Description):
         return Integer.SIZES[self.byte_count]
 
     def __struct_description(self):
-        return self.endian.value + (self.size if self.signed else self.byte_count.value.upper())
+        return self.endian.value + (self.byte_count.value if self.signed else self.byte_count.value.upper())
 
     def from_bytes(self, data:bytes, offset:int=0):
         self.value = struct.unpack(self.__struct_description(), data[offset:offset + self.size()])[0]
@@ -106,17 +103,21 @@ class Integer(Description):
         return self.value
 
 
-class FourCharCode(Description):
-    def __init__(self, value:bytes=None):
+class Bytes(Description):
+    def __init__(self, value:bytes=None, byte_count:int=0):
         if isinstance(value, str):
             value = value.encode('ascii')
-        assert value is None or len(value) == 4
+
+        elif value is None and byte_count > 0:
+            value = b'\x00'*byte_count
+
         self.value = value
 
     def size(self) -> int:
-        return 4
+        return len(self.value)
 
     def from_bytes(self, data:bytes, offset:int=0):
+        assert self.value is not None, "You must specify byte_count in constructor"
         self.value = data[offset:offset + self.size()]
         assert len(self.value) == self.size()
         return self
@@ -125,7 +126,12 @@ class FourCharCode(Description):
         return self.value
 
     def from_value(self, description:any):
-        self.value = ESCAPED_PATTERN.sub(unescape_bytes, description.encode('ascii'))
+        if description is None:
+            self.value = description
+        else:
+            self.value = ESCAPED_PATTERN.sub(unescape_bytes, description.encode('ascii'))
+
+        return self
 
     def to_value(self) -> any:
         if self.value is None:
@@ -136,25 +142,38 @@ class FourCharCode(Description):
     def to_string(self):
         return self.to_value()
 
+    def __len__(self):
+        return self.size()
+
     def __repr__(self):
-        return f"FourCharCode('{self.to_string()}')"
+        return f"Bytes('{self.to_string()}')"
 
     def __eq__(self, other) -> bool:
         if isinstance(other, str):
             return self.to_string() == other
 
         if isinstance(other, bytes):
-            return self.to_bytes() == other
+            return self.value == other
 
         return self.value == other.value
 
-class PString(Description):
+
+class FourCharCode(Bytes):
+    def __init__(self, value:bytes=None):
+        assert value is None or len(value) == 4
+        super().__init__(value, byte_count=4)
+
+    def __repr__(self):
+        return f"FourCharCode('{self.to_string()}')"
+
+
+class PString(Bytes):
     def __init__(self, value:bytes=None):
         assert value is None or len(value) < 256
-        self.value = value
+        super().__init__(value)
 
     def size(self) -> int:
-        return 1 + len(self.value)
+        return 1 + super().size()
 
     def from_bytes(self, data:bytes, offset:int=0):
         byte_count = Integer(byte_count=IntSize.INT8, signed=False).from_bytes(data, offset)
@@ -166,26 +185,9 @@ class PString(Description):
         prefix = Integer(len(self.value), byte_count=IntSize.INT8, signed=False).to_bytes()
         return prefix + self.value
 
-    def from_value(self, description:any):
-        self.value = ESCAPED_PATTERN.sub(unescape_bytes, description.encode('ascii'))
-
-    def to_value(self) -> any:
-        return ESCAPE_CHARS.sub(escape_bytes, self.value).decode('ascii')
-
-    def to_string(self):
-        return self.to_value()
-
     def __repr__(self):
         return f"PString('{self.to_string()}')"
 
-    def __eq__(self, other) -> bool:
-        if isinstance(other, str):
-            return self.to_string() == other
-
-        if isinstance(other, bytes):
-            return self.value == other
-
-        return self.value == other.value
 
 class Structure(Description):
     def __init__(self, *value):
@@ -239,6 +241,7 @@ class Structure(Description):
 
         return all(self.__dict__[n] == other.__dict__[n] for n in self.__fields)
 
+
 class Array(Description):
     def __init__(self, data_type, *value, data_count=0):
         assert all(isinstance(v, data_type) for v in value)
@@ -253,7 +256,7 @@ class Array(Description):
         return len(self.value)
 
     def set_length(self, data_count):
-        self.value = [data_type() for _ in range(0, data_count)]
+        self.value = [self.data_type() for _ in range(0, data_count)]
         return self
 
     def from_bytes(self, data:bytes, offset:int=0):
@@ -284,6 +287,12 @@ class Array(Description):
 
     def __getitem__(self, item_index):
         return self.value[item_index]
+
+    def __eq__(self, other):
+        if len(self) != len(other):
+            return False
+
+        return all(a == b for a,b in zip(self, other))
 
 
 @total_ordering

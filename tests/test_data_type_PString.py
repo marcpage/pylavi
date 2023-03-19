@@ -9,7 +9,11 @@ def test_strings():
         string = PString(binary)
         assert string.size() == TEST_SET[binary][0], f"{string.size()} {binary}"
         assert string.to_bytes()[1:] == binary, f"{string.to_bytes()[1:]} vs {binary}"
-        assert PString().from_bytes(string.to_bytes()) == string, [PString().from_bytes(string.to_bytes()), string]
+        s = PString().from_bytes(string.to_bytes())
+        assert s == string, [PString().from_bytes(string.to_bytes()), string]
+        description = s.to_value()
+        reconstituted = PString().from_value(description)
+        assert reconstituted == s
 
     assert str(PString(b'\tmore\\')) == '\\x09more\\x5c', [str(PString(b'\tmore\\')), '\\x09more\\x5c']
     assert repr(PString(b'\tmore\\')) == "PString('\\x09more\\x5c')"

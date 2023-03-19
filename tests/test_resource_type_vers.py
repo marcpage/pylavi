@@ -13,7 +13,7 @@ def test_basics():
         assert reconstituted.to_bytes() == binary
         assert vers.version.to_string() == TEST_CASES[binary]['version']
         assert vers.language == TEST_CASES[binary]['language']
-        assert vers.text == TEST_CASES[binary]['text']
+        assert vers.text == TEST_CASES[binary]['text'], [vers.text, TEST_CASES[binary]['text']]
         assert vers.name == TEST_CASES[binary]['name']
         assert vers.size() == len(binary)
 

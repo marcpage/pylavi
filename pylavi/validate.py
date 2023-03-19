@@ -361,7 +361,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
     invalid = False
 
     if save_record:
-        versions.append(save_record.header.version)
+        versions.append(save_record.version)
 
     if not invalid and args.path_length and len(next_path) > args.path_length:
         problems.append(

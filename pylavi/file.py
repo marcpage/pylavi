@@ -121,8 +121,8 @@ class MetadataHeader(Structure):
         """String representation of the header"""
         return (
             "{"
-            + f"unused_8 = {self['unused_8']}, "
-            + f"unused_16 = {self['unused_16']}, "
+            + f"unused_8 = {self.unused_8}, "
+            + f"unused_16 = {self.unused_16}, "
             + f"file_header_size = {self.file_header_size}, "
             + f"metadata_header_size = {self.metadata_header_size}, "
             + f"names_offset = {self.names_offset}"
@@ -247,9 +247,9 @@ class ResourceMetadata(Structure):
         return (
             "{"
             + f"resource_id = {self.resource_id}, "
-            + f"unused_8 = {self['unused_8']}, "
-            + f"unused_16 = {self['unused_16']}, "
-            + f"name_offset = {self['name_offset']}, "
+            + f"unused_8 = {self.unused_8}, "
+            + f"unused_16 = {self.unused_16}, "
+            + f"name_offset = {self.name_offset}, "
             + f"data_offset = {self.data_offset}"
             + "}"
         )
@@ -305,7 +305,7 @@ class Resources:
     def get_ids(self, resource_type: str) -> [int]:
         """Get the id of the resources"""
         return list(
-            r[0] for t in self.__resources if t[0] == resource_type for r in t[1]
+            r[0].value for t in self.__resources if t[0] == resource_type for r in t[1]
         )
 
     def get_names(self, resource_type: str) -> [str]:
@@ -317,7 +317,7 @@ class Resources:
     def get_resources(self, resource_type: str) -> [(int, str, bytes)]:
         """Gets all resources of a given type with their name and id"""
         return list(
-            (r[0], r[1], r[2])
+            (r[0].value, r[1], r[2])
             for t in self.__resources
             if t[0] == resource_type
             for r in t[1]

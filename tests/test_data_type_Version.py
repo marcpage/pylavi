@@ -34,6 +34,10 @@ def test_bytes():
         assert version.patch() == VERSION_BYTES[version_bytes][2]
         assert version.phase() == VERSION_BYTES[version_bytes][3], f"{version_bytes} -> {version.phase()} {VERSION_BYTES[version_bytes]}"
         assert version.build() == VERSION_BYTES[version_bytes][4]
+        assert version.to_bytes() == version_bytes
+        description = version.to_value()
+        reconstituted = Version().from_value(description)
+        assert reconstituted == version
 
 
 def test_fields():

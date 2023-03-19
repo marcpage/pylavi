@@ -8,8 +8,8 @@ def test_basics():
     for binary in TEST_CASES:
         bdpw = TypeBDPW().from_bytes(binary)
         assert bdpw.to_bytes() == binary
-        description = bdpw.to_dict()
-        reconstituted = TypeBDPW().from_dict(description)
+        description = bdpw.to_value()
+        reconstituted = TypeBDPW().from_value(description)
         assert reconstituted.to_bytes() == binary
         assert bdpw.has_password() == TEST_CASES[binary], binary
 
@@ -17,8 +17,10 @@ def test_basics():
     bdpw = TypeBDPW().from_bytes(binary)
     assert bdpw.size() == 48
     assert bdpw.password_matches('password')
-    assert str(bdpw) == "{password_md5=5f4dcc3b5aa765d61d8327deb882cf99, extra=ae527dd8c4b7b48ecacf896fea005f9974d3f8d9a3a021ccf3037822d8b12fb4}"
-    assert repr(bdpw) == "TypeBDPW({password_md5=5f4dcc3b5aa765d61d8327deb882cf99, extra=ae527dd8c4b7b48ecacf896fea005f9974d3f8d9a3a021ccf3037822d8b12fb4})"
+    expected_str = "['5f4dcc3b5aa765d61d8327deb882cf99', 'ae527dd8c4b7b48ecacf896fea005f99', '74d3f8d9a3a021ccf3037822d8b12fb4']"
+    assert str(bdpw) == expected_str, [str(bdpw), expected_str]
+    expected_repr = "TypeBDPW(['5f4dcc3b5aa765d61d8327deb882cf99', 'ae527dd8c4b7b48ecacf896fea005f99', '74d3f8d9a3a021ccf3037822d8b12fb4'])"
+    assert repr(bdpw) == expected_repr, [repr(bdpw), expected_repr]
 
 
 TEST_CASES = {
