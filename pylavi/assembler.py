@@ -53,6 +53,7 @@ def main(args=None):
             )
 
     if args.output_file:
+        print(output)
         with open(args.output_file, "w", encoding="utf-8") as output_file:
             json.dump(output, output_file, indent=2, sort_keys=True)
     else:

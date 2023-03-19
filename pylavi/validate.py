@@ -342,6 +342,7 @@ def validate_version(args, versions, problems, next_path):
             break
 
 
+# pylint: disable=no-member
 def validate(args, resources: Resources, problems: list, next_path: str):
     """Validate that the given resources file is valid"""
     version_resources = resources.get_resources("vers")
@@ -361,7 +362,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
     invalid = False
 
     if save_record:
-        versions.append(save_record.header.version)
+        versions.append(save_record.version)
 
     if not invalid and args.path_length and len(next_path) > args.path_length:
         problems.append(

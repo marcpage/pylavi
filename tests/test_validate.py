@@ -166,7 +166,7 @@ EXPECTED_FILES = {
     'tests/test_assembler.py',
     'tests/test_data_type_PString.py',
     'tests/test_data_type_Version.py',
-    'tests/test_file_FourCharCode.py',
+    'tests/test_data_type_FourCharCode.py',
     'tests/test_file_Header.py',
     'tests/test_file_MetadataHeader.py',
     'tests/test_file_ResourceMetadata.py',

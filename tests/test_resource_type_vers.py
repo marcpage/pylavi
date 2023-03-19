@@ -8,18 +8,18 @@ def test_basics():
     for binary in TEST_CASES:
         vers = Typevers().from_bytes(binary)
         assert vers.to_bytes() == binary
-        description = vers.to_dict()
-        reconstituted = Typevers().from_dict(description)
+        description = vers.to_value()
+        reconstituted = Typevers().from_value(description)
         assert reconstituted.to_bytes() == binary
         assert vers.version.to_string() == TEST_CASES[binary]['version']
         assert vers.language == TEST_CASES[binary]['language']
-        assert vers.text == TEST_CASES[binary]['text']
+        assert vers.text == TEST_CASES[binary]['text'], [vers.text, TEST_CASES[binary]['text']]
         assert vers.name == TEST_CASES[binary]['name']
         assert vers.size() == len(binary)
 
     vers = Typevers().from_bytes(b'\x07\x00`h\x00\x00\x067.0b68\x1aOldest compatible LabVIEW.')
-    assert repr(vers) == "Typevers({version=7b68, language=0, text=b'7.0b68', name=b'Oldest compatible LabVIEW.'})"
-    assert str(vers) == "{version=7b68, language=0, text=b'7.0b68', name=b'Oldest compatible LabVIEW.'}"
+    assert repr(vers) == "Typevers({version=7b68, language=0, text='7.0b68', name='Oldest compatible LabVIEW.'})", repr(vers)
+    assert str(vers) == "{version=7b68, language=0, text='7.0b68', name='Oldest compatible LabVIEW.'}", str(vers)
     v1 = Typevers().from_bytes(b"\x12\x00`'\x00\x00\x0712.0b27\x00")
     assert v1 < "13"
     assert not v1 < "12d0"

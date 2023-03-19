@@ -8,11 +8,11 @@ def test_basics():
     for binary in TEST_CASES:
         lvsr = TypeLVSR().from_bytes(binary)
         assert lvsr.to_bytes() == binary
-        description = lvsr.to_dict()
-        reconstituted = TypeLVSR().from_dict(description)
+        description = lvsr.to_value()
+        reconstituted = TypeLVSR().from_value(description)
         assert reconstituted.to_bytes() == binary
         assert lvsr.size() == len(binary)
-        assert lvsr.header.version.to_string() == TEST_CASES[binary]['version'], lvsr.header.version.to_string()
+        assert lvsr.version.to_string() == TEST_CASES[binary]['version'], lvsr.version.to_string()
         assert lvsr.saved_for_previous() == TEST_CASES[binary]['previous']
         assert lvsr.separate_code() == TEST_CASES[binary]['no_code']
         assert lvsr.has_breakpoints() == TEST_CASES[binary].get('has_breakpoints', False), binary
@@ -23,7 +23,7 @@ def test_basics():
         assert lvsr.suspend_on_run() == TEST_CASES[binary].get('suspend_on_run', False), binary
         assert lvsr.debuggable() == TEST_CASES[binary].get('debuggable', True), binary
         assert lvsr.separate_code() == TEST_CASES[binary]['no_code']
-        assert len(lvsr.extra) == TEST_CASES[binary]['extra_size'], len(lvsr.extra)
+        assert len(lvsr.flags) == TEST_CASES[binary]['extra_size'] + 64, len(lvsr.flags)
         lvsr.separate_code(True)
         assert lvsr.separate_code()
         lvsr.separate_code(False)
@@ -36,8 +36,10 @@ def test_basics():
 
     binary = b"\x14\x00@p\x00\x00\x00\x00 \x00\x00\x00\x00\x00\x00\x04\x00\x03\x00<\x00\x00\x00\x1f@\x80\x02\x10\x00\x00\x00\x01\x00\x01\x00\x02\xff\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00fE\xa4n\xec\xad'D\xa1\x08\xe8\x8e\xdd2l2\x00\x00\x00\x0c\x00\x00\x00\x10\x00\x00\x00\x00\x16\xd7\xbc\xa0\x18\xa84K\xac\x90\xb5~\xd7\xe0:\xe6\xd4\x1d\x8c\xd9\x8f\x00\xb2\x04\xe9\x80\t\x98\xec\xf8B~\x00\x00\x10\x00\x00\x00\x00\x00\x01\xc5h-1\xad\xa1H\xab\xb5}jH\r\xfaM\x01"
     lvsr = TypeLVSR().from_bytes(binary)
-    assert str(lvsr) == '{version=14a70, flags=0b0,0b100000000000000000000000000000,0b100,0b110000000000111100,0b11111,0b1000000100000000000001000010000,0b1,0b10000000000000010,0b11111111111111111111111111111111,0b0,0b0,0b0,0b1100110010001011010010001101110,0b11101100101011010010011101000100,0b10100001000010001110100010001110,0b11011101001100100110110000110010, extra=0000000c000000100000000016d7bca018a8344bac90b57ed7e03ae6d41d8cd98f00b204e9800998ecf8427e000010000000000001c5682d31ada148abb57d6a480dfa4d01}'
-    assert repr(lvsr) == 'TypeLVSR({version=14a70, flags=0b0,0b100000000000000000000000000000,0b100,0b110000000000111100,0b11111,0b1000000100000000000001000010000,0b1,0b10000000000000010,0b11111111111111111111111111111111,0b0,0b0,0b0,0b1100110010001011010010001101110,0b11101100101011010010011101000100,0b10100001000010001110100010001110,0b11011101001100100110110000110010, extra=0000000c000000100000000016d7bca018a8344bac90b57ed7e03ae6d41d8cd98f00b204e9800998ecf8427e000010000000000001c5682d31ada148abb57d6a480dfa4d01})'
+    expected_str = '{\'version\': \'14a70\', \'flags\': "\\\\x00\\\\x00\\\\x00\\\\x00 \\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x04\\\\x00\\\\x03\\\\x00<\\\\x00\\\\x00\\\\x00\\\\x1f@\\\\x80\\\\x02\\\\x10\\\\x00\\\\x00\\\\x00\\\\x01\\\\x00\\\\x01\\\\x00\\\\x02\\\\xff\\\\xff\\\\xff\\\\xff\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00fE\\\\xa4n\\\\xec\\\\xad\'D\\\\xa1\\\\x08\\\\xe8\\\\x8e\\\\xdd2l2\\\\x00\\\\x00\\\\x00\\\\x0c\\\\x00\\\\x00\\\\x00\\\\x10\\\\x00\\\\x00\\\\x00\\\\x00\\\\x16\\\\xd7\\\\xbc\\\\xa0\\\\x18\\\\xa84K\\\\xac\\\\x90\\\\xb5~\\\\xd7\\\\xe0:\\\\xe6\\\\xd4\\\\x1d\\\\x8c\\\\xd9\\\\x8f\\\\x00\\\\xb2\\\\x04\\\\xe9\\\\x80\\\\x09\\\\x98\\\\xec\\\\xf8B~\\\\x00\\\\x00\\\\x10\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x01\\\\xc5h-1\\\\xad\\\\xa1H\\\\xab\\\\xb5}jH\\\\x0d\\\\xfaM\\\\x01"}'
+    assert str(lvsr) == expected_str, [str(lvsr), expected_str]
+    expected_repr = 'TypeLVSR({\'version\': \'14a70\', \'flags\': "\\\\x00\\\\x00\\\\x00\\\\x00 \\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x04\\\\x00\\\\x03\\\\x00<\\\\x00\\\\x00\\\\x00\\\\x1f@\\\\x80\\\\x02\\\\x10\\\\x00\\\\x00\\\\x00\\\\x01\\\\x00\\\\x01\\\\x00\\\\x02\\\\xff\\\\xff\\\\xff\\\\xff\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00fE\\\\xa4n\\\\xec\\\\xad\'D\\\\xa1\\\\x08\\\\xe8\\\\x8e\\\\xdd2l2\\\\x00\\\\x00\\\\x00\\\\x0c\\\\x00\\\\x00\\\\x00\\\\x10\\\\x00\\\\x00\\\\x00\\\\x00\\\\x16\\\\xd7\\\\xbc\\\\xa0\\\\x18\\\\xa84K\\\\xac\\\\x90\\\\xb5~\\\\xd7\\\\xe0:\\\\xe6\\\\xd4\\\\x1d\\\\x8c\\\\xd9\\\\x8f\\\\x00\\\\xb2\\\\x04\\\\xe9\\\\x80\\\\x09\\\\x98\\\\xec\\\\xf8B~\\\\x00\\\\x00\\\\x10\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x01\\\\xc5h-1\\\\xad\\\\xa1H\\\\xab\\\\xb5}jH\\\\x0d\\\\xfaM\\\\x01"})'
+    assert repr(lvsr) == expected_repr, [repr(lvsr), expected_repr]
 
 
 TEST_CASES = {

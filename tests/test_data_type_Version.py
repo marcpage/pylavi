@@ -13,7 +13,7 @@ def test_strings():
         assert version.phase() == VERSION_STRINGS[version_string][3], f"{version_string} -> {version.phase()} {VERSION_STRINGS[version_string]}"
         assert version.build() == VERSION_STRINGS[version_string][4]
         assert str(version) == version_string, f"{version_string} -> {str(version)}"
-        assert repr(version) == f"Version('{version}')"
+        assert repr(version) == f"Version('{version}')", [repr(version), f"Version('{version}')"]
 
 
 def test_ints():
@@ -34,6 +34,10 @@ def test_bytes():
         assert version.patch() == VERSION_BYTES[version_bytes][2]
         assert version.phase() == VERSION_BYTES[version_bytes][3], f"{version_bytes} -> {version.phase()} {VERSION_BYTES[version_bytes]}"
         assert version.build() == VERSION_BYTES[version_bytes][4]
+        assert version.to_bytes() == version_bytes
+        description = version.to_value()
+        reconstituted = Version().from_value(description)
+        assert reconstituted == version
 
 
 def test_fields():
