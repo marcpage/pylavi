@@ -1761,7 +1761,9 @@ def test_MetadataHeader():
         assert header.file_header_size == TEST_SETS[header_bytes]['file_header_size']
         assert header.metadata_header_size == TEST_SETS[header_bytes]['metadata_header_size']
         assert header.names_offset == TEST_SETS[header_bytes]['names_offset']
-        header.validate(Header(), header.names_offset)
+        dummy_header = Header()
+        dummy_header.metadata_offset.value = 0
+        header.validate(dummy_header, header.names_offset)
         expected_repr = f"MetadataHeader({{unused_8 = {header.unused_8}, unused_16 = {header.unused_16}, file_header_size = {header.file_header_size}, metadata_header_size = {header.metadata_header_size}, names_offset = {header.names_offset}}})"
         assert repr(header) == expected_repr
 

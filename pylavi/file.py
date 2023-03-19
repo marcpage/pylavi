@@ -140,7 +140,7 @@ class MetadataHeader(Structure):
         assert (
             self.metadata_header_size == Header().size() + self.size()
         ), f"type info not where it should be {self.metadata_header_size}"
-        assert file_size >= (file_header.metadata_offset + self.names_offset), (
+        assert file_size.value >= (file_header.metadata_offset.value + self.names_offset.value), (
             f"File too small {file_size} <"
             + f" {file_header.metadata_offset + self.names_offset}"
             + f" file_header.metadata_offset = {file_header.metadata_offset}"
@@ -238,24 +238,22 @@ class ResourceMetadata(Structure):
 
     _pack_ = 1
     _fields_ = [
-        ("resource_id", ctypes.c_uint),
-        ("name_offset", ctypes.c_uint),
-        ("unused_8", ctypes.c_uint),
-        ("data_offset", ctypes.c_uint),
-        ("unused_16", ctypes.c_uint),
     ]
 
-    def __init__(self, **kwargs):
-        kwargs["unused_8"] = kwargs.get("unused_8", 0)
-        kwargs["unused_16"] = kwargs.get("unused_16", 0)
-        kwargs["name_offset"] = kwargs.get("name_offset", ResourceMetadata.NO_NAME)
-        assert (
-            "name_offset" not in kwargs
-            or kwargs["name_offset"] % 4 == 0
-            or kwargs["name_offset"] == ResourceMetadata.NO_NAME
+    def __init__(self):
+        super().__init__(
+            "resource_id", Integer(),
+            "name_offset", Integer(ResourceMetadata.NO_NAME),
+            "unused_8", Integer(),
+            "data_offset", Integer(),
+            "unused_16", Integer(),
         )
-        assert "data_offset" not in kwargs or kwargs["data_offset"] % 4 == 0
-        super().__init__(**kwargs)
+        assert (
+            self.name_offset.value is None
+            or self.name_offset.value % 4 == 0
+            or self.name_offset.value == ResourceMetadata.NO_NAME
+        )
+        assert self.data_offset.value is None or self.data_offset.value%4 == 0
 
     def to_string(self):
         """Convert to a string"""

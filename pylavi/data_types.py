@@ -205,7 +205,6 @@ class Structure(Description):
         return f"Structure({', '.join(n+'='+repr(self.__dict__[n]) for n in self.__fields)})"
 
     def __getitem__(self, key):
-        raise SyntaxError()
         for name in self.__fields:
             if name == key:
                 return self.__dict__[name]
