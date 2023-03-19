@@ -18,13 +18,13 @@ class Header(Structure):
         "LMNU",  # menu
         "LVRS",  # menu
         "LVSB",  # lsb
-        "\0\0\0\0",  # menu
+        "\\x00\\x00\\x00\\x00",  # menu
         "iUWl",  # LabWindows/CVI user interface resource file .uir
     ]
     FILE_CREATORS = [
         "LBVW",  # usual
         "WLin",  # LabWindows/CVI user interface resource file .uir
-        "\0\0\0\0",  # older .uir and .mnu files
+        "\\x00\\x00\\x00\\x00",  # older .uir and .mnu files
     ]
     VERSION = 3
     SIGNATURE = FourCharCode().from_bytes(b"RSRC")
@@ -49,10 +49,10 @@ class Header(Structure):
         """String representation of the header"""
         return (
             "{"
-            + f"file_type={self['file_type'].to_string()}, "
-            + f"file_creator={self['file_creator'].to_string()}, "
-            + f"metadata_offset={self['metadata_offset']}, metadata_size={self['metadata_size']}, "
-            + f"data_offset={self['data_offset']}, data_size={self['data_size']}"
+            + f"file_type={self.file_type.to_string()}, "
+            + f"file_creator={self.file_creator.to_string()}, "
+            + f"metadata_offset={self.metadata_offset}, metadata_size={self.metadata_size}, "
+            + f"data_offset={self.data_offset}, data_size={self.data_size}"
             + "}"
         )
 
@@ -62,43 +62,43 @@ class Header(Structure):
     def validate(self, file_size: int = None):
         """ensured the header data makes sense"""
         assert (
-            self['file_format'] == Header.SIGNATURE
-        ), f"Invalid Signature {self['file_format']}"
-        assert self['corruption_check'] == b"\r\n", f"Corrupt {self['corruption_check']}"
-        assert self['format_version'] == Header.VERSION, f"Version {self['format_version']}"
+            self.file_format == Header.SIGNATURE
+        ), f"Invalid Signature {self.file_format}"
+        assert self.corruption_check == b"\r\n", f"Corrupt {self.corruption_check}"
+        assert self.format_version == Header.VERSION, f"Version {self.format_version}"
         assert (
-            self['file_type'].to_value() in Header.FILE_TYPES
-        ), f"Type {[self['file_type']]}"
+            self.file_type.to_value() in Header.FILE_TYPES
+        ), f"Type {[self.file_type]}"
         assert (
-            self['file_creator'].to_value() in Header.FILE_CREATORS
-        ), f"Creator {[self['file_creator']]}"
+            self.file_creator.to_value() in Header.FILE_CREATORS
+        ), f"Creator {[self.file_creator]}"
         assert (
-            self.size() == self['data_offset']
-        ), f"post-header gap {self['data_offset'] - self.size()}"
+            self.size() == self.data_offset
+        ), f"post-header gap {self.data_offset - self.size()}"
         assert (
-            self['data_offset'] + self['data_size'] == self['metadata_offset']
-        ), f"post-data gap {self['metadata_offset'] - (self['data_offset'] + self['data_size'])}"
-        assert self['data_size'].value % 4 == 0
+            self.data_offset + self.data_size == self.metadata_offset
+        ), f"post-data gap {self.metadata_offset - (self.data_offset + self.data_size)}"
+        assert self.data_size.value % 4 == 0
         assert (
-            file_size is None or file_size >= self['metadata_offset'] + self['metadata_size']
+            file_size is None or file_size >= self.metadata_offset + self.metadata_size
         ), (
             f"file_size={file_size} expected="
-            + f"{self['metadata_offset'] + self['metadata_size']}\n"
-            + f"\t metadata offset = {self['metadata_offset']}\n"
-            + f"\t metadata size = {self['metadata_size']}"
+            + f"{self.metadata_offset + self.metadata_size}\n"
+            + f"\t metadata offset = {self.metadata_offset}\n"
+            + f"\t metadata size = {self.metadata_size}"
         )
         minimum_metadata_size = (
             Header().size()
             + MetadataHeader().size()
-            + TypeCount().size()
+            + Integer().size()
             + TypeInfo().size()
         )
         assert (
-            self['metadata_size'] >= minimum_metadata_size
-        ), f"metadata size too small {self['metadata_size']}"
-        assert self['metadata_offset'] == (self['data_offset'] + self['data_size']), (
-            f"metadata should be right after data: metadata = {self['metadata_offset']}"
-            + f" data end = {self['data_offset'] + self['data_size']}"
+            self.metadata_size.value >= minimum_metadata_size
+        ), f"metadata size too small {self.metadata_size}"
+        assert self.metadata_offset == (self.data_offset + self.data_size), (
+            f"metadata should be right after data: metadata = {self.metadata_offset}"
+            + f" data end = {self.data_offset + self.data_size}"
         )
         return self
 
@@ -115,7 +115,7 @@ class MetadataHeader(Structure):
             "metadata_header_size", Integer(),
             "names_offset", Integer(),
         )
-        self['metadata_header_size'].value = header_size + self.size()
+        self.metadata_header_size.value = header_size + self.size()
 
     def to_string(self):
         """String representation of the header"""
@@ -152,13 +152,6 @@ class MetadataHeader(Structure):
 class TypeInfo(Structure):
     """Structure for the list of resource types."""
 
-    _pack_ = 1
-    _fields_ = [
-        ("resource_type", FourCharCode),
-        ("resource_count", ctypes.c_uint),
-        ("list_offset", ctypes.c_uint),
-    ]
-
     def __init__(
         self,
         resource_type: str = "\0\0\0\0",
@@ -166,9 +159,9 @@ class TypeInfo(Structure):
         list_offset: int = 0,
     ):
         super().__init__(
-            resource_type=FourCharCode(resource_type),
-            resource_count=(resource_count - 1),
-            list_offset=list_offset,
+            "resource_type", FourCharCode(resource_type),
+            "resource_count", Integer(resource_count - 1),
+            "list_offset", Integer(list_offset),
         )
 
     def to_string(self):
@@ -272,7 +265,7 @@ class ResourceMetadata(Structure):
             + f"unused_8 = {self['unused_8']}, "
             + f"unused_16 = {self['unused_16']}, "
             + f"name_offset = {self['name_offset']}, "
-            + f"data_offset = {self['data_offset']}"
+            + f"data_offset = {self.data_offset}"
             + "}"
         )
 
@@ -322,8 +315,8 @@ class Resources:
     def __init__(
         self, file_type: str = None, file_creator: str = None, description: list = None
     ):
-        self['file_type'] = file_type
-        self['file_creator'] = file_creator
+        self.file_type = file_type
+        self.file_creator = file_creator
         self.__resources = description
 
     def types(self) -> [str]:

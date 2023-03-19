@@ -113,6 +113,9 @@ class FourCharCode(Description):
         self.value = ESCAPED_PATTERN.sub(unescape_bytes, description.encode('ascii'))
 
     def to_value(self) -> any:
+        if self.value is None:
+            return None
+
         return ESCAPE_CHARS.sub(escape_bytes, self.value).decode('ascii')
 
     def to_string(self):
@@ -165,47 +168,56 @@ class PString(Description):
 
 class Structure(Description):
     def __init__(self, *value):
-        assert all(isinstance(n, str) for n in value[0::2])
+        self.__fields = [n for n in value[0::2]]
+        assert all(isinstance(n, str) for n in self.__fields)
         assert all(isinstance(v, Description) for v in value[1::2])
-        self.value = value
+        self.__dict__.update({n:v for n, v in zip(self.__fields, value[1::2])})
 
     def size(self):
-        return sum(v.size() for v in self.value[1::2])
+        return sum(self.__dict__[n].size() for n in self.__fields)
 
     def from_bytes(self, data:bytes, offset:int=0):
-        for value in self.value[1::2]:
-            value.from_bytes(data, offset)
-            offset += value.size()
+        for name in self.__fields:
+            self.__dict__[name].from_bytes(data, offset)
+            offset += self.__dict__[name].size()
 
         return self
 
     def to_bytes(self) -> bytes:
-        return b''.join(v.to_bytes() for v in self.value[1::2])
+        return b''.join(self.__dict__[n].to_bytes() for n in self.__fields)
 
     def from_value(self, description:any):
-        assert set(description.keys()) <= set(n for n in self.value[0::2])
+        assert set(description.keys()) <= set(self.__fields)
 
-        for name, value in zip(self.value[0::2], self.value[1::2]):
+        for name in self.__fields:
             if name in description:
-                value.from_value(description[name])
+                self.__dict__[name].from_value(description[name])
 
         return self
 
     def to_value(self) -> any:
-        return {n:v.to_value() for n, v in zip(self.value[0::2], self.value[1::2])}
+        return {n:self.__dict__[n].to_value() for n in self.__fields}
 
     def to_string(self):
         return str(self.to_value())
 
     def __repr__(self):
-        return f"Structure({', '.join(n+'='+repr(v) for n, v in zip(self.value[0::2], self.value[1::2]))})"
+        return f"Structure({', '.join(n+'='+repr(self.__dict__[n]) for n in self.__fields)})"
 
     def __getitem__(self, key):
-        for name, value in zip(self.value[0::2], self.value[1::2]):
+        raise SyntaxError()
+        for name in self.__fields:
             if name == key:
-                return value
+                return self.__dict__[name]
 
         return None
+
+    def __eq__(self, other):
+
+        if not isinstance(other, Structure) or self.__fields != other.__fields:
+            return False
+
+        return all(self.__dict__[n] == other.__dict__[n] for n in self.__fields)
 
 class Array(Description):
     def __init__(self, data_type, *value, data_count=0):
