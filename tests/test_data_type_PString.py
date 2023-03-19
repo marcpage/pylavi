@@ -8,11 +8,11 @@ def test_strings():
     for binary in TEST_SET:
         string = PString(binary)
         assert string.size() == TEST_SET[binary][0], f"{string.size()} {binary}"
-        assert string.to_bytes()[1:] == binary
-        assert PString().from_bytes(string.to_bytes()) == string
-        assert str(string) == str(binary)
-        assert repr(string) == f"PString({str(binary)})"
+        assert string.to_bytes()[1:] == binary, f"{string.to_bytes()[1:]} vs {binary}"
+        assert PString().from_bytes(string.to_bytes()) == string, [PString().from_bytes(string.to_bytes()), string]
 
+    assert str(PString(b'\tmore\\')) == '\\x09more\\x5c', [str(PString(b'\tmore\\')), '\\x09more\\x5c']
+    assert repr(PString(b'\tmore\\')) == "PString('\\x09more\\x5c')"
     try:
         PString(b'01234567890123456789012345678901234567890123456789'
         +b'01234567890123456789012345678901234567890123456789'

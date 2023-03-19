@@ -81,15 +81,15 @@ TEST_SETS = {
 def test_Header():
     for header_index, header_bytes in enumerate(TEST_SETS):
         header = Header().from_bytes(header_bytes)
-        assert header.file_type == TEST_SETS[header_bytes]['file_type']
-        assert header.file_creator == TEST_SETS[header_bytes]['file_creator']
-        assert header.metadata_offset == TEST_SETS[header_bytes]['metadata_offset']
-        assert header.metadata_size == TEST_SETS[header_bytes]['metadata_size']
-        assert header.data_offset == TEST_SETS[header_bytes]['data_offset'], f"{header.data_offset} != {TEST_SETS[header_bytes]['data_offset']}"
-        assert header.data_size == TEST_SETS[header_bytes]['data_size'], f"{header.data_size} != {TEST_SETS[header_bytes]['data_size']}"
-        expected_repr = f"Header({{file_type={header.file_type.to_string()}, file_creator={header.file_creator.to_string()}, metadata_offset={header.metadata_offset}, metadata_size={header.metadata_size}, data_offset={header.data_offset}, data_size={header.data_size}}})"
+        assert header['file_type'] == TEST_SETS[header_bytes]['file_type']
+        assert header['file_creator'] == TEST_SETS[header_bytes]['file_creator']
+        assert header['metadata_offset'] == TEST_SETS[header_bytes]['metadata_offset']
+        assert header['metadata_size'] == TEST_SETS[header_bytes]['metadata_size']
+        assert header['data_offset'] == TEST_SETS[header_bytes]['data_offset'], f"{header['data_offset']} != {TEST_SETS[header_bytes]['data_offset']}"
+        assert header['data_size'] == TEST_SETS[header_bytes]['data_size'], f"{header['data_size']} != {TEST_SETS[header_bytes]['data_size']}"
+        expected_repr = f"Header({{file_type={header['file_type'].to_string()}, file_creator={header['file_creator'].to_string()}, metadata_offset={header['metadata_offset']}, metadata_size={header['metadata_size']}, data_offset={header['data_offset']}, data_size={header['data_size']}}})"
         assert repr(header) == expected_repr, f"repr\n{repr(header)}\nvs\n{expected_repr}"
-        header.validate(header.metadata_offset + header.metadata_size)
+        header.validate(header['metadata_offset'] + header['metadata_size'])
         assert header == Header().from_bytes(header_bytes)
         assert header != 5
 

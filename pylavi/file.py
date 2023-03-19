@@ -5,7 +5,7 @@
 
 import ctypes
 
-from pylavi.data_types import Structure, FourCharCode, PString
+from pylavi.data_types import Structure, FourCharCode, PString, Integer, IntSize
 
 
 class Header(Structure):
@@ -30,94 +30,62 @@ class Header(Structure):
     SIGNATURE = FourCharCode().from_bytes(b"RSRC")
     CORRUPTION_CHECK = b"\r\n"
 
-    _pack_ = 1
-    _fields_ = [
-        ("file_format", FourCharCode),
-        ("corruption_check", ctypes.c_char * 2),
-        ("format_version", ctypes.c_short),
-        ("file_type", FourCharCode),
-        ("file_creator", FourCharCode),
-        ("metadata_offset", ctypes.c_uint),
-        ("metadata_size", ctypes.c_uint),
-        ("data_offset", ctypes.c_uint),
-        ("data_size", ctypes.c_uint),
-    ]
-
-    def __init__(self, **kwargs):
-        assert kwargs.get("file_type", None) is None or isinstance(
-            kwargs["file_type"], str
+    def __init__(self, file_type:str=None, file_creator:str=None):
+        file_type = file_type or Header.FILE_TYPES[0]
+        file_creator = file_creator or Header.FILE_CREATORS[0]
+        super().__init__(
+            'file_format', FourCharCode(),
+            'corruption_check', Integer(byte_count=IntSize.INT16),
+            "format_version", Integer(byte_count=IntSize.INT16),
+            "file_type", FourCharCode(file_type),
+            "file_creator", FourCharCode(file_creator),
+            "metadata_offset", Integer(),
+            "metadata_size", Integer(),
+            "data_offset", Integer(),
+            "data_size", Integer(),
         )
-        assert kwargs.get("file_creator", None) is None or isinstance(
-            kwargs["file_creator"], str
-        )
-        kwargs["file_format"] = kwargs.get("file_format", Header.SIGNATURE)
-        kwargs["corruption_check"] = kwargs.get(
-            "corruption_check", Header.CORRUPTION_CHECK
-        )
-        kwargs["format_version"] = kwargs.get("format_version", Header.VERSION)
-        kwargs["file_type"] = FourCharCode(
-            kwargs.get("file_type", Header.FILE_TYPES[0])
-        )
-        kwargs["file_creator"] = FourCharCode(
-            kwargs.get("file_creator", Header.FILE_CREATORS[0])
-        )
-        kwargs["data_offset"] = kwargs.get("data_offset", self.size())
-        super().__init__(**kwargs)
 
     def to_string(self):
         """String representation of the header"""
         return (
             "{"
-            + f"file_type={self.file_type.to_string()}, "
-            + f"file_creator={self.file_creator.to_string()}, "
-            + f"metadata_offset={self.metadata_offset}, metadata_size={self.metadata_size}, "
-            + f"data_offset={self.data_offset}, data_size={self.data_size}"
+            + f"file_type={self['file_type'].to_string()}, "
+            + f"file_creator={self['file_creator'].to_string()}, "
+            + f"metadata_offset={self['metadata_offset']}, metadata_size={self['metadata_size']}, "
+            + f"data_offset={self['data_offset']}, data_size={self['data_size']}"
             + "}"
         )
 
     def __repr__(self) -> str:
         return f"Header({self.to_string()})"
 
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, Header):
-            return False
-
-        return (
-            self.file_type == other.file_type
-            and self.file_creator == other.file_creator
-            and self.metadata_offset == other.metadata_offset
-            and self.metadata_size == other.metadata_size
-            and self.data_offset == other.data_offset
-            and self.data_size == other.data_size
-        )
-
     def validate(self, file_size: int = None):
         """ensured the header data makes sense"""
         assert (
-            self.file_format == Header.SIGNATURE
-        ), f"Invalid Signature {self.file_format}"
-        assert self.corruption_check == b"\r\n", f"Corrupt {self.corruption_check}"
-        assert self.format_version == Header.VERSION, f"Version {self.format_version}"
+            self['file_format'] == Header.SIGNATURE
+        ), f"Invalid Signature {self['file_format']}"
+        assert self['corruption_check'] == b"\r\n", f"Corrupt {self['corruption_check']}"
+        assert self['format_version'] == Header.VERSION, f"Version {self['format_version']}"
         assert (
-            bytes(self.file_type).decode("ascii") in Header.FILE_TYPES
-        ), f"Type {[self.file_type]}"
+            self['file_type'].to_value() in Header.FILE_TYPES
+        ), f"Type {[self['file_type']]}"
         assert (
-            bytes(self.file_creator).decode("ascii") in Header.FILE_CREATORS
-        ), f"Creator {[self.file_creator]}"
+            self['file_creator'].to_value() in Header.FILE_CREATORS
+        ), f"Creator {[self['file_creator']]}"
         assert (
-            self.size() == self.data_offset
-        ), f"post-header gap {self.data_offset - self.size()}"
+            self.size() == self['data_offset']
+        ), f"post-header gap {self['data_offset'] - self.size()}"
         assert (
-            self.data_offset + self.data_size == self.metadata_offset
-        ), f"post-data gap {self.metadata_offset - (self.data_offset + self.data_size)}"
-        assert self.data_size % 4 == 0
+            self['data_offset'] + self['data_size'] == self['metadata_offset']
+        ), f"post-data gap {self['metadata_offset'] - (self['data_offset'] + self['data_size'])}"
+        assert self['data_size'].value % 4 == 0
         assert (
-            file_size is None or file_size >= self.metadata_offset + self.metadata_size
+            file_size is None or file_size >= self['metadata_offset'] + self['metadata_size']
         ), (
             f"file_size={file_size} expected="
-            + f"{self.metadata_offset + self.metadata_size}\n"
-            + f"\t metadata offset = {self.metadata_offset}\n"
-            + f"\t metadata size = {self.metadata_size}"
+            + f"{self['metadata_offset'] + self['metadata_size']}\n"
+            + f"\t metadata offset = {self['metadata_offset']}\n"
+            + f"\t metadata size = {self['metadata_size']}"
         )
         minimum_metadata_size = (
             Header().size()
@@ -126,11 +94,11 @@ class Header(Structure):
             + TypeInfo().size()
         )
         assert (
-            self.metadata_size >= minimum_metadata_size
-        ), f"metadata size too small {self.metadata_size}"
-        assert self.metadata_offset == (self.data_offset + self.data_size), (
-            f"metadata should be right after data: metadata = {self.metadata_offset}"
-            + f" data end = {self.data_offset + self.data_size}"
+            self['metadata_size'] >= minimum_metadata_size
+        ), f"metadata size too small {self['metadata_size']}"
+        assert self['metadata_offset'] == (self['data_offset'] + self['data_size']), (
+            f"metadata should be right after data: metadata = {self['metadata_offset']}"
+            + f" data end = {self['data_offset'] + self['data_size']}"
         )
         return self
 
@@ -138,30 +106,23 @@ class Header(Structure):
 class MetadataHeader(Structure):
     """header for the metadata section"""
 
-    _pack_ = 1
-    _fields_ = [
-        ("unused_8", ctypes.c_uint),
-        ("unused_16", ctypes.c_uint),
-        ("file_header_size", ctypes.c_uint),
-        ("metadata_header_size", ctypes.c_uint),
-        ("names_offset", ctypes.c_uint),
-    ]
-
-    def __init__(self, **kwargs):
-        kwargs["unused_8"] = kwargs.get("unused_8", 0)
-        kwargs["unused_16"] = kwargs.get("unused_16", 0)
-        kwargs["file_header_size"] = kwargs.get("file_header_size", Header().size())
-        kwargs["metadata_header_size"] = kwargs.get(
-            "metadata_header_size", Header().size() + self.size()
+    def __init__(self):
+        header_size = Header().size()
+        super().__init__(
+            "unused_8", Integer(0),
+            "unused_16", Integer(0),
+            "file_header_size", Integer(header_size),
+            "metadata_header_size", Integer(),
+            "names_offset", Integer(),
         )
-        super().__init__(**kwargs)
+        self['metadata_header_size'].value = header_size + self.size()
 
     def to_string(self):
         """String representation of the header"""
         return (
             "{"
-            + f"unused_8 = {self.unused_8}, "
-            + f"unused_16 = {self.unused_16}, "
+            + f"unused_8 = {self['unused_8']}, "
+            + f"unused_16 = {self['unused_16']}, "
             + f"file_header_size = {self.file_header_size}, "
             + f"metadata_header_size = {self.metadata_header_size}, "
             + f"names_offset = {self.names_offset}"
@@ -308,10 +269,10 @@ class ResourceMetadata(Structure):
         return (
             "{"
             + f"resource_id = {self.resource_id}, "
-            + f"unused_8 = {self.unused_8}, "
-            + f"unused_16 = {self.unused_16}, "
-            + f"name_offset = {self.name_offset}, "
-            + f"data_offset = {self.data_offset}"
+            + f"unused_8 = {self['unused_8']}, "
+            + f"unused_16 = {self['unused_16']}, "
+            + f"name_offset = {self['name_offset']}, "
+            + f"data_offset = {self['data_offset']}"
             + "}"
         )
 
@@ -361,8 +322,8 @@ class Resources:
     def __init__(
         self, file_type: str = None, file_creator: str = None, description: list = None
     ):
-        self.file_type = file_type
-        self.file_creator = file_creator
+        self['file_type'] = file_type
+        self['file_creator'] = file_creator
         self.__resources = description
 
     def types(self) -> [str]:
