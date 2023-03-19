@@ -5,7 +5,7 @@
 
 import ctypes
 
-from pylavi.data_types import Structure, FourCharCode, PString, Integer, IntSize
+from pylavi.data_types import Structure, Array, FourCharCode, PString, Integer, IntSize
 
 
 class Header(Structure):
@@ -236,17 +236,13 @@ class ResourceMetadata(Structure):
 
     NO_NAME = 0xFFFFFFFF
 
-    _pack_ = 1
-    _fields_ = [
-    ]
-
-    def __init__(self):
+    def __init__(self, res_id:int=None, name_offset:int=None, data_offset:int=None):
         super().__init__(
-            "resource_id", Integer(),
-            "name_offset", Integer(ResourceMetadata.NO_NAME),
-            "unused_8", Integer(),
-            "data_offset", Integer(),
-            "unused_16", Integer(),
+            "resource_id", Integer(res_id),
+            "name_offset", Integer(ResourceMetadata.NO_NAME if name_offset is None else name_offset),
+            "unused_8", Integer(0),
+            "data_offset", Integer(data_offset),
+            "unused_16", Integer(0),
         )
         assert (
             self.name_offset.value is None
@@ -271,25 +267,15 @@ class ResourceMetadata(Structure):
         return f"ResourceMetadata({self.to_string()})"
 
 
-def create_resource_list(count: int):
-    """Create a structure for a list Resources based on the count found in the type map."""
+class ResourceList(Array):
+    """Fixed size list of types"""
 
-    class ResourceList(Structure):
-        """Fixed size list of types"""
+    def __init__(self, *elements, length:int=0):
+        assert not elements or all(isinstance(e, ResourceMetadata) for e in elements)
+        super().__init__(ResourceMetadata, *elements, data_count=length)
 
-        _pack_ = 1
-        _fields_ = [
-            ("resources", ResourceMetadata * count),
-        ]
-
-        def to_string(self):
-            """Convert to string"""
-            return f"[{', '.join(e.to_string() for e in self.resources)}]"
-
-        def __repr__(self) -> str:
-            return f"ResourceList({self.to_string()})"
-
-    return ResourceList()
+    def __repr__(self):
+        return f"ResourceList({', '.join(repr(v) for v in self.value)})"
 
 
 class Resources:
@@ -449,7 +435,7 @@ class Resources:
         for entry in data_types.type:
             assert entry.list_offset > last_offset, "Unordered type table"
             last_offset = entry.list_offset
-            resource_list = create_resource_list(entry.number_of_resources())
+            resource_list = ResourceList(length=entry.number_of_resources())
             offset = header.metadata_offset
             offset += Header().size() + MetadataHeader().size()
             offset += entry.list_offset

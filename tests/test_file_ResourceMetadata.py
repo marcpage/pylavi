@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from pylavi.file import create_resource_list, ResourceMetadata
+from pylavi.file import ResourceList, ResourceMetadata
 
 
 def test_resource_list():
@@ -10,10 +10,10 @@ def test_resource_list():
     for test_bytes in TEST_SET:
         assert len(test_bytes)%resource_info_size == 0
         resource_count = int(len(test_bytes) / resource_info_size)
-        resource_list = create_resource_list(resource_count).from_bytes(test_bytes)
-        assert len(resource_list.resources) == len(TEST_SET[test_bytes])
+        resource_list = ResourceList(length=resource_count).from_bytes(test_bytes)
+        assert resource_list.length() == len(TEST_SET[test_bytes])
 
-        for resource_info, expected_info in zip(resource_list.resources, TEST_SET[test_bytes]):
+        for resource_info, expected_info in zip(resource_list.value, TEST_SET[test_bytes]):
             assert resource_info.resource_id == expected_info['resource_id']
             assert resource_info.unused_8 == expected_info['unused_8']
             assert resource_info.unused_16 == expected_info['unused_16']
@@ -25,8 +25,8 @@ def test_single_resource_metadata():
     data = b'\x00\x00\x00 \xff\xff\xff\xff\x00\x00\x00\x00\x00\x00IX\x00\x00\x00\x00'
     metadata = ResourceMetadata().from_bytes(data)
     assert repr(metadata) == "ResourceMetadata({resource_id = 32, unused_8 = 0, unused_16 = 0, name_offset = 4294967295, data_offset = 18776})"
-    resource_list = create_resource_list(1).from_bytes(data)
-    assert repr(resource_list) == "ResourceList([{resource_id = 32, unused_8 = 0, unused_16 = 0, name_offset = 4294967295, data_offset = 18776}])"
+    resource_list = ResourceList(length=1).from_bytes(data)
+    assert repr(resource_list) == "ResourceList(ResourceMetadata({resource_id = 32, unused_8 = 0, unused_16 = 0, name_offset = 4294967295, data_offset = 18776}))", repr(resource_list)
 
 
 TEST_SET = {

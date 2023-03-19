@@ -225,8 +225,15 @@ class Array(Description):
         self.value = value if value else [data_type() for _ in range(0, data_count)]
 
     def size(self) -> int:
-        assert len(self.value) > 0
+        assert self.length() > 0
         return sum(v.size() for v in self.value)
+
+    def length(self) -> int:
+        return len(self.value)
+
+    def set_length(self, data_count):
+        self.value = [data_type() for _ in range(0, data_count)]
+        return self
 
     def from_bytes(self, data:bytes, offset:int=0):
         for value in self.value:
