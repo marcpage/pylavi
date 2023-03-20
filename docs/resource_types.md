@@ -442,6 +442,110 @@ The size is either 32 or 48.
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
 
+Link Identity VI?
+
+Always Resource #0 and never has a name.
+
+| Field | Size  | Value | Type          | Description               |
+|-------|------:|-------|---------------|---------------------------|
+| ???   |  2    |   1   | unsigned int  | Unknown                   |
+| Type  |  4    |       | FourCharCode  | See types                 |
+| Name  | L + 1 |       | PString       | Name                      |
+| ???   |  2    |   0   | unsigned int  | ???                       |
+| Count |  4    |       | unsigned int  | Number of Link Identities |
+| List  |       |       | Link Item     | ???                       |
+| End   |  2    |   3   | unsigned int  | Unknown
+
+#### Link Types
+
+| Type  | Description  |
+|-------|--------------|
+| LVIN  | Control link |
+| LVCC  | VI link      |
+
+#### Link Item
+
+| Code | Link Item Type |
+|------|----------------|
+| AXVT | [ActiveX](axvt---active-x) |
+| BSVR | [VI to Static](#bsvr---vi-to-static) |
+| DNVA | [.Net](dnva---dot-net) |
+| LVCC | [VI to Control](#lvcc---vi-to-control) |
+| LVIN | [VI to VI](#lvin---vi-to-control) |
+| POLY | [PolyVI](#poly---polyvi) |
+| RVPI | [VI to Class Interface](#rvpi---vi-to-class-interface) ||
+| VIAV | |
+| VICC | |
+| VIFN | |
+| VIGV | |
+| VIIV | |
+| VILB | [VI to Library](#vilb---vi-to-library) |
+| VIPI | |
+| VIPV | |
+| VIVI | [VI to VI](#vivi---vi-to-vi) |
+| VIXC | |
+| VIXN | |
+| VTVN | |
+| XVPR | |
+
+##### VILB - VI to Library
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VILB  | FourCharCode | type            |
+|  ???  |  4   |  0    | unsigned int | ???             |
+| Path  |      |       | Path         | Path to library |
+...
+
+##### VIVI - VI to VI
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VIVI  | FourCharCode | Library link    |
+| Count |  4   | 0-7   | unsigned in  | count of names in namespace |
+| Names | ...  |       | PStr[]       | names in the namespace |
+
+
+
+##### VICC - VI to Control
+
+##### Link to Class
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VIPI  | FourCharCode | Library link    |
+|  ???  |  4   |  0    | unsigned int | ???             |
+|  ???  |  3   |       | unsigned int | ???             |
+| Name  | L+1  |       | PString      | Class Name      |
+|  ???  |  4   |       | unsigned int | ???             |
+| Path  |      |       | Path         | Path to library |
+...
+
+##### Link to Class
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VICC  | FourCharCode | Library link    |
+|  ???  |  4   |  0    | unsigned int | ???             |
+| Name  | L+1  |       | PString      | Class Name      |
+...
+
+##### Link to VI
+
+| Field | Size | Value | Type         | Description     |
+|-------|------|-------|--------------|-----------------|
+|  ???  |  2   |  2    | unsigned int | ???             |
+| Type  |  4   | VIVI  | FourCharCode | Library link    |
+|  ???  |  4   |  0    | unsigned int | ???             |
+| Name  | L+1  |       | PString      | Class Name      |
+...
+
+
+
 ### LPIN
 
 - **extensions** .ctl, .vim, .vi, .vit

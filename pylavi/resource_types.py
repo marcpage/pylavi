@@ -5,15 +5,21 @@
 
 import hashlib
 
-from pylavi.data_types import (
-    Structure,
-    Version,
-    PString,
-    Integer,
-    IntSize,
-    Array,
-    Bytes,
-)
+from pylavi.data_types import Structure, Integer, IntSize, Array, Bytes
+from pylavi.data_types import Version, PString, FourCharCode
+
+
+class TypeLIvi(Structure):
+    def __init__(self):
+        super().__init__(
+            'one', Integer(1, byte_count=IntSize.INT16),
+            'type', FourCharCode(),
+            'name', PString(pad_to=2),
+            'zero', Integer(0, byte_count=IntSize.INT16),
+            'count', Integer(0),
+        )
+
+class LinkItemVILB(Structure):
 
 
 class TypeBDPW(Array):

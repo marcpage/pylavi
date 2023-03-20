@@ -33,7 +33,7 @@ class Description:
         return ""
 
     def __str__(self):
-        return self.to_string()
+        return str(self.to_string())
 
 
 class Endian(enum.Enum):
@@ -219,17 +219,20 @@ class FourCharCode(Bytes):
 class PString(Bytes):
     """byte-length-prefixed string"""
 
-    def __init__(self, value: bytes = None):
+    def __init__(self, value: bytes = None, pad_to=1, length_bytes=IntSize.INT8):
         assert value is None or len(value) < 256
+        assert pad_to > 0
         super().__init__(value)
+        self.pad_to = pad_to
+        self.length_bytes = length_bytes
 
     def size(self) -> int:
         """Get the size of the bytes representation"""
-        return 1 + super().size()
+        return (int((self.length_bytes + super().size() - 1) / self.pad_to) + 1) * self.pad_to
 
     def from_bytes(self, data: bytes, offset: int = 0):
         """fill in data from bytes"""
-        byte_count = Integer(byte_count=IntSize.INT8, signed=False).from_bytes(
+        byte_count = Integer(byte_count=self.length_bytes, signed=False).from_bytes(
             data, offset
         )
         self.value = data[offset + 1 : offset + byte_count.value + 1]
@@ -241,9 +244,10 @@ class PString(Bytes):
     def to_bytes(self) -> bytes:
         """get the binary version"""
         prefix = Integer(
-            len(self.value), byte_count=IntSize.INT8, signed=False
+            len(self.value), byte_count=self.length_bytes, signed=False
         ).to_bytes()
-        return prefix + self.value
+        value = prefix + self.value
+        return value + b'\x00' * (self.size() - len(value))
 
     def __repr__(self):
         return f"PString('{self.to_string()}')"
@@ -373,6 +377,59 @@ class Array(Description):
         return all(a == b for a, b in zip(self, other))
 
 
+class Path(Structure):
+    KNOWN_PATH_TYPES = {
+        'PTH0': 0,
+        'PTH1': 0,
+        'PTH2': 0,
+    }
+    FORMATS = ['absolute', 'relative', 'not a path', 'unc']
+    NEW_FORMATS = ['abs ', 'rel ', '!pth', 'unc ']
+
+    def __init__(self):
+        super().__init__(
+            'type', FourCharCode(sorted(Path.KNOWN_PATH_TYPES)[0]),
+            'size', Integer(0),
+        )
+        self.format = Integer(0, byte_count=IntSize.INT16)
+        self.count = Integer(0, byte_count=IntSize.INT16)
+        self.elements = []
+        assert self.type in KNOWN_PATH_TYPES, self.type
+        assert self.format < len(Path.FORMATS)
+
+    def size(self):
+        """Get the size of the bytes representation"""
+        return super().size() self.format.size() | self.count.size() + self.elements.size()
+
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
+        super().from_bytes(data, offset)
+
+        if self.format == sorted(Path.KNOWN_PATH_TYPES)[0]:
+            string_type = PString
+            self.format = Integer(0, byte_count=IntSize.INT16)
+            self.count = Integer(0, byte_count=IntSize.INT16)
+        else:
+            string_type = None
+            self.format = FourCharCode()
+            raise SyntaxError()
+
+        offset += super().size()
+        self.format.from_bytes(data, offset)
+        offset += self.format.size()
+        self.count.from_bytes(data, offset)
+        offset += self.count.size()
+        self.elements = Array(string_type, byte_count=self.count.value)
+        self.elements.from_bytes(data, offset)
+        return self
+
+    def to_bytes(self) -> bytes:
+        """get the binary version"""
+        return super().to_bytes() + self.format.to_bytes() + self.count.to_bytes() + self.elements.to_bytes()
+
+    def to_value(self) -> any:
+        """restore from a basic python type"""
+
 @total_ordering
 class Version(Integer):
     """LabVIEW version number"""
@@ -472,6 +529,9 @@ class Version(Integer):
 
     def to_value(self) -> any:
         """restore from a basic python type"""
+        if self.value is None:
+            return None
+
         major = self.major()
         minor = self.minor()
         patch = self.patch()
@@ -521,22 +581,37 @@ class Version(Integer):
 
     def major(self):
         """get the major version"""
+        if self.value is None:
+            return None
+
         return (self.value >> 28 & 0xF) * 10 + (self.value >> 24 & 0xF)
 
     def minor(self):
         """get the minor version"""
+        if self.value is None:
+            return None
+
         return int(self.value >> 20 & 0xF)
 
     def patch(self):
         """get the patch version"""
+        if self.value is None:
+            return None
+
         return int(self.value >> 16 & 0xF)
 
     def phase(self):
         """get the version phase"""
+        if self.value is None:
+            return None
+
         return self.value >> 13 & 0x7
 
     def build(self):
         """get the build number"""
+        if self.value is None:
+            return None
+
         return (
             1000 * (self.value >> 12 & 0x01)
             + 100 * (self.value >> 8 & 0xF)

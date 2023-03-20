@@ -11,7 +11,7 @@ import sys
 import threading
 
 from pylavi.file import Resources
-from pylavi.resource_types import Typevers, TypeLVSR, TypeBDPW
+from pylavi.resource_types import Typevers, TypeLVSR, TypeBDPW, TypeLIvi
 from pylavi.data_types import Version
 
 
