@@ -3,8 +3,6 @@
 """
 
 
-import ctypes
-
 from pylavi.data_types import Structure, Array, FourCharCode, PString, Integer, IntSize
 
 
@@ -200,18 +198,6 @@ class TypeInfo(Structure):
     def number_of_resources(self) -> int:
         """Get the number of resources for the given type"""
         return self.resource_count + 1
-
-
-class DataSize(Integer):
-    """Header for the resource data block."""
-
-    _pack_ = 1
-    _fields_ = [
-        ("byte_count", ctypes.c_uint),
-    ]
-
-    def __init__(self, byte_count: int = 0):
-        super().__init__(byte_count)
 
 
 class TypeList(Array):
@@ -427,7 +413,7 @@ class Resources:
     @staticmethod
     def __load_resource_data(header, resource_info, contents):
         data_offset = header.data_offset + resource_info.data_offset
-        data_size = DataSize().from_bytes(contents[data_offset:])
+        data_size = Integer().from_bytes(contents[data_offset:])
         data_offset += data_size.size()
         offset_past_data = data_offset + data_size.value
         return contents[data_offset:offset_past_data]
