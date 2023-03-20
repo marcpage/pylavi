@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from pylavi.data_types import Integer, IntSize, Endian
+from pylavi.data_types import Integer, IntSize, Endian, UInt32, UInt16
 
 
 def test_basic():
@@ -20,6 +20,25 @@ def test_basic():
     assert Integer(5) < Integer(7)
     assert Integer(5) < b'\x00\x00\x00\x07'
     assert set((Integer(5), Integer(7), Integer(7))) == set((Integer(5), Integer(7)))
+
+
+def test_aliases():
+    for test_index, test_set in enumerate(TEST_SET):
+        if test_set[3] == IntSize.INT32:
+            assert UInt32(test_set[0], test_set[2]) == UInt32(None, test_set[2]).from_bytes(test_set[1]), f"#{test_index} {test_set} {UInt32(test_set[0], test_set[2])} vs {UInt32(None, test_set[2]).from_bytes(test_set[1])}"
+            i = UInt32(None, test_set[2]).from_bytes(test_set[1])
+            assert i.to_bytes() == test_set[1]
+            description = i.to_value()
+            reconstituted = UInt32(None, test_set[2]).from_value(description)
+            assert reconstituted == test_set[1]
+        elif test_set[3] == IntSize.INT16:
+            assert UInt16(test_set[0], test_set[2]) == UInt16(None, test_set[2]).from_bytes(test_set[1]), f"#{test_index} {test_set} {UInt16(test_set[0], test_set[2])} vs {UInt16(None, test_set[2]).from_bytes(test_set[1])}"
+            i = UInt16(None, test_set[2]).from_bytes(test_set[1])
+            assert i.to_bytes() == test_set[1]
+            description = i.to_value()
+            reconstituted = UInt16(None, test_set[2]).from_value(description)
+            assert reconstituted == test_set[1]
+
 
 TEST_SET = [
     (0, b'\x00\x00\x00\x00', Endian.BIG, IntSize.INT32, True),
@@ -87,3 +106,5 @@ TEST_SET = [
 
 if __name__ == "__main__":
     test_basic()
+    test_aliases()
+
