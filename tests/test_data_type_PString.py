@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from pylavi.data_types import PString
+from pylavi.data_types import PString, Structure, IntSize
 
 
 def test_strings():
@@ -17,6 +17,7 @@ def test_strings():
 
     assert str(PString(b'\tmore\\')) == '\\x09more\\x5c', [str(PString(b'\tmore\\')), '\\x09more\\x5c']
     assert repr(PString(b'\tmore\\')) == "PString('\\x09more\\x5c')"
+
     try:
         PString(b'01234567890123456789012345678901234567890123456789'
         +b'01234567890123456789012345678901234567890123456789'
@@ -29,7 +30,32 @@ def test_strings():
         pass
 
 
+def test_padding_and_prefix_size():
+    for test_index, binary in enumerate(PADDING_TEST_SET):
+        pad_to = PADDING_TEST_SET[binary].get('pad_to', IntSize.INT16)
+        prefix_size = PADDING_TEST_SET[binary].get('prefix_size', IntSize.INT8)
+        s = Structure('first', PString(pad_to=pad_to, prefix_size=prefix_size),'last', PString(pad_to=pad_to, prefix_size=prefix_size)).from_bytes(binary)
+        assert s.first == PADDING_TEST_SET[binary]['first'], [test_index, s, PADDING_TEST_SET[binary], binary]
+        assert s.last == PADDING_TEST_SET[binary]['last']
+        assert s.to_bytes() == binary, [test_index, s.to_bytes(), binary]
+        description = s.to_value()
+        reconstituted = Structure('first', PString(pad_to=pad_to, prefix_size=prefix_size),'last', PString(pad_to=pad_to, prefix_size=prefix_size)).from_value(description)
+        assert reconstituted.to_bytes() == binary, [test_index, reconstituted.to_bytes(), binary]
 
+
+PADDING_TEST_SET = {
+    b'\x02AB\x00\x01A\x00\x00': {'first': 'AB', 'last': 'A', 'pad_to': IntSize.INT32},
+    b'\x01J\x00\x00\x01K\x00\x00': {'first': 'J', 'last': 'K', 'pad_to': IntSize.INT32},
+    b'\x01J\x00\x00\x02KB\x00': {'first': 'J', 'last': 'KB', 'pad_to': IntSize.INT32},
+
+    b'\x00\x02AB\x00\x01A\x00': {'first': 'AB', 'last': 'A', 'prefix_size': IntSize.INT16},
+    b'\x00\x01J\x00\x00\x01K\x00': {'first': 'J', 'last': 'K', 'prefix_size': IntSize.INT16},
+    b'\x00\x01J\x00\x00\x02KB': {'first': 'J', 'last': 'KB', 'prefix_size': IntSize.INT16},
+
+    b'\x02AB\x00\x01A': {'first': 'AB', 'last': 'A'},
+    b'\x01J\x01K': {'first': 'J', 'last': 'K'},
+    b'\x01J\x02KB\x00': {'first': 'J', 'last': 'KB'},
+}
 
 TEST_SET = {
     b'': (1,),
@@ -44,3 +70,4 @@ TEST_SET = {
 
 if __name__ == "__main__":
     test_strings()
+    test_padding_and_prefix_size()

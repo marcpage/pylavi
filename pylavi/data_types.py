@@ -219,20 +219,35 @@ class FourCharCode(Bytes):
 class PString(Bytes):
     """byte-length-prefixed string"""
 
-    def __init__(self, value: bytes = None):
-        assert value is None or len(value) < 256
+    def __init__(
+        self,
+        value: bytes = None,
+        pad_to: IntSize = IntSize.INT8,
+        prefix_size: IntSize = IntSize.INT8,
+    ):
+        assert value is None or len(value) < 2 ** (8 * Integer.SIZES[prefix_size])
         super().__init__(value)
+        self.pad_to = Integer.SIZES[pad_to]
+        self.prefix_size = prefix_size
 
     def size(self) -> int:
         """Get the size of the bytes representation"""
-        return 1 + super().size()
+        return (
+            int((Integer.SIZES[self.prefix_size] + super().size() - 1) / self.pad_to)
+            + 1
+        ) * self.pad_to
 
     def from_bytes(self, data: bytes, offset: int = 0):
         """fill in data from bytes"""
-        byte_count = Integer(byte_count=IntSize.INT8, signed=False).from_bytes(
+        byte_count = Integer(byte_count=self.prefix_size, signed=False).from_bytes(
             data, offset
         )
-        self.value = data[offset + 1 : offset + byte_count.value + 1]
+        self.value = data[
+            offset
+            + Integer.SIZES[self.prefix_size] : offset
+            + byte_count.value
+            + Integer.SIZES[self.prefix_size]
+        ]
         assert (
             len(self.value) == byte_count.value
         ), f"{[len(self.value), byte_count]} {data}"
@@ -241,9 +256,10 @@ class PString(Bytes):
     def to_bytes(self) -> bytes:
         """get the binary version"""
         prefix = Integer(
-            len(self.value), byte_count=IntSize.INT8, signed=False
+            len(self.value), byte_count=self.prefix_size, signed=False
         ).to_bytes()
-        return prefix + self.value
+        value = prefix + self.value
+        return value + b"\x00" * (self.size() - len(value))
 
     def __repr__(self):
         return f"PString('{self.to_string()}')"
