@@ -327,7 +327,7 @@ class Array(Description):
         """Get the number of elements in the array"""
         return len(self.value)
 
-    def set_length(self, data_count):
+    def set_length(self, data_count: int):
         """Clear the array and fill it with data_count empty data elements"""
         self.value = [self.data_type() for _ in range(0, data_count)]
         return self

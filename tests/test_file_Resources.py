@@ -9,7 +9,7 @@ from pylavi.file import Resources
 def test_empty_vi():
     vi_path = os.path.join(os.path.split(__file__)[0], 'empty.vi')
     resources = Resources.load(vi_path)
-    assert set(resources.types()) == set(EMPTY_VI_TYPES)
+    assert set(resources.types()) == set(EMPTY_VI_TYPES), [set(resources.types()), set(EMPTY_VI_TYPES)]
     assert resources.count_type('vers') == 5, resources.count_type('vers')
     assert resources.count_type('LVSR') == 1, resources.count_type('LVSR')
     assert set(resources.get_ids('vers')) == VERS_IDS
