@@ -140,6 +140,20 @@ class Integer(Description):
         return self.value
 
 
+class UInt32(Integer):
+    """unsigned 32-bit integer"""
+
+    def __init__(self, value: int = None, endian: Endian = Endian.BIG):
+        super().__init__(value, endian, IntSize.INT32, signed=False)
+
+
+class UInt16(Integer):
+    """unsigned 16-bit integer"""
+
+    def __init__(self, value: int = None, endian: Endian = Endian.BIG):
+        super().__init__(value, endian, IntSize.INT16, signed=False)
+
+
 class Bytes(Description):
     """Collection of Bytes"""
 
@@ -217,7 +231,7 @@ class FourCharCode(Bytes):
 
 
 class PString(Bytes):
-    """byte-length-prefixed string"""
+    """length-prefixed string"""
 
     def __init__(
         self,
@@ -263,6 +277,13 @@ class PString(Bytes):
 
     def __repr__(self):
         return f"PString('{self.to_string()}')"
+
+
+class PString16(PString):
+    """16-bit length prefixed string"""
+
+    def __init__(self, value: bytes = None, pad_to: IntSize = IntSize.INT8):
+        super().__init__(value, pad_to, IntSize.INT16)
 
 
 class Structure(Description):
