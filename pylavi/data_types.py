@@ -15,9 +15,7 @@ ESCAPE_CHARS = re.compile(b"[^ -[\\]-~]")
 
 def unescape_bytes(matchobj) -> bytes:
     """unescape non-ascii bytes"""
-    return Integer(
-        int(matchobj.group(0)[2:], 16), byte_count=IntSize.INT8, signed=False
-    ).to_bytes()
+    return UInt8(int(matchobj.group(0)[2:], 16)).to_bytes()
 
 
 def escape_bytes(matchobj) -> bytes:
@@ -68,6 +66,7 @@ class Integer(Description):
         byte_count: IntSize = IntSize.INT32,
         signed: bool = False,
     ):
+        assert value is None or signed or value >= 0
         self.value = value
         self.endian = endian
         self.signed = signed
@@ -91,15 +90,18 @@ class Integer(Description):
 
     def to_bytes(self) -> bytes:
         """get the binary version"""
+        assert self.value is None or self.signed or self.value >= 0
         return struct.pack(self.__struct_description(), self.value)
 
     def from_value(self, description: any):
         """Get a Python basic type to represent this value"""
         self.value = description
+        assert self.value is None or self.signed or self.value >= 0
         return self
 
     def to_value(self) -> any:
         """restore from a basic python type"""
+        assert self.value is None or self.signed or self.value >= 0
         return self.value
 
     def to_string(self) -> str:
@@ -152,6 +154,13 @@ class UInt16(Integer):
 
     def __init__(self, value: int = None, endian: Endian = Endian.BIG):
         super().__init__(value, endian, IntSize.INT16, signed=False)
+
+
+class UInt8(Integer):
+    """unsigned 16-bit integer"""
+
+    def __init__(self, value: int = None, endian: Endian = Endian.BIG):
+        super().__init__(value, endian, IntSize.INT8, signed=False)
 
 
 class Bytes(Description):
@@ -411,7 +420,7 @@ class Array(Description):
 
 
 @total_ordering
-class Version(Integer):
+class Version(UInt32):
     """LabVIEW version number"""
 
     DEVELOPMENT = 1
@@ -496,7 +505,7 @@ class Version(Integer):
             if not version_value:
                 version_value = Version.__compose(major, minor, patch, phase, build)
 
-        super().__init__(version_value, Endian.BIG, IntSize.INT32, signed=False)
+        super().__init__(version_value)
 
     def size(self) -> int:
         """Get the size of the bytes representation"""

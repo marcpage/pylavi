@@ -5,15 +5,8 @@
 
 import hashlib
 
-from pylavi.data_types import (
-    Structure,
-    Version,
-    PString,
-    Integer,
-    IntSize,
-    Array,
-    Bytes,
-)
+from pylavi.data_types import Structure, Array, Bytes, UInt32, UInt16
+from pylavi.data_types import PString, Version
 
 
 class TypeBDPW(Array):
@@ -82,7 +75,7 @@ class TypeLVSR(Structure):
         )
 
     def __get_flag_set(self, flag: int) -> int:
-        value = Integer()
+        value = UInt32()
 
         if flag * value.size() + value.size() > self.flags.size():
             return None
@@ -90,7 +83,7 @@ class TypeLVSR(Structure):
         return value.from_bytes(self.flags.value, flag * value.size()).value
 
     def __set_flag_set(self, flag: int, new_value: int):
-        value = Integer(new_value)
+        value = UInt32(new_value)
 
         if flag * value.size() + value.size() <= self.flags.size():
             prefix = self.flags.value[: flag * value.size()]
@@ -185,7 +178,7 @@ class Typevers(Structure):
             "version",
             version if isinstance(version, Version) else Version(version),
             "language",
-            Integer(language or Typevers.ENGLISH, byte_count=IntSize.INT16),
+            UInt16(language or Typevers.ENGLISH),
             "text",
             PString(text or b""),
             "name",
