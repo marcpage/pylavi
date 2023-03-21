@@ -3,7 +3,7 @@
 """
 
 
-from pylavi.data_types import Structure, Array, FourCharCode, PString, Integer, IntSize
+from pylavi.data_types import Structure, Array, FourCharCode, PString, UInt16, UInt32
 
 
 # pylint: disable=no-member
@@ -36,21 +36,21 @@ class Header(Structure):
             "file_format",
             FourCharCode(),
             "corruption_check",
-            Integer(byte_count=IntSize.INT16),
+            UInt16(),
             "format_version",
-            Integer(byte_count=IntSize.INT16),
+            UInt16(),
             "file_type",
             FourCharCode(file_type),
             "file_creator",
             FourCharCode(file_creator),
             "metadata_offset",
-            Integer(),
+            UInt32(),
             "metadata_size",
-            Integer(),
+            UInt32(),
             "data_offset",
-            Integer(),
+            UInt32(),
             "data_size",
-            Integer(),
+            UInt32(),
         )
 
     def to_string(self):
@@ -98,7 +98,7 @@ class Header(Structure):
         minimum_metadata_size = (
             Header().size()
             + MetadataHeader().size()
-            + Integer().size()
+            + UInt32().size()
             + TypeInfo().size()
         )
         assert (
@@ -118,15 +118,15 @@ class MetadataHeader(Structure):
         header_size = Header().size()
         super().__init__(
             "unused_8",
-            Integer(0),
+            UInt32(0),
             "unused_16",
-            Integer(0),
+            UInt32(0),
             "file_header_size",
-            Integer(header_size),
+            UInt32(header_size),
             "metadata_header_size",
-            Integer(),
+            UInt32(),
             "names_offset",
-            Integer(),
+            UInt32(),
         )
         self.metadata_header_size.value = header_size + self.size()
 
@@ -177,9 +177,9 @@ class TypeInfo(Structure):
             "resource_type",
             FourCharCode(resource_type),
             "resource_count",
-            Integer(resource_count - 1),
+            UInt32(resource_count - 1),
             "list_offset",
-            Integer(list_offset),
+            UInt32(list_offset),
         )
 
     def to_string(self):
@@ -209,8 +209,8 @@ class TypeList(Array):
 
     def from_bytes(self, data: bytes, offset: int = 0):
         """fill in data from bytes"""
-        length = Integer().from_bytes(data, offset) + 1
-        offset += Integer().size()
+        length = UInt32().from_bytes(data, offset) + 1
+        offset += UInt32().size()
         assert offset + length * TypeInfo().size() <= len(data), [
             offset,
             length,
@@ -224,7 +224,7 @@ class TypeList(Array):
 
     def to_bytes(self) -> bytes:
         """get the binary version"""
-        return Integer(self.length() - 1).to_bytes() + super().to_bytes()
+        return UInt32(self.length() - 1).to_bytes() + super().to_bytes()
 
     def __repr__(self):
         return f"TypeList({', '.join(repr(v) for v in self.value)})"
@@ -240,15 +240,15 @@ class ResourceMetadata(Structure):
     ):
         super().__init__(
             "resource_id",
-            Integer(res_id),
+            UInt32(res_id),
             "name_offset",
-            Integer(ResourceMetadata.NO_NAME if name_offset is None else name_offset),
+            UInt32(ResourceMetadata.NO_NAME if name_offset is None else name_offset),
             "unused_8",
-            Integer(0),
+            UInt32(0),
             "data_offset",
-            Integer(data_offset),
+            UInt32(data_offset),
             "unused_16",
-            Integer(0),
+            UInt32(0),
         )
         assert (
             self.name_offset.value is None
@@ -413,7 +413,7 @@ class Resources:
     @staticmethod
     def __load_resource_data(header, resource_info, contents):
         data_offset = header.data_offset + resource_info.data_offset
-        data_size = Integer().from_bytes(contents[data_offset:])
+        data_size = UInt32().from_bytes(contents[data_offset:])
         data_offset += data_size.size()
         offset_past_data = data_offset + data_size.value
         return contents[data_offset:offset_past_data]
