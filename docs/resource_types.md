@@ -237,6 +237,14 @@ The size is either 32 or 48.
 - **file types** LVIN
 
 100% of DLLP resources found had Path types in them.
+The resource name is always empty.
+The resource id is anywhere from 2 to 151 (with gaps).
+It appears that this resource is just a Path type.
+It sometimes contains just a relative path to 'LabVIEW'.
+If not then it is often an absolute (sometimes relative) path to a `.dll`.
+Other times it is a relative path to a `.vi`.
+
+The name of the resource is blank except in the `.vi` case in which case it is the name of the `.vi`.
 
 ### DSIM
 
@@ -368,6 +376,12 @@ The size is either 32 or 48.
 
 100% of HLPP resources found had Path types in them.
 
+The id of these resources is often -1, -2, or 0 through 42.
+The name of the resource is often empty, but can be a `.vi`, `.chm`, or just a name.
+The resource contents is just a Path type.
+It is often an absolute path to a `.chm` or `.hlp` in the \<helpdir>.
+It can be a relative path as well.
+
 
 ### HLPT
 
@@ -436,6 +450,8 @@ The size is either 32 or 48.
 
 67% of LIbd resources found had Path types in them.
 
+This appears to contain Link Items (some of which can contain Path types).
+
 ### LIds
 
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
@@ -445,6 +461,8 @@ The size is either 32 or 48.
 
 59% of LIds resources found had Path types in them.
 
+This appears to contain Link Items (some of which can contain Path types).
+
 ### LIfp
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
@@ -452,12 +470,16 @@ The size is either 32 or 48.
 
 51% of LIfp resources found had Path types in them.
 
+This appears to contain Link Items (some of which can contain Path types).
+
 ### LIvi
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
 
 83% of LIvi resources found had Path types in them.
+
+This appears to contain Link Items (some of which can contain Path types).
 
 ### LPIN
 
@@ -604,6 +626,11 @@ The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 
 - **file types** LVIN
 
 100% of RTMP resources found had Path types in them.
+
+It appears to be the relative path to the VI's runtime menu (`.rtm`).
+The resource name is always empty.
+The resource id is always 0.
+
 
 ### RTSG
 
@@ -775,6 +802,13 @@ No other languages other than the ones above have been found to be used.
 
 84% of LPTH resources found had Path types in them.
 
+This appears to be a 4-byte-integer-length-prefixed list of Path data types.
+The resource id is -1 or -2.
+The resource name appears to be the name of a folder or grouping.
+There doesn't appear to be any padding between the paths in the list.
+These are paths to `.llb`, `.lvclass`, `.lvlib`, and `.mnu` files.
+
+
 ### LVzp
 
 - **extensions** .rtexe
@@ -815,6 +849,7 @@ Another common pattern is an absolute path to \<instrlib>/..., \<menus>/..., \<u
 
 78% of UCRF resources found had Path types in them.
 
+This appears to contain Link Items (some of which can contain Path types).
 
 ## LabWindows/CVI
 
