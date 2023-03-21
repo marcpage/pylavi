@@ -384,7 +384,7 @@ class Array(Description):
 
     def size(self) -> int:
         """Get the size of the bytes representation"""
-        assert self.length() > 0
+        assert self.length() >= 0
         return sum(v.size() for v in self.value)
 
     def length(self) -> int:
@@ -440,13 +440,14 @@ class Array(Description):
 class Path(Structure):
     """LabVIEW path type"""
 
-    KNOWN_PATH_TYPES = ["PTH0", "PTH1", "PTH2"]
+    KNOWN_PATH_FORMATS = ["PTH0", "PTH1", "PTH2"]
     ABSOLUTE = 0
     RELATIVE = 1
     NOTAPATH = 2
     UNC = 3
-    FORMATS = ["absolute", "relative", "not a path", "unc"]
-    NEW_FORMATS = ["abs ", "rel ", "!pth", "unc "]
+    TYPE_VALUES = [ABSOLUTE, RELATIVE, NOTAPATH, UNC]
+    TYPES = ["absolute", "relative", "not a path", "unc"]
+    NEW_TYPES = ["abs ", "rel ", "!pth", "unc "]
     STARTS = {
         ABSOLUTE: "/",
         RELATIVE: "",
@@ -456,22 +457,22 @@ class Path(Structure):
 
     def __init__(self):
         super().__init__(
-            "type",
-            FourCharCode(Path.KNOWN_PATH_TYPES[0]),  # TODO: swap format and type
-            "size",
+            "format",
+            FourCharCode(Path.KNOWN_PATH_FORMATS[0]),
+            "byte_count",
             UInt32(FourCharCode().size() + UInt32().size()),
         )
-        self.format = UInt16(Path.ABSOLUTE)
+        self.type = UInt16(Path.ABSOLUTE)
         self.count = UInt16(0)
-        self.elements = []
-        assert self.type in Path.KNOWN_PATH_TYPES, self.type
-        assert self.format < len(Path.FORMATS)
+        self.elements = Array(PString)
+        assert self.format in Path.KNOWN_PATH_FORMATS, self.format
+        assert self.type < len(Path.TYPES)
 
     def __name_to_str(self, name: bytes) -> str:
         if len(name) == 0:
             return ".."
 
-        if self.type != Path.KNOWN_PATH_TYPES[-1]:
+        if self.format != Path.KNOWN_PATH_FORMATS[-1]:
             value = ESCAPE_CHARS.sub(escape_bytes, name).decode("ascii")
         else:
             value = name.decode("utf-8")
@@ -484,7 +485,7 @@ class Path(Structure):
 
         value = name.replace("\\x2f", "/")
 
-        if self.type != Path.KNOWN_PATH_TYPES[-1]:
+        if self.format != Path.KNOWN_PATH_FORMATS[-1]:
             return ESCAPED_PATTERN.sub(unescape_bytes, value.encode("ascii"))
 
         return value.encode("utf-8")
@@ -492,70 +493,70 @@ class Path(Structure):
     def size(self):
         """Get the size of the bytes representation"""
         return (
-            super().size()
-            + self.format.size()
-            + self.count.size()
-            + self.elements.size()
+            super().size() + self.type.size() + self.count.size() + self.elements.size()
         )
 
-    def is_format(self, path_format):
+    def is_type(self, path_format: int) -> bool:
         """determine if this path has the given format"""
-        return self.format.value in (Path.NEW_FORMATS[path_format], path_format)
+        if self.type.value in Path.TYPE_VALUES:
+            return self.type.value == path_format
 
-    def get_format(self):
+        return self.type.to_string() == Path.NEW_TYPES[path_format]
+
+    def get_type(self) -> int:
         """Get the format int"""
-        if isinstance(self.format, Integer):
-            assert self.format.value < len(Path.FORMATS)
-            return self.format.value
+        if isinstance(self.type, Integer):
+            assert self.type.value < len(Path.TYPES)
+            return self.type.value
 
-        assert self.format.to_string() in Path.NEW_FORMATS, [
-            self.format.to_string(),
-            Path.NEW_FORMATS,
-            self.format,
+        assert self.type.to_string() in Path.NEW_TYPES, [
+            self.type.to_string(),
+            Path.NEW_TYPES,
+            self.type,
         ]
-        return Path.NEW_FORMATS.index(self.format.to_string())
+        return Path.NEW_TYPES.index(self.type.to_string())
 
     def from_bytes(self, data: bytes, offset: int = 0):
         """fill in data from bytes"""
         super().from_bytes(data, offset)
 
-        if self.type.to_string() == Path.KNOWN_PATH_TYPES[0]:
+        if self.format.to_string() == Path.KNOWN_PATH_FORMATS[0]:
             string_type = PString
-            self.format = Integer(0, byte_count=IntSize.INT16)
+            self.type = Integer(0, byte_count=IntSize.INT16)
             self.count = Integer(0, byte_count=IntSize.INT16)
         else:
             string_type = PString16
-            self.format = FourCharCode()
+            self.type = FourCharCode()
             self.count = Description()
 
         offset += super().size()
         original_offset = offset
-        self.format.from_bytes(data, offset)
-        offset += self.format.size()
+        self.type.from_bytes(data, offset)
+        offset += self.type.size()
         self.count.from_bytes(data, offset)
         offset += self.count.size()
         elements = []
-        assert self.size + original_offset <= len(data), [original_offset, self, data]
+        assert self.byte_count + original_offset <= len(data), [original_offset, data]
 
-        while offset - original_offset < self.size:
+        while offset - original_offset < self.byte_count:
             elements.append(string_type().from_bytes(data, offset))
             offset += elements[-1].size()
 
-        assert offset - original_offset == self.size, [
+        assert offset - original_offset == self.byte_count, [
             offset,
             original_offset,
             self,
             data,
         ]
         self.elements = Array(string_type, *elements)
-        assert not self.is_format(Path.NOTAPATH) or len(self.elements) == 0
+        assert not self.is_type(Path.NOTAPATH) or len(self.elements) == 0
         return self
 
     def to_bytes(self) -> bytes:
         """get the binary version"""
         return (
             super().to_bytes()
-            + self.format.to_bytes()
+            + self.type.to_bytes()
             + self.count.to_bytes()
             + self.elements.to_bytes()
         )
@@ -564,11 +565,11 @@ class Path(Structure):
     def from_value(self, description: any):
         """Get a Python basic type to represent this value"""
         if description is None:
-            self.type = FourCharCode(Path.KNOWN_PATH_TYPES[0])
-            self.size = UInt32(self.type.size() + UInt32().size())
-            self.format = UInt16(Path.NOTAPATH)
+            self.format = FourCharCode(Path.KNOWN_PATH_FORMATS[0])
+            self.byte_count = UInt32(self.format.size())
+            self.type = UInt16(Path.NOTAPATH)
             self.count = UInt16(0)
-            self.elements = []
+            self.elements = Array(PString)
             return self
 
         new_path_type = Path.NEW_PATH_PATTERN.match(description)
@@ -581,14 +582,14 @@ class Path(Structure):
             type_index = 0
             name_type = PString
 
-        self.type = FourCharCode(Path.KNOWN_PATH_TYPES[type_index])
+        self.format = FourCharCode(Path.KNOWN_PATH_FORMATS[type_index])
         path_format = [
             f
             for f in [Path.UNC, Path.ABSOLUTE, Path.RELATIVE]
             if description.startswith(Path.STARTS[f])
         ][0]
-        self.format = (
-            FourCharCode(Path.NEW_FORMATS[path_format])
+        self.type = (
+            FourCharCode(Path.NEW_TYPES[path_format])
             if new_path_type
             else UInt16(path_format)
         )
@@ -598,29 +599,29 @@ class Path(Structure):
             *[name_type(self.__str_to_name(n)) for n in description.split("/")],
         )
         self.count = Description() if new_path_type else UInt16(len(self.elements))
-        self.size = UInt32(len(self.to_bytes()) - super().size())
+        self.byte_count = UInt32(len(self.to_bytes()) - super().size())
         return self
 
     def to_value(self) -> any:
         """restore from a basic python type"""
-        if self.is_format(Path.NOTAPATH):
+        if self.is_type(Path.NOTAPATH):
             return None
 
-        if self.type.to_string() != Path.KNOWN_PATH_TYPES[0]:
-            value = f"{{{Path.KNOWN_PATH_TYPES.index(self.type.to_string())}}}"
+        if self.format.to_string() != Path.KNOWN_PATH_FORMATS[0]:
+            value = f"{{{Path.KNOWN_PATH_FORMATS.index(self.format.to_string())}}}"
         else:
             value = ""
 
-        value += Path.STARTS[self.get_format()]
+        value += Path.STARTS[self.get_type()]
         return value + "/".join(self.__name_to_str(n.value) for n in self.elements)
 
     def to_string(self) -> str:
-        return self.to_value()
+        return str(self.to_value())
 
     def __repr__(self) -> str:
         return (
-            f"Path({self.type}[{self.size}] "
-            + f"{Path.FORMATS[self.get_format()]} #{self.count} {self.elements})"
+            f"Path({self.format}[{self.byte_count}] "
+            + f"{Path.TYPES[self.get_type()]} #{self.count} {self.elements})"
         )
 
 
