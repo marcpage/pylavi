@@ -220,7 +220,9 @@ The size is either 32 or 48.
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
 
-**Note:** This resources is missing when **Separate compiled code from source** is turned on
+**Note:** This resources may missing when **Separate compiled code from source** is turned on
+
+1% of DFDS resources found had Path types in them.
 
 ### DLDR
 
@@ -233,6 +235,8 @@ The size is either 32 or 48.
 
 - **extensions** .vi
 - **file types** LVIN
+
+100% of DLLP resources found had Path types in them.
 
 ### DSIM
 
@@ -311,6 +315,8 @@ The size is either 32 or 48.
 - **extensions** .ctl, .vim, .vi, .vit
 - **file types** LVCC, LVIN
 
+1% of FPTS resources found had Path types in them.
+
 ### FTAB
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
@@ -359,6 +365,9 @@ The size is either 32 or 48.
 
 - **extensions** .vim, .llb, .vi, .ctl, .vit, .mnu
 - **file types** LVRS, LMNU, LVAR, LVIN, LVCC
+
+100% of HLPP resources found had Path types in them.
+
 
 ### HLPT
 
@@ -425,22 +434,30 @@ The size is either 32 or 48.
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
 
+67% of LIbd resources found had Path types in them.
+
 ### LIds
 
 - **extensions** .vim, .vi, .ctl, .ctt, .vit
 - **file types** LVCC, LVIN
 
-**Note:** This resources is missing when **Separate compiled code from source** is turned on
+**Note:** This resources may be missing when **Separate compiled code from source** is turned on
+
+59% of LIds resources found had Path types in them.
 
 ### LIfp
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
 
+51% of LIfp resources found had Path types in them.
+
 ### LIvi
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
+
+83% of LIvi resources found had Path types in them.
 
 ### LPIN
 
@@ -586,6 +603,8 @@ The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 
 - **extensions** .vi, .vit
 - **file types** LVIN
 
+100% of RTMP resources found had Path types in them.
+
 ### RTSG
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
@@ -664,10 +683,14 @@ The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 
 - **extensions** .vim, .vi, .vit
 - **file types** LVIN
 
+69% of VINS resources found had Path types in them.
+
 ### VITS
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
 - **file types** LVCC, LVIN
+
+9% of VITS resources found had Path types in them.
 
 ### VPDP
 
@@ -738,6 +761,8 @@ No other languages other than the ones above have been found to be used.
 - **extensions** .llb
 - **file types** LVAR
 
+61% of CPRF resources found had Path types in them.
+
 ### FLAG
 
 - **extensions** .mnu, .llb
@@ -747,6 +772,8 @@ No other languages other than the ones above have been found to be used.
 
 - **extensions** .mnu, .llb
 - **file types** LVRS, LMNU, LVAR
+
+84% of LPTH resources found had Path types in them.
 
 ### LVzp
 
@@ -763,6 +790,8 @@ No other languages other than the ones above have been found to be used.
 - **extensions** .mnu
 - **file types** LVRS, LMNU
 
+100% of PATH resources found had Path types in them.
+
 ### PLM2
 
 - **extensions** .mnu, .llb
@@ -777,6 +806,8 @@ No other languages other than the ones above have been found to be used.
 
 - **extensions** .llb
 - **file types** LVAR
+
+78% of UCRF resources found had Path types in them.
 
 
 ## LabWindows/CVI
