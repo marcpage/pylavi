@@ -792,6 +792,12 @@ No other languages other than the ones above have been found to be used.
 
 100% of PATH resources found had Path types in them.
 
+Resources seem to be either id -1 or -2.
+They have names that appear to be categories or folder names.
+The contents of the resource are a Path type that appears to be the path to a directory.
+Often the path is a relative '..' path.
+Another common pattern is an absolute path to \<instrlib>/..., \<menus>/..., \<userlib>/..., or \<vilib>/....
+
 ### PLM2
 
 - **extensions** .mnu, .llb
