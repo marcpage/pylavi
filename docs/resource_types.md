@@ -489,7 +489,7 @@ Always Resource #0 and never has a name.
 |-------|------:|-------|---------------|---------------------------|
 | ???   |  2    |   1   | unsigned int  | Unknown                   |
 | Type  |  4    |       | FourCharCode  | See types                 |
-| Name  | L + 1 |       | PString       | Name                      |
+| Name  | L + 1 |       | PString       | Name (padded to 2-byte)   |
 | ???   |  2    |   0   | unsigned int  | ???                       |
 | Count |  4    |       | unsigned int  | Number of Link Identities |
 | List  |       |       | Link Item     | ???                       |
@@ -543,8 +543,10 @@ Always Resource #0 and never has a name.
 |-------|------|-------|--------------|-----------------|
 |  ???  |  2   |  2    | unsigned int | ???             |
 | Type  |  4   | VIVI  | FourCharCode | Library link    |
-| Count |  4   | 0-7   | unsigned in  | count of names in namespace |
+| Count |  4   | 0-7   | unsigned int | count of names in namespace |
+| ???   |  2   |  0    | unsigned int | ??? |
 | Names | ...  |       | PStr[]       | names in the namespace |
+| Path  |      |       | Path         | path |
 
 
 
