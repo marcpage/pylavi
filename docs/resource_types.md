@@ -712,6 +712,8 @@ The resource id is always 0.
 
 69% of VINS resources found had Path types in them.
 
+This appears to contain Link Items (some of which can contain Path types).
+
 ### VITS
 
 - **extensions** .vim, .glb, .vi, .ctl, .ctt, .vit, .gbl
