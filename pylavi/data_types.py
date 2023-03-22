@@ -532,7 +532,12 @@ class Path(Structure):
             self.type = Integer(0, byte_count=IntSize.INT16)
             self.count = Integer(0, byte_count=IntSize.INT16)
         else:
-            assert self.format.to_string() in Path.KNOWN_PATH_FORMATS, [self.format, data, offset, data[offset:]]
+            assert self.format.to_string() in Path.KNOWN_PATH_FORMATS, [
+                self.format,
+                data,
+                offset,
+                data[offset:],
+            ]
             string_type = PString16
             self.type = FourCharCode()
             self.count = Description()
@@ -544,7 +549,12 @@ class Path(Structure):
         self.count.from_bytes(data, offset)
         offset += self.count.size()
         elements = []
-        assert self.byte_count + original_offset <= len(data), [self.byte_count, original_offset, data, data[offset:]]
+        assert self.byte_count + original_offset <= len(data), [
+            self.byte_count,
+            original_offset,
+            data,
+            data[offset:],
+        ]
 
         while offset - original_offset < self.byte_count:
             elements.append(string_type().from_bytes(data, offset))
