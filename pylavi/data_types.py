@@ -312,6 +312,13 @@ class PString16(PString):
         super().__init__(value, pad_to, IntSize.INT16)
 
 
+class PStringPad2(PString):
+    """16-bit length prefixed string"""
+
+    def __init__(self, value: bytes = None, prefix_size: IntSize = IntSize.INT8):
+        super().__init__(value, pad_to=IntSize.INT16, prefix_size=prefix_size)
+
+
 class Structure(Description):
     """A collection of heterogeneous, named data"""
 
@@ -525,6 +532,7 @@ class Path(Structure):
             self.type = Integer(0, byte_count=IntSize.INT16)
             self.count = Integer(0, byte_count=IntSize.INT16)
         else:
+            assert self.format.to_string() in Path.KNOWN_PATH_FORMATS, [self.format, data, offset, data[offset:]]
             string_type = PString16
             self.type = FourCharCode()
             self.count = Description()
@@ -536,7 +544,7 @@ class Path(Structure):
         self.count.from_bytes(data, offset)
         offset += self.count.size()
         elements = []
-        assert self.byte_count + original_offset <= len(data), [original_offset, data]
+        assert self.byte_count + original_offset <= len(data), [self.byte_count, original_offset, data, data[offset:]]
 
         while offset - original_offset < self.byte_count:
             elements.append(string_type().from_bytes(data, offset))
