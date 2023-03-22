@@ -369,7 +369,7 @@ class Resources:
     @staticmethod
     def __validate_2nd_file_header(contents: bytes, header: Header) -> int:
         offset = header.metadata_offset.value
-        second_header = Header().from_bytes(contents[offset:]).validate(len(contents))
+        second_header = Header().from_bytes(contents, offset).validate(len(contents))
         assert (
             second_header == header
         ), f"headers don't match {header} vs {second_header}"
@@ -381,7 +381,7 @@ class Resources:
     ) -> (int, MetadataHeader):
         metadata_header = (
             MetadataHeader()
-            .from_bytes(contents[offset:])
+            .from_bytes(contents, offset)
             .validate(header, len(contents))
         )
         offset += metadata_header.size()
@@ -404,7 +404,7 @@ class Resources:
                 + metadata_header.names_offset.value
                 + resource_info.name_offset.value
             )
-            name = PString().from_bytes(contents[name_offset:])
+            name = PString().from_bytes(contents, name_offset)
             assert len(name.value) > 0, f"name_size = {len(name.value)}"
             return name.value
 
@@ -413,7 +413,7 @@ class Resources:
     @staticmethod
     def __load_resource_data(header, resource_info, contents):
         data_offset = header.data_offset + resource_info.data_offset
-        data_size = UInt32().from_bytes(contents[data_offset:])
+        data_size = UInt32().from_bytes(contents, data_offset)
         data_offset += data_size.size()
         offset_past_data = data_offset + data_size.value
         return contents[data_offset:offset_past_data]
@@ -443,7 +443,7 @@ class Resources:
             offset = header.metadata_offset
             offset += Header().size() + MetadataHeader().size()
             offset += entry.list_offset.value
-            resource_list.from_bytes(contents[offset:])
+            resource_list.from_bytes(contents, offset)
             resources = [
                 (
                     r.resource_id,
