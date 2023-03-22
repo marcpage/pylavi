@@ -481,7 +481,7 @@ This appears to contain Link Items (some of which can contain Path types).
 
 This appears to contain Link Items (some of which can contain Path types).
 
-Link Identity VI?
+Link Item VI?
 
 Always Resource #0 and never has a name.
 
@@ -491,7 +491,8 @@ Always Resource #0 and never has a name.
 | Type  |  4    |       | FourCharCode  | See types                 |
 | Name  | L + 1 |       | PString       | Name (padded to 2-byte)   |
 | ???   |  2    |   0   | unsigned int  | ???                       |
-| Count |  4    |       | unsigned int  | Number of Link Identities |
+| Count |  4    |       | unsigned int  | Number of Link Items 
+|
 | List  |       |       | Link Item     | ???                       |
 | End   |  2    |   3   | unsigned int  | Unknown
 
