@@ -16,7 +16,7 @@ def test_basic():
     path = Path().from_bytes(b'PTH0\x00\x00\x00\x04\x00\x02\x00\x00')
     expected_repr = 'Path(PTH0[4] not a path #0 [])'
     assert repr(path) == expected_repr, repr(path)
-    expected_str = 'None'
+    expected_str = Path.NOT_A_PATH_STRING
     assert str(path) == expected_str, str(path)
 
     path = Path().from_bytes(b'PTH0\x00\x00\x00N\x00\x03\x00\x07\x16\\\\nirvana\\measurements\x0binstruments\x02RF\x05group\x05yiluo\x07sub vis\x0fElapsed Time.vi')
@@ -45,6 +45,10 @@ def test_basic():
 
 
 TEST_SET = [
+
+    # null path
+    b'PTH0\x00\x00\x00\x00\x00\x00\x00\x00',
+
     # empty path, absolute and relative
     b'PTH0\x00\x00\x00\x04\x00\x00\x00\x00',
     b'PTH0\x00\x00\x00\x04\x00\x01\x00\x00',

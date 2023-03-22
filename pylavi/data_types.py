@@ -452,6 +452,7 @@ class Path(Structure):
     RELATIVE = 1
     NOTAPATH = 2
     UNC = 3
+    NOT_A_PATH_STRING = "\\\\NOT A PATH//"
     TYPE_VALUES = [ABSOLUTE, RELATIVE, NOTAPATH, UNC]
     TYPES = ["absolute", "relative", "not a path", "unc"]
     NEW_TYPES = ["abs ", "rel ", "!pth", "unc "]
@@ -526,6 +527,7 @@ class Path(Structure):
     def from_bytes(self, data: bytes, offset: int = 0):
         """fill in data from bytes"""
         super().from_bytes(data, offset)
+        assert self.byte_count >= 4 or self.byte_count == 0
 
         if self.format.to_string() == Path.KNOWN_PATH_FORMATS[0]:
             string_type = PString
@@ -545,6 +547,7 @@ class Path(Structure):
         offset += super().size()
         original_offset = offset
         self.type.from_bytes(data, offset)
+        assert self.byte_count >= 4 or self.is_type(Path.ABSOLUTE)
         offset += self.type.size()
         self.count.from_bytes(data, offset)
         offset += self.count.size()
@@ -560,7 +563,7 @@ class Path(Structure):
             elements.append(string_type().from_bytes(data, offset))
             offset += elements[-1].size()
 
-        assert offset - original_offset == self.byte_count, [
+        assert self.byte_count in {offset - original_offset, 0}, [
             offset,
             original_offset,
             self,
@@ -582,10 +585,10 @@ class Path(Structure):
     # pylint: disable=attribute-defined-outside-init
     def from_value(self, description: any):
         """Get a Python basic type to represent this value"""
-        if description is None:
+        if description is None or description == Path.NOT_A_PATH_STRING:
             self.format = FourCharCode(Path.KNOWN_PATH_FORMATS[0])
-            self.byte_count = UInt32(self.format.size())
-            self.type = UInt16(Path.NOTAPATH)
+            self.byte_count = UInt32(0 if description is None else self.format.size())
+            self.type = UInt16(Path.ABSOLUTE if description is None else Path.NOTAPATH)
             self.count = UInt16(0)
             self.elements = Array(PString)
             return self
@@ -628,6 +631,9 @@ class Path(Structure):
     def to_value(self) -> any:
         """restore from a basic python type"""
         if self.is_type(Path.NOTAPATH):
+            return Path.NOT_A_PATH_STRING
+
+        if self.byte_count == 0:
             return None
 
         if self.format.to_string() != Path.KNOWN_PATH_FORMATS[0]:
