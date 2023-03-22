@@ -12,7 +12,25 @@ import threading
 
 from pylavi.file import Resources
 from pylavi.resource_types import Typevers, TypeLVSR, TypeBDPW
-from pylavi.data_types import Version
+from pylavi.data_types import Version, Path
+
+
+class Problem:
+    """Describe a problem found with a file"""
+
+    def __init__(self, path, message, other=None):
+        self.path = path
+        self.message = message
+        self.other = other
+
+    def to_string(self):
+        """Displayable message about the problem"""
+        return f"{self.message}: {self.path}" + (
+            ("\n\t" + "\n\t".join(self.other)) if self.other else ""
+        )
+
+    def __str__(self):
+        return self.to_string()
 
 
 def add_version_options(parser):
@@ -94,6 +112,11 @@ def add_flag_options(parser):
     parser.add_argument("--debuggable", action="count", help="VI is debuggable")
     parser.add_argument("--not-debuggable", action="count", help="VI is not debuggable")
     parser.add_argument(
+        "--no-absolute-path",
+        action="store_true",
+        help="Does not reference links by absolute path",
+    )
+    parser.add_argument(
         "--autoerror",
         action="store_true",
         help="Not saved with auto error handling turned on",
@@ -139,10 +162,19 @@ def parse_args(command_line=None):
         action="count",
         help="Reduce the output (multiple times reduces output more)",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        help="Increase the output (multiple times increases output more)",
+    )
     args = parser.parse_args(args=command_line)
     args.path = args.path or ["."]
     args.skip = args.skip or []
     args.quiet = args.quiet or 0
+    args.verbose = args.verbose or 0
+    args.verbose -= args.quiet
+    args.quiet = -1 * args.verbose
     args.no_code = args.no_code or 0
     args.code = args.code or 0
     args.no_password = args.no_password or 0
@@ -208,6 +240,22 @@ def start_finding_files(paths):
     return found
 
 
+def find_paths(data):
+    """Search a block of data for potential Path data in it"""
+    paths = []
+
+    while b"PTH" in data:
+        try:
+            data = data[data.find(b"PTH") :]
+            paths.append(Path().from_bytes(data))
+            data = data[paths[-1].size() :]
+        except AssertionError:  # Just a random PTH in the resource, not a path
+            data = data[1:]
+
+    return paths
+
+
+# pylint: disable=too-many-return-statements
 def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str) -> bool:
     """validate run flags"""
 
@@ -215,29 +263,36 @@ def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str) ->
         args.clear_indicators - args.no_clear_indicators < 0
         and save_record.clear_indicators()
     ):
-        problems.append(("clear indicators", "", next_path))
+        problems.append(Problem(next_path, "Clear Indicators is on"))
+        return True
+
+    if (
+        args.clear_indicators - args.no_clear_indicators > 0
+        and not save_record.clear_indicators()
+    ):
+        problems.append(Problem(next_path, "Clear Indicators is off"))
         return True
 
     if args.run_on_open - args.no_run_on_open > 0 and not save_record.run_on_open():
-        problems.append(("no run on open", "", next_path))
+        problems.append(Problem(next_path, "Run on open is off"))
         return True
 
     if args.run_on_open - args.no_run_on_open < 0 and save_record.run_on_open():
-        problems.append(("run on open", "", next_path))
+        problems.append(Problem(next_path, "Run on open is on"))
         return True
 
     if (
         args.suspend_on_run - args.no_suspend_on_run > 0
         and not save_record.suspend_on_run()
     ):
-        problems.append(("no suspend on run", "", next_path))
+        problems.append(Problem(next_path, "Suspend on run is off"))
         return True
 
     if (
         args.suspend_on_run - args.no_suspend_on_run < 0
         and save_record.suspend_on_run()
     ):
-        problems.append(("suspend on run", "", next_path))
+        problems.append(Problem(next_path, "Suspend on run is on"))
         return True
 
     return False
@@ -247,26 +302,19 @@ def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str) -
     """Validates if the separate code flags matches the command line arguments"""
 
     if args.code - args.no_code > 0 and save_record.separate_code():
-        problems.append(("no code", "", next_path))
+        problems.append(Problem(next_path, "Code is separate from VI"))
         return True
 
     if args.code - args.no_code < 0 and not save_record.separate_code():
-        problems.append(("has code", "", next_path))
-        return True
-
-    if (
-        args.clear_indicators - args.no_clear_indicators > 0
-        and not save_record.clear_indicators()
-    ):
-        problems.append(("no clear indicators", "", next_path))
+        problems.append(Problem(next_path, "Code is not separate from VI"))
         return True
 
     if args.debuggable - args.not_debuggable > 0 and not save_record.debuggable():
-        problems.append(("not debuggable", "", next_path))
+        problems.append(Problem(next_path, "Not debuggable"))
         return True
 
     if args.debuggable - args.not_debuggable < 0 and save_record.debuggable():
-        problems.append(("debuggable", "", next_path))
+        problems.append(Problem(next_path, "Debuggable"))
         return True
 
     return False
@@ -277,27 +325,27 @@ def validate_locked_password(
 ) -> bool:
     """Validates if the separate code flags matches the command line arguments"""
     if args.password_match and not password.password_matches(args.password_match):
-        problems.append((f"password not {args.password_match}", "", next_path))
+        problems.append(Problem(next_path, "Password is not {args.password_match}"))
         return True
 
     if args.password - args.no_password > 0:
         if not save_record.locked() or not password.has_password():
-            problems.append(("no password", "", next_path))
+            problems.append(Problem(next_path, "No password"))
             return True
 
     if args.password - args.no_password < 0:
         if save_record.locked() and password.has_password():
-            problems.append(("has password", "", next_path))
+            problems.append(Problem(next_path, "Has password"))
             return True
 
     if args.locked - args.not_locked > 0:
         if not save_record.locked():
-            problems.append(("not locked", "", next_path))
+            problems.append(Problem(next_path, "Not locked"))
             return True
 
     if args.locked - args.not_locked < 0:
         if save_record.locked():
-            problems.append(("locked", "", next_path))
+            problems.append(Problem(next_path, "Locked"))
             return True
 
     return False
@@ -310,36 +358,100 @@ def validate_version(args, versions, problems, next_path):
         phase = version.phase()
 
         if args.gt and version < args.gt:
-            problems.append((f"<{args.gt}", version_string, next_path))
+            problems.append(
+                Problem(next_path, f"VI saved in LabVIEW {version_string} < {args.gt}")
+            )
             break
 
         if args.lt and not version < args.lt:
-            problems.append((f">{args.lt}", version_string, next_path))
+            problems.append(
+                Problem(next_path, f"VI saved in LabVIEW {version_string} > {args.lt}")
+            )
             break
 
         if args.eq and not version == args.eq:
-            problems.append((f"!={args.eq}", version_string, next_path))
+            problems.append(
+                Problem(
+                    next_path, f"VI saved in LabVIEW {version_string} is not {args.eq}"
+                )
+            )
             break
 
         if args.no_release and phase == Version.RELEASE:
-            problems.append(("no-release", version_string, next_path))
+            problems.append(
+                Problem(
+                    next_path,
+                    f"VI saved in LabVIEW {version_string} is a release version",
+                )
+            )
             break
 
         if args.no_beta and phase == Version.BETA:
-            problems.append(("no-beta", version_string, next_path))
+            problems.append(
+                Problem(
+                    next_path, f"VI saved in LabVIEW {version_string} is a beta version"
+                )
+            )
             break
 
         if args.no_alpha and phase == Version.ALPHA:
-            problems.append(("no-alpha", version_string, next_path))
+            problems.append(
+                Problem(
+                    next_path,
+                    f"VI saved in LabVIEW {version_string} is an alpha version",
+                )
+            )
             break
 
         if args.no_development and phase == Version.DEVELOPMENT:
-            problems.append(("no-development", version_string, next_path))
+            problems.append(
+                Problem(
+                    next_path,
+                    f"VI saved in LabVIEW {version_string} is a development version",
+                )
+            )
             break
 
         if args.no_invalid and (phase > Version.RELEASE or phase == 0):
-            problems.append(("no-invalid", version_string, next_path))
+            problems.append(
+                Problem(
+                    next_path,
+                    f"VI saved in LabVIEW {version_string} is an invalid phase",
+                )
+            )
             break
+
+
+def validate_links(resources: Resources, problems: list, next_path: str):
+    """validates that references are not linked via absolute paths"""
+    bad_paths = []
+
+    for _, _, data in resources.get_resources("LIvi"):
+        for path in find_paths(data):
+            if path.get_type() in [Path.RELATIVE, Path.NOTAPATH]:
+                continue
+
+            if path.to_value() is None:
+                continue
+
+            absolute = path.is_type(Path.ABSOLUTE)
+            has_elements = path.elements.length() > 0
+            begin_named = not has_elements or path.elements[0].value.startswith(b"<")
+            end_named = not has_elements or path.elements[0].value.endswith(b">")
+
+            if absolute and has_elements and begin_named and end_named:
+                continue
+
+            bad_paths.append(str(path))
+
+    if bad_paths:
+        plural = "" if len(bad_paths) == 1 else "s"
+        problems.append(
+            Problem(next_path, f"Absolute linker path{plural} found", bad_paths)
+        )
+        return True
+
+    return False
 
 
 # pylint: disable=no-member
@@ -364,9 +476,12 @@ def validate(args, resources: Resources, problems: list, next_path: str):
     if save_record:
         versions.append(save_record.version)
 
+    if not invalid and args.no_absolute_path:
+        invalid = validate_links(resources, problems, next_path)
+
     if not invalid and args.path_length and len(next_path) > args.path_length:
         problems.append(
-            (f"path length {len(next_path)} > {args.path_length}", "", next_path)
+            Problem(next_path, f"Path length {len(next_path)} > {args.path_length}")
         )
         invalid = True
 
@@ -375,7 +490,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
             number = save_record.breakpoint_count()
             plural = "" if number == 1 else "s"
             number = "" if number is None else f"{number} "
-            problems.append((f"{number}breakpoint{plural} found", "", next_path))
+            problems.append(Problem(next_path, f"{number} breakpoint{plural} found"))
             invalid = True
 
     if (
@@ -384,7 +499,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         and save_record
         and save_record.auto_error_handling()
     ):
-        problems.append(("auto error handling turned on", "", next_path))
+        problems.append(Problem(next_path, "Auto error handling turned on"))
         invalid = True
 
     if not invalid and save_record_resources:
@@ -402,9 +517,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         validate_version(args, versions, problems, next_path)
 
     if len(problems) > problem_count and args.quiet < 1:
-        print(
-            f"FAIL: {problems[-1][0]} saved in version {problems[-1][1]}: {problems[-1][2]}"
-        )
+        print(f"FAIL: {problems[-1]}")
 
 
 def should_skip(args, path):
@@ -429,14 +542,15 @@ def find_problems(args, files):
             continue
 
         try:
+            if args.verbose > 0:
+                print(f"Validating: {next_path}")
+
             validate(args, Resources.load(next_path), problems, next_path)
 
         except AssertionError as error:
-            problems.append((error, "", next_path))
+            problems.append(Problem(next_path, error))
             if args.quiet < 2:
-                print(
-                    f"FAIL: {problems[-1][0]} saved in version {problems[-1][1]}: {problems[-1][2]}"
-                )
+                print(f"FAIL: {problems[-1]}")
 
     return problems
 
@@ -444,6 +558,14 @@ def find_problems(args, files):
 def main(args=None):
     """run the (dis)assembler"""
     args = args or parse_args()
+
+    if args.verbose > 1:
+        print(
+            ", ".join(
+                f"{a} = {args.__dict__[a]}" for a in dir(args) if not a.startswith("_")
+            )
+        )
+
     files = start_finding_files(args.path)
     problems = find_problems(args, files)
 
