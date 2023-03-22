@@ -435,6 +435,7 @@ class Resources:
         last_offset = 0
 
         for entry in data_types:
+            assert entry.resource_count < int(header.metadata_size.value / ResourceMetadata().size()), "Corrupted"
             assert (
                 entry.list_offset > last_offset
             ), f"Unordered type table {entry.list_offset} vs {last_offset}"
