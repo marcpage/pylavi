@@ -37,7 +37,7 @@ def test_find_files():
 
 
 def test_run():
-    assert main(parse_args(['--path', os.path.join('tests', 'empty.vi')])) ==0
+    assert main(parse_args(['-v', '-v', '--path', os.path.join('tests', 'empty.vi')])) ==0
     assert main(parse_args(['-q', '--password', '--path', os.path.join('tests', 'empty.vi')])) == 1
     assert main(parse_args(['-q', '--no-password', '--path', os.path.split(os.path.split(__file__)[0])[0]])) == 1
     assert main(parse_args(['--path-length', '14', '--path',  os.path.join('tests', 'empty.vi')])) == 0
@@ -152,6 +152,10 @@ def test_run():
     problems = find_problems(parse_args(['--clear-indicators']), start_finding_files([os.path.join('tests', 'empty_clear_indicators.vi')]))
     assert len(problems) == 0, problems
     problems = find_problems(parse_args(['-q', '--no-clear-indicators']), start_finding_files([os.path.join('tests', 'empty_clear_indicators.vi')]))
+    assert len(problems) == 1, problems
+    problems = find_problems(parse_args(['-v', '-v', '--no-absolute-path']), start_finding_files([os.path.join('tests', 'relative_link.vi')]))
+    assert len(problems) == 0, problems
+    problems = find_problems(parse_args(['-q', '--no-absolute-path']), start_finding_files([os.path.join('tests', 'absolute_link_PTH.vi')]))
     assert len(problems) == 1, problems
 
 

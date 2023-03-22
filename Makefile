@@ -5,6 +5,7 @@ MODULE_NAME=pylavi
 SOURCES=$(MODULE_NAME)/*.py
 TEST_DIR=tests
 TESTS=$(TEST_DIR)/*.py
+TEST_FILES=$(TEST_DIR)/*.vi
 VENV_DIR=.venv
 VENV_ACTIVATE_SCRIPT=$(VENV_DIR)/bin/activate
 LINT_LOG=$(VENV_DIR)/lint.txt
@@ -45,7 +46,7 @@ $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
 lint: $(LINT_LOG)
 	@cat $<
 
-$(TEST_LOG): $(SOURCES) $(TESTS)  $(VENV_ACTIVATE_SCRIPT)
+$(TEST_LOG): $(SOURCES) $(TESTS) $(TEST_FILES) $(VENV_ACTIVATE_SCRIPT)
 	@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run --source=$(MODULE_NAME) -m pytest \
 		> $@ || (cat $@; exit 1)
 
