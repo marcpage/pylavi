@@ -452,7 +452,7 @@ class Path(Structure):
     RELATIVE = 1
     NOTAPATH = 2
     UNC = 3
-    NOT_A_PATH_STRING = '\\\\NOT A PATH//'
+    NOT_A_PATH_STRING = "\\\\NOT A PATH//"
     TYPE_VALUES = [ABSOLUTE, RELATIVE, NOTAPATH, UNC]
     TYPES = ["absolute", "relative", "not a path", "unc"]
     NEW_TYPES = ["abs ", "rel ", "!pth", "unc "]
@@ -563,7 +563,7 @@ class Path(Structure):
             elements.append(string_type().from_bytes(data, offset))
             offset += elements[-1].size()
 
-        assert offset - original_offset == self.byte_count or self.byte_count == 0, [
+        assert self.byte_count in {offset - original_offset, 0}, [
             offset,
             original_offset,
             self,
