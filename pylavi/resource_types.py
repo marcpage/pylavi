@@ -5,8 +5,113 @@
 
 import hashlib
 
-from pylavi.data_types import Structure, Array, Bytes, UInt32, UInt16
-from pylavi.data_types import PString, Version, Path
+from pylavi.data_types import Structure, Array, Bytes, UInt32, UInt16, FourCharCode
+from pylavi.data_types import PString, PStringPad2, Version, Path, Description
+
+
+class LinkItemVIVI(Structure):
+    TYPE = b"VIVI"
+
+    def __init__(self):
+        super().__init__(
+            "type",
+            FourCharCode(LinkItemVIVI.TYPE),
+            "unknown1",
+            UInt16(0),
+            "count",
+            UInt32(0),
+            "names",
+            Array(PString),
+            "path",
+            Path(),
+            "unknown2",
+            Bytes(byte_count=30),
+            "more",
+            UInt16(TypeLIvi.MORE),
+        )
+
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
+        print(f"LinkItemVIVI.from_bytes({data}, {offset}, {data[offset:]}) -> {self}")
+        offset += self.type.from_bytes(data, offset).size()
+        print(f"\t type = {self.type} offset = {offset} {data[offset:]}")
+        assert self.type.value == LinkItemVIVI.TYPE
+        offset += self.unknown1.from_bytes(data, offset).size()
+        print(f"\t unknown1 = {self.unknown1} offset = {offset} {data[offset:]}")
+        offset += self.count.from_bytes(data, offset).size()
+        print(f"\t count = {self.count} offset = {offset} {data[offset:]}")
+        self.names.set_length(self.count.value)
+        self.names.from_bytes(data, offset)
+        offset += self.names.size() + self.names.size() % 2  # pad to 2 bytes
+        print(
+            f"\t names = {self.names} size = {self.names.size()} pad = {self.names.size()%2} offset = {offset} {data[offset:]}"
+        )
+        offset += self.path.from_bytes(data, offset).size()
+        print(f"\t path = {self.path} offset = {offset} {data[offset:]}")
+        offset += self.unknown2.from_bytes(data, offset).size()
+        print(f"\t unknown2 = {self.unknown2} offset = {offset} {data[offset:]}")
+        offset += self.more.from_bytes(data, offset).size()
+        print(f"\t more = {repr(self.more)} offset = {offset} {data[offset:]}")
+        assert self.more.value in {TypeLIvi.MORE, TypeLIvi.END}, [self.more]
+        return self
+
+
+class TypeLIvi(Structure):
+    CONTROL_TYPE = b"LVCC"
+    VI_TYPE = b"LVIN"
+    START = 1
+    MORE = 2
+    END = 3
+
+    def __init__(self):
+        super().__init__(
+            "start",
+            UInt16(TypeLIvi.START),
+            "type",
+            FourCharCode(TypeLIvi.VI_TYPE),
+            "name",
+            PStringPad2(),
+            "zero",
+            UInt16(0),
+            "count",
+            UInt32(0),
+            "more",
+            UInt16(TypeLIvi.MORE),
+            "items",
+            Array(LinkItemVIVI),
+        )
+
+    def from_bytes(self, data: bytes, offset: int = 0):
+        """fill in data from bytes"""
+        offset += self.start.from_bytes(data, offset).size()
+        assert self.start.value == TypeLIvi.START
+        offset += self.type.from_bytes(data, offset).size()
+        assert self.type.value in {TypeLIvi.CONTROL_TYPE, TypeLIvi.VI_TYPE}
+        offset += self.name.from_bytes(data, offset).size()
+        offset += self.zero.from_bytes(data, offset).size()
+        assert self.zero.value == 0, self.zero
+        offset += self.count.from_bytes(data, offset).size()
+        offset += self.more.from_bytes(data, offset).size()
+        assert self.more.value in {TypeLIvi.MORE, TypeLIvi.END}
+        assert self.count == 0 or self.more.value == TypeLIvi.MORE
+        assert self.count > 0 or self.more.value == TypeLIvi.END
+        self.items.set_length(self.count.value)
+        self.items.from_bytes(data, offset)
+        assert self.count == 0 or self.items[-1].more == TypeLIvi.END
+        return self
+
+    def to_bytes(self) -> bytes:
+        """get the binary version"""
+        return (
+            self.start.to_bytes()
+            + self.type.to_bytes()
+            + self.name.to_bytes()
+            + (UInt8(0) if self.name.size() % 2 == 1 else Description()).to_bytes()
+            + self.zero.to_bytes()
+            + self.count.to_bytes()
+            + self.more.to_bytes()
+            + self.items.to_bytes()
+        )
 
 
 class TypePATH(Path):
