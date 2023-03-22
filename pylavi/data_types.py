@@ -594,10 +594,15 @@ class Path(Structure):
             else UInt16(path_format)
         )
         description = description[len(Path.STARTS[path_format]) :]
-        self.elements = Array(
-            name_type,
-            *[name_type(self.__str_to_name(n)) for n in description.split("/")],
-        )
+
+        if description:
+            elements = [
+                name_type(self.__str_to_name(n)) for n in description.split("/")
+            ]
+        else:
+            elements = []
+
+        self.elements = Array(name_type, *elements)
         self.count = Description() if new_path_type else UInt16(len(self.elements))
         self.byte_count = UInt32(len(self.to_bytes()) - super().size())
         return self
