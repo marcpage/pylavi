@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from pylavi.data_types import PString, Structure, IntSize, PString16
+from pylavi.data_types import PString, Structure, IntSize, PString16, PStringPad2
 
 
 def test_strings():
@@ -60,6 +60,23 @@ def test_PString16():
         assert reconstituted.to_bytes() == binary, [test_index, reconstituted.to_bytes(), binary]
 
 
+def test_PStringPad2():
+    for test_index, binary in enumerate(PADDING_TEST_SET):
+        pad_to = PADDING_TEST_SET[binary].get('pad_to', IntSize.INT16)
+        prefix_size = PADDING_TEST_SET[binary].get('prefix_size', IntSize.INT8)
+
+        if pad_to != IntSize.INT16:
+            continue
+
+        s = Structure('first', PStringPad2(prefix_size=prefix_size),'last', PStringPad2(prefix_size=prefix_size)).from_bytes(binary)
+        assert s.first == PADDING_TEST_SET[binary]['first'], [test_index, s, PADDING_TEST_SET[binary], binary]
+        assert s.last == PADDING_TEST_SET[binary]['last']
+        assert s.to_bytes() == binary, [test_index, s.to_bytes(), binary]
+        description = s.to_value()
+        reconstituted = Structure('first', PStringPad2(prefix_size=prefix_size),'last', PStringPad2(prefix_size=prefix_size)).from_value(description)
+        assert reconstituted.to_bytes() == binary, [test_index, reconstituted.to_bytes(), binary]
+
+
 PADDING_TEST_SET = {
     b'\x02AB\x00\x01A\x00\x00': {'first': 'AB', 'last': 'A', 'pad_to': IntSize.INT32},
     b'\x01J\x00\x00\x01K\x00\x00': {'first': 'J', 'last': 'K', 'pad_to': IntSize.INT32},
@@ -89,4 +106,5 @@ if __name__ == "__main__":
     test_strings()
     test_padding_and_prefix_size()
     test_PString16()
+    test_PStringPad2()
 
