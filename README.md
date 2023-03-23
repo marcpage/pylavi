@@ -14,7 +14,7 @@
 Python LabVIEW VI file checker.
 
 There are many valuable checks that should be done on LabVIEW source code. 
-While you can perform all these checks via running LabVIEW, `vi_validate` command can validate over a thousand VIs before LabVIEW can even launch.
+While you can perform all these checks via running LabVIEW, `vi_validate` command can validate over a thousand VIs before LabVIEW can even launch (and only requires that Python be installed and not all of LabVIEW).
 
 Checks:
 - Dependency paths are not absolute paths (this can cause long mass compile times)
