@@ -119,6 +119,7 @@ Each key underneath is the `--` name with hyphens converted to underscores (eg `
 `path`, `skip`, and `extension` are lists.
 `path_length` and `password_match` are values.
 All enable flags are set to `true` to enable.
+`path` and `skip` paths are relative to the directory that the config file is in.
 
 ```
 usage: vi_validate [-h] [-l LT] [-g GT] [-e EQ] [-r] [-b] [-a] [-d] [-i] [-c] [--code] [--breakpoints] [--locked] [--not-locked]
