@@ -181,6 +181,7 @@ def patch_up_args(args):
         args.no_development = True
         args.no_invalid = True
         args.path_length = 260
+        args.no_absolute_path = True
 
     if not args.extension:
         args.extension = Resources.EXTENSIONS
