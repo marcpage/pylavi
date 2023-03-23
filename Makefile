@@ -2,6 +2,7 @@
 
 MIN_TEST_COVERAGE=99
 MODULE_NAME=pylavi
+REQUIREMENTS_FILE=requirements.txt
 SOURCES=$(MODULE_NAME)/*.py
 TEST_DIR=tests
 TESTS=$(TEST_DIR)/*.py
@@ -24,6 +25,7 @@ clean:
 $(VENV_ACTIVATE_SCRIPT):
 	@python3 -m venv $(VENV_DIR)
 	@$(RUN_IN_VENV) python3 -m pip install -q --upgrade pip && pip3 install -q setuptools wheel
+	@$(RUN_IN_VENV) pip3 install -r $(REQUIREMENTS_FILE)
 	@echo VENV Created
 
 venv: $(VENV_ACTIVATE_SCRIPT)

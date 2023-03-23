@@ -9,10 +9,17 @@ import os
 import queue
 import sys
 import threading
+import time
+import types
+
+import yaml
 
 from pylavi.file import Resources
 from pylavi.resource_types import Typevers, TypeLVSR, TypeBDPW
 from pylavi.data_types import Version, Path
+
+
+MAX_FILES_TO_QUEUE = 1000
 
 
 class Problem:
@@ -123,6 +130,64 @@ def add_flag_options(parser):
     )
 
 
+def patch_up_args(args):
+    """from the raw args patch them up to be useful"""
+    args.path = args.path or ([] if args.config else ["."])
+    args.skip = args.skip or []
+    args.quiet = args.quiet or 0
+    args.verbose = args.verbose or 0
+    args.verbose -= args.quiet
+    args.quiet = -1 * args.verbose
+    args.no_code = args.no_code or 0
+    args.code = args.code or 0
+    args.no_password = args.no_password or 0
+    args.password = args.password or 0
+    args.not_locked = args.not_locked or 0
+    args.locked = args.locked or 0
+    args.not_debuggable = args.not_debuggable or 0
+    args.debuggable = args.debuggable or 0
+    args.no_clear_indicators = args.no_clear_indicators or 0
+    args.clear_indicators = args.clear_indicators or 0
+    args.no_run_on_open = args.no_run_on_open or 0
+    args.run_on_open = args.run_on_open or 0
+    args.no_suspend_on_run = args.no_suspend_on_run or 0
+    args.suspend_on_run = args.suspend_on_run or 0
+    has_comparison = args.lt or args.gt or args.eq
+    has_phase = (
+        args.no_release
+        or args.no_beta
+        or args.no_alpha
+        or args.no_development
+        or args.no_invalid
+    )
+    has_code = args.no_code > 0 or args.code > 0
+    has_locked = args.locked > 0 or args.not_locked > 0
+    has_password = args.password > 0 or args.no_password > 0
+    has_debuggable = args.debuggable > 0 or args.not_debuggable > 0
+    has_binary = has_code or has_locked or has_password or has_debuggable
+    has_other = (
+        args.autoerror or args.breakpoints or args.password_match or args.path_length
+    )
+
+    if (
+        not has_comparison
+        and not has_phase
+        and not has_binary
+        and not has_other
+        and not args.config
+    ):
+        args.no_beta = True
+        args.no_alpha = True
+        args.no_development = True
+        args.no_invalid = True
+        args.path_length = 260
+
+    if not args.extension:
+        args.extension = Resources.EXTENSIONS
+
+    return args
+
+
 def parse_args(command_line=None):
     """Interpret command line arguments"""
     command_line = command_line or sys.argv[1:]
@@ -168,74 +233,32 @@ def parse_args(command_line=None):
         action="count",
         help="Increase the output (multiple times increases output more)",
     )
-    args = parser.parse_args(args=command_line)
-    args.path = args.path or ["."]
-    args.skip = args.skip or []
-    args.quiet = args.quiet or 0
-    args.verbose = args.verbose or 0
-    args.verbose -= args.quiet
-    args.quiet = -1 * args.verbose
-    args.no_code = args.no_code or 0
-    args.code = args.code or 0
-    args.no_password = args.no_password or 0
-    args.password = args.password or 0
-    args.not_locked = args.not_locked or 0
-    args.locked = args.locked or 0
-    args.not_debuggable = args.not_debuggable or 0
-    args.debuggable = args.debuggable or 0
-    args.no_clear_indicators = args.no_clear_indicators or 0
-    args.clear_indicators = args.clear_indicators or 0
-    args.no_run_on_open = args.no_run_on_open or 0
-    args.run_on_open = args.run_on_open or 0
-    args.no_suspend_on_run = args.no_suspend_on_run or 0
-    args.suspend_on_run = args.suspend_on_run or 0
-    has_comparison = args.lt or args.gt or args.eq
-    has_phase = (
-        args.no_release
-        or args.no_beta
-        or args.no_alpha
-        or args.no_development
-        or args.no_invalid
+    parser.add_argument(
+        "--config",
+        type=str,
+        help="Path to a .yaml file with collections of arguments",
     )
-    has_code = args.no_code > 0 or args.code > 0
-    has_locked = args.locked > 0 or args.not_locked > 0
-    has_password = args.password > 0 or args.no_password > 0
-    has_debuggable = args.debuggable > 0 or args.not_debuggable > 0
-    has_binary = has_code or has_locked or has_password or has_debuggable
-    has_other = (
-        args.autoerror or args.breakpoints or args.password_match or args.path_length
-    )
-
-    if not has_comparison and not has_phase and not has_binary and not has_other:
-        args.no_beta = True
-        args.no_alpha = True
-        args.no_development = True
-        args.no_invalid = True
-        args.path_length = 260
-
-    if not args.extension:
-        args.extension = Resources.EXTENSIONS
-
-    return args
+    return patch_up_args(parser.parse_args(args=command_line))
 
 
-def find_files(found_queue, paths):
+def find_files(found_queue, argsset):
     """Find files in given paths and put them in the queue"""
-    for path in paths:
-        if os.path.isfile(path):
-            found_queue.put(path)
-        else:
-            for root, _, files in os.walk(path):
-                for file in files:
-                    found_queue.put(os.path.join(root, file))
+    for args in argsset:
+        for path in args.path:
+            if os.path.isfile(path):
+                found_queue.put((args, path))
+            else:
+                for root, _, files in os.walk(path):
+                    for file in files:
+                        found_queue.put((args, os.path.join(root, file)))
 
     found_queue.put(None)
 
 
-def start_finding_files(paths):
+def start_finding_files(args):
     """Start the find_files function running in the background finding files"""
-    found = queue.Queue()
-    thread = threading.Thread(target=find_files, args=(found, paths), daemon=True)
+    found = queue.Queue(MAX_FILES_TO_QUEUE)
+    thread = threading.Thread(target=find_files, args=(found, args), daemon=True)
     thread.start()
     return found
 
@@ -520,17 +543,25 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         print(f"FAIL: {problems[-1]}")
 
 
-def should_skip(args, path):
+def should_skip(args, path, verbose: int):
     """Determine if the file should be skipped"""
     if os.path.splitext(path)[1] not in args.extension:
         return True
 
+    if verbose > 2:
+        print(f"path = {path}")
+
+        for skip in [] if not args.skip else args.skip:
+            print(f"\t skip = {skip} fnmatch = {fnmatch.fnmatch(path, skip)}")
+
     return any(fnmatch.fnmatch(path, p) for p in ([] if not args.skip else args.skip))
 
 
-def find_problems(args, files):
+def find_problems(files, top_args):
     """Searchs for problems files and returns them"""
     problems = []
+    file_count = 0
+    start = time.time()
 
     while True:
         next_path = files.get()
@@ -538,13 +569,22 @@ def find_problems(args, files):
         if next_path is None:
             break
 
-        if should_skip(args, next_path):
+        args, next_path = next_path
+        suffix = ""
+
+        if "name" in dir(args):
+            suffix = f" from {args.name}"
+
+        if should_skip(args, next_path, verbose=args.verbose):
+            if args.verbose > 1:
+                print(f"Skipping: {next_path}{suffix}")
             continue
 
         try:
             if args.verbose > 0:
-                print(f"Validating: {next_path}")
+                print(f"Validating: {next_path}{suffix}")
 
+            file_count += 1
             validate(args, Resources.load(next_path), problems, next_path)
 
         except AssertionError as error:
@@ -552,24 +592,65 @@ def find_problems(args, files):
             if args.quiet < 2:
                 print(f"FAIL: {problems[-1]}")
 
+    if top_args.verbose > 1:
+        print(
+            f"{file_count} files in {time.time() - start:0.1f} seconds "
+            + f"{file_count / (time.time() - start):0.0f} files/second"
+        )
+
     return problems
+
+
+def parse_config_file(args):
+    """parse the config yaml file and generate args"""
+    if not args.config:
+        return (args,)
+
+    with open(args.config, "r", encoding="utf-8") as config_file:
+        more_args = yaml.load(config_file, Loader=yaml.Loader)
+
+    config_dir = os.path.dirname(args.config)
+    full_arg_set = {a: None for a in dir(args) if not a.startswith("_")}
+    config_args = []
+
+    for arg_set_name in more_args:
+        arg_set = dict(full_arg_set)
+        arg_set.update(more_args[arg_set_name])
+        arg_set["name"] = arg_set_name
+        arg_set["relative_to"] = config_dir
+
+        for path_type in ["path", "skip"]:
+            if arg_set.get(path_type, False):
+                arg_set[path_type] = [
+                    os.path.join(config_dir, p) for p in arg_set[path_type]
+                ]
+
+        config_args.append(patch_up_args(types.SimpleNamespace(**arg_set)))
+        config_args[-1].verbose = args.verbose
+        config_args[-1].quiet = args.quiet
+
+    return (args, *config_args)
 
 
 def main(args=None):
     """run the (dis)assembler"""
-    args = args or parse_args()
+    args = parse_config_file(args or parse_args())
 
-    if args.verbose > 1:
-        print(
-            ", ".join(
-                f"{a} = {args.__dict__[a]}" for a in dir(args) if not a.startswith("_")
+    if args[0].verbose > 1:
+        for argset in args:
+            print(
+                f"{argset.name if 'name' in dir(argset) else 'CLI'}: "
+                + ", ".join(
+                    f"{a} = {argset.__dict__[a]}"
+                    for a in dir(argset)
+                    if not a.startswith("_")
+                )
             )
-        )
 
-    files = start_finding_files(args.path)
-    problems = find_problems(args, files)
+    files = start_finding_files(args)
+    problems = find_problems(files, args[0])
 
-    if len(problems) > 0 and args.quiet < 3:
+    if len(problems) > 0 and args[0].quiet < 3:
         print(f"{len(problems)} problems encounted")
         return 1
 
