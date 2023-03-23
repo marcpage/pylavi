@@ -1,0 +1,29 @@
+public api:
+    path:
+        - ..
+    skip:
+        - ../tests/*
+    gt: 8.0f
+    lt: 23.0f
+    no_code: true
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    no_breakpoints: true
+    password_match: Setec Astronomy
+    clear_indicators: true
+    no_run_on_open: true
+    no_suspend_on_run: true
+    not_debuggable: true
+    no_absolute_path: true
+    autoerror: true
+    path_length: 128
+
+test code:
+    path:
+        - ../tests
+    extension:
+        - .vi
+    eq: 21.0f
+    path_length: 128

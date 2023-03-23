@@ -45,7 +45,7 @@ setup(
     long_description_content_type="text/markdown",
     author="marcpage",
     author_email="MarcAllenPage@gmail.com",
-    install_requires=[],
+    install_requires=['PyYAML'],
     python_requires="",
     url="https://github.com/marcpage/pylavi",
     license="Unlicense",
