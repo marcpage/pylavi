@@ -1,0 +1,292 @@
+test all:
+    path:
+        - ..
+    skip:
+        - ../tests/empty_alpha.vi
+        - ../tests/empty_beta.vi
+        - ../tests/empty_dev.vi
+        - ../tests/empty_invalid.vi
+    eq: 21.0f
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    path_length: 44
+
+
+test beta:
+    path:
+        - ../tests/empty_beta.vi
+    eq: 21.0b
+    path_length: 44
+    no_release: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+
+
+test alpha:
+    path:
+        - ../tests/empty_alpha.vi
+    eq: 21.0a
+    path_length: 44
+    no_beta: true
+    no_release: true
+    no_development: true
+    no_invalid: true
+
+
+test dev:
+    path:
+        - ../tests/empty_dev.vi
+    eq: 21.0d
+    path_length: 44
+    no_beta: true
+    no_alpha: true
+    no_release: true
+    no_invalid: true
+
+
+test invalid:
+    path:
+        - ../tests/empty_invalid.vi
+    eq: 21.0{0}
+    path_length: 44
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_release: true
+
+
+test flags:
+    path:
+        - ..
+    skip:
+        - ../tests/empty_separate_code.vi
+        - ../tests/empty_no_debugging.vi
+        - ../tests/empty_clear_indicators.vi
+        - ../tests/empty_run_on_open.vi
+        - ../tests/absolute_link_PTH.vi
+        - ../tests/empty_suspend_when_called.vi
+        - ../tests/add_breakpoints.vi
+        - ../tests/empty_password.vi
+        - ../tests/empty_locked.vi
+    code: true
+    breakpoints: true
+    not_locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+test no code:
+    path:
+        - ../tests/empty_separate_code.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    no_code: true
+    breakpoints: true
+    not_locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+
+test not debuggable:
+    path:
+        - ../tests/empty_no_debugging.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: true
+    not_locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    not_debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+
+test clear indicators:
+    path:
+        - ../tests/empty_clear_indicators.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: true
+    not_locked: true
+    clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+
+test run on open:
+    path:
+        - ../tests/empty_run_on_open.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: true
+    not_locked: true
+    no_clear_indicators: true
+    run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+
+test absolute path:
+    path:
+        - ../tests/absolute_link_PTH.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: true
+    not_locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: false
+    no_password: true
+
+
+test suspend when called:
+    path:
+        - ../tests/empty_suspend_when_called.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: true
+    not_locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+
+test breakpoints:
+    path:
+        - ../tests/add_breakpoints.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: false
+    not_locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+
+test locked:
+    path:
+        - ../tests/empty_password.vi
+        - ../tests/empty_locked.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: false
+    locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+
+
+test locked no password:
+    path:
+        - ../tests/empty_locked.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: false
+    locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    no_password: true
+
+
+test password:
+    path:
+        - ../tests/empty_password.vi
+    eq: 21.0f
+    path_length: 44
+    no_release: false
+    no_beta: true
+    no_alpha: true
+    no_development: true
+    no_invalid: true
+    code: true
+    breakpoints: false
+    locked: true
+    no_clear_indicators: true
+    no_run_on_open: true
+    debuggable: true
+    no_suspend_on_run: true
+    no_absolute_path: true
+    password: true
+    password_match: password
