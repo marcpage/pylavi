@@ -10,7 +10,7 @@ public api:
     no_alpha: true
     no_development: true
     no_invalid: true
-    no_breakpoints: true
+    breakpoints: false
     password_match: Setec Astronomy
     clear_indicators: true
     no_run_on_open: true

@@ -45,6 +45,7 @@ def test_run():
     assert main(parse_args(['--path-length', '14', '--path',  os.path.join('tests', 'empty.vi')])) == 0
     assert main(parse_args(['-q', '--path-length', '13', '--path',  os.path.join('tests', 'empty.vi')])) == 1
     assert main(parse_args(['--config', os.path.join('tests', 'args.yaml')])) == 1
+    assert main(parse_args(['--config', os.path.join('tests', 'test.yaml')])) == 0
     root_dir = os.path.split(os.path.split(__file__)[0])[0]
     assert main(parse_args(['-v', '-v', '-v', '--no-password', '--skip', os.path.join(root_dir, 'tests', '*'), '--path', os.path.split(os.path.split(__file__)[0])[0]])) == 0
     test_vi_set = [

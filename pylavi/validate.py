@@ -349,7 +349,7 @@ def validate_locked_password(
 ) -> bool:
     """Validates if the separate code flags matches the command line arguments"""
     if args.password_match and not password.password_matches(args.password_match):
-        problems.append(Problem(next_path, "Password is not {args.password_match}"))
+        problems.append(Problem(next_path, f"Password is not '{args.password_match}'"))
         return True
 
     if args.password - args.no_password > 0:
@@ -615,6 +615,10 @@ def parse_config_file(args):
     config_args = []
 
     for arg_set_name in more_args:
+        assert set(more_args[arg_set_name]) <= set(full_arg_set), (
+            f"Unknown {set(more_args[arg_set_name]) - set(full_arg_set)} "
+            + f"in '{arg_set_name}' section in {args.config}"
+        )
         arg_set = dict(full_arg_set)
         arg_set.update(more_args[arg_set_name])
         arg_set["name"] = arg_set_name
