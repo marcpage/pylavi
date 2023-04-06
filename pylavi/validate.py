@@ -39,6 +39,9 @@ class Problem:
     def __str__(self):
         return self.to_string()
 
+    def __repr__(self):
+        return self.to_string()
+
 
 def add_version_options(parser):
     """adds options related to LabVIEW version that saved the file"""
@@ -279,8 +282,7 @@ def find_paths(data):
     return paths
 
 
-# pylint: disable=too-many-return-statements
-def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str) -> bool:
+def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str):
     """validate run flags"""
 
     if (
@@ -288,91 +290,70 @@ def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str) ->
         and save_record.clear_indicators()
     ):
         problems.append(Problem(next_path, "Clear Indicators is on"))
-        return True
 
     if (
         args.clear_indicators - args.no_clear_indicators > 0
         and not save_record.clear_indicators()
     ):
         problems.append(Problem(next_path, "Clear Indicators is off"))
-        return True
 
     if args.run_on_open - args.no_run_on_open > 0 and not save_record.run_on_open():
         problems.append(Problem(next_path, "Run on open is off"))
-        return True
 
     if args.run_on_open - args.no_run_on_open < 0 and save_record.run_on_open():
         problems.append(Problem(next_path, "Run on open is on"))
-        return True
 
     if (
         args.suspend_on_run - args.no_suspend_on_run > 0
         and not save_record.suspend_on_run()
     ):
         problems.append(Problem(next_path, "Suspend on run is off"))
-        return True
 
     if (
         args.suspend_on_run - args.no_suspend_on_run < 0
         and save_record.suspend_on_run()
     ):
         problems.append(Problem(next_path, "Suspend on run is on"))
-        return True
-
-    return False
 
 
-def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str) -> bool:
+def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str):
     """Validates if the separate code flags matches the command line arguments"""
 
     if args.code - args.no_code > 0 and save_record.separate_code():
         problems.append(Problem(next_path, "Code is separate from VI"))
-        return True
 
     if args.code - args.no_code < 0 and not save_record.separate_code():
         problems.append(Problem(next_path, "Code is not separate from VI"))
-        return True
 
     if args.debuggable - args.not_debuggable > 0 and not save_record.debuggable():
         problems.append(Problem(next_path, "Not debuggable"))
-        return True
 
     if args.debuggable - args.not_debuggable < 0 and save_record.debuggable():
         problems.append(Problem(next_path, "Debuggable"))
-        return True
-
-    return False
 
 
 def validate_locked_password(
     args, save_record: TypeLVSR, password: TypeBDPW, problems: list, next_path: str
-) -> bool:
+):
     """Validates if the separate code flags matches the command line arguments"""
     if args.password_match and not password.password_matches(args.password_match):
         problems.append(Problem(next_path, f"Password is not '{args.password_match}'"))
-        return True
 
     if args.password - args.no_password > 0:
         if not save_record.locked() or not password.has_password():
             problems.append(Problem(next_path, "No password"))
-            return True
 
     if args.password - args.no_password < 0:
         if save_record.locked() and password.has_password():
             problems.append(Problem(next_path, "Has password"))
-            return True
 
     if args.locked - args.not_locked > 0:
         if not save_record.locked():
             problems.append(Problem(next_path, "Not locked"))
-            return True
 
     if args.locked - args.not_locked < 0:
         if save_record.locked():
             problems.append(Problem(next_path, "Locked"))
-            return True
-
-    return False
 
 
 def validate_version(args, versions, problems, next_path):
@@ -473,9 +454,6 @@ def validate_links(resources: Resources, problems: list, next_path: str):
         problems.append(
             Problem(next_path, f"Absolute linker path{plural} found", bad_paths)
         )
-        return True
-
-    return False
 
 
 # pylint: disable=no-member
@@ -495,50 +473,40 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         TypeBDPW().from_bytes(password_resources[0][2]) if password_resources else None
     )
     problem_count = len(problems)
-    invalid = False
 
     if save_record:
         versions.append(save_record.version)
 
-    if not invalid and args.no_absolute_path:
-        invalid = validate_links(resources, problems, next_path)
+    if args.no_absolute_path:
+        validate_links(resources, problems, next_path)
 
-    if not invalid and args.path_length and len(next_path) > args.path_length:
+    if args.path_length and len(next_path) > args.path_length:
         problems.append(
             Problem(next_path, f"Path length {len(next_path)} > {args.path_length}")
         )
-        invalid = True
 
-    if not invalid and args.breakpoints and save_record:
+    if args.breakpoints and save_record:
         if save_record.has_breakpoints():
             number = save_record.breakpoint_count()
             plural = "" if number == 1 else "s"
             number = "" if number is None else f"{number} "
             problems.append(Problem(next_path, f"{number} breakpoint{plural} found"))
-            invalid = True
 
-    if (
-        not invalid
-        and args.autoerror
-        and save_record
-        and save_record.auto_error_handling()
-    ):
+    if args.autoerror and save_record and save_record.auto_error_handling():
         problems.append(Problem(next_path, "Auto error handling turned on"))
-        invalid = True
 
-    if not invalid and save_record_resources:
-        invalid = validate_code(args, save_record, problems, next_path)
+    if save_record_resources:
+        validate_code(args, save_record, problems, next_path)
 
-    if not invalid and save_record_resources:
-        invalid = validate_run(args, save_record, problems, next_path)
+    if save_record_resources:
+        validate_run(args, save_record, problems, next_path)
 
-    if not invalid and save_record_resources and password_record:
-        invalid = validate_locked_password(
+    if save_record_resources and password_record:
+        validate_locked_password(
             args, save_record, password_record, problems, next_path
         )
 
-    if not invalid:
-        validate_version(args, versions, problems, next_path)
+    validate_version(args, versions, problems, next_path)
 
     if len(problems) > problem_count and args.quiet < 1:
         print(f"FAIL: {problems[-1]}")

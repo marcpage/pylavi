@@ -161,6 +161,9 @@ def test_run():
     assert len(problems) == 0, problems
     problems = find_problems(start_finding_files(parse_config_file(parse_args(['-q', '--no-absolute-path', '-p', os.path.join('tests', 'absolute_link_PTH.vi')]))), parse_args(['-v']))
     assert len(problems) == 1, problems
+    problems = find_problems(start_finding_files(parse_config_file(parse_args(['-q', '--locked', '--no-code', '-p', os.path.join('tests', 'empty.vi')]))), parse_args(['-v']))
+    assert len(problems) == 2, problems
+    print(problems)
 
 
 EXPECTED_FILES = {
