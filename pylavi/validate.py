@@ -624,7 +624,7 @@ def main(args=None):
     problems = find_problems(files, args[0])
 
     if len(problems) > 0 and args[0].quiet < 3:
-        print(f"{len(problems)} problems encounted")
+        print(f"{len(problems)} problems encountered")
         return 1
 
     return 0
