@@ -2,7 +2,6 @@
     LabVIEW resource data
 """
 
-
 import hashlib
 
 from pylavi.data_types import Structure, Array, Bytes, UInt32, UInt16

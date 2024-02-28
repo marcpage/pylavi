@@ -2,7 +2,6 @@
     Common data types for LabVIEW resources
 """
 
-
 import struct
 import enum
 from functools import total_ordering

@@ -2,7 +2,6 @@
     Parses a LabVIEW resource file
 """
 
-
 from pylavi.data_types import Structure, Array, FourCharCode, PString, UInt16, UInt32
 
 

@@ -2,7 +2,6 @@
     Checks LabVIEW resource file(s) for given criteria
 """
 
-
 import argparse
 import fnmatch
 import os

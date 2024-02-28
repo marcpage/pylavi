@@ -2,7 +2,6 @@
     Parses a LabVIEW resource file
 """
 
-
 import argparse
 import json
 import sys
