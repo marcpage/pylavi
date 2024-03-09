@@ -3,6 +3,7 @@
 MIN_TEST_COVERAGE=99
 MODULE_NAME=pylavi
 REQUIREMENTS_FILE=requirements.txt
+INFRA_REQUIREMENTS_FILE=requirements-infra.txt
 SOURCES=$(MODULE_NAME)/*.py
 TEST_DIR=tests
 TESTS=$(TEST_DIR)/*.py
@@ -31,7 +32,7 @@ $(VENV_ACTIVATE_SCRIPT):
 venv: $(VENV_ACTIVATE_SCRIPT)
 
 $(BLACK_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
-	@$(RUN_IN_VENV) pip3 install -q black && black $(SOURCES) \
+	@$(RUN_IN_VENV) pip3 install -q -r $(INFRA_REQUIREMENTS_FILE) && black $(SOURCES) \
 		2> $@ || (cat $@; exit 1)
 	@echo Source Formatted
 
@@ -39,9 +40,9 @@ format: $(BLACK_LOG)
 	@cat $<
 
 $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
-	@$(RUN_IN_VENV) pip3 install -q pylint && pylint $(SOURCES) \
+	@$(RUN_IN_VENV) pip3 install -q -r $(INFRA_REQUIREMENTS_FILE) && pylint $(SOURCES) \
 		> $@ || (cat $@; exit 1)
-	@$(RUN_IN_VENV) pip3 install -q black && black --check $(SOURCES) \
+	@$(RUN_IN_VENV) pip3 install -q -r $(INFRA_REQUIREMENTS_FILE) && black --check $(SOURCES) \
 		2>> $@ || (cat $@; exit 1)
 	@echo Linting Complete
 
@@ -49,7 +50,7 @@ lint: $(LINT_LOG)
 	@cat $<
 
 $(TEST_LOG): $(SOURCES) $(TESTS) $(TEST_FILES) $(VENV_ACTIVATE_SCRIPT)
-	@$(RUN_IN_VENV) pip3 install -q pytest coverage && coverage run --source=$(MODULE_NAME) -m pytest \
+	@$(RUN_IN_VENV) pip3 install -q -r $(INFRA_REQUIREMENTS_FILE) && coverage run --source=$(MODULE_NAME) -m pytest \
 		> $@ || (cat $@; exit 1)
 
 test: $(TEST_LOG)
