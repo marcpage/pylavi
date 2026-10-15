@@ -5,7 +5,6 @@ import struct
 from pylavi.resource_types import TypeLVSR
 
 
-
 def test_basics():
     for binary in TEST_CASES:
         lvsr = TypeLVSR().from_bytes(binary)
