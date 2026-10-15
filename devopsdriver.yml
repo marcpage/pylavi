@@ -1,0 +1,13 @@
+pypi_test:
+    repo: testpypi
+    username: __token__
+    url: https://test.pypi.org/simple/
+
+pypi_prod:
+    repo: pypi
+    username: __token__
+    url: https://pypi.org/simple/
+
+secrets:
+    pypi_test.password: pypi_test/token
+    pypi_prod.password: pypi/token
