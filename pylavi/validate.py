@@ -42,6 +42,18 @@ class Problem:
         return self.to_string()
 
 
+NON_REENTRANT = "non-reentrant"
+SHARED_REENTRANT = "shared-clone"
+PREALLOCATE_REENTRANT = "preallocate-clone"
+INLINE_REENTRANT = "inline"
+REENTRANCY_CHOICES = [
+    NON_REENTRANT,
+    SHARED_REENTRANT,
+    PREALLOCATE_REENTRANT,
+    INLINE_REENTRANT,
+]
+
+
 def add_version_options(parser):
     """adds options related to LabVIEW version that saved the file"""
     parser.add_argument(
@@ -130,6 +142,12 @@ def add_flag_options(parser):
         action="store_true",
         help="Not saved with auto error handling turned on",
     )
+    parser.add_argument(
+        "--reentrancy",
+        action="append",
+        choices=REENTRANCY_CHOICES,
+        help="Allowed reentrancy (may be repeated); a VI passes if it matches any listed setting",
+    )
 
 
 def patch_up_args(args):
@@ -140,6 +158,14 @@ def patch_up_args(args):
     args.verbose = args.verbose or 0
     args.verbose -= args.quiet
     args.quiet = -1 * args.verbose
+    args.reentrancy = args.reentrancy or []
+
+    if isinstance(args.reentrancy, str):
+        args.reentrancy = [args.reentrancy]
+
+    assert set(args.reentrancy) <= set(
+        REENTRANCY_CHOICES
+    ), f"Invalid reentrancy {set(args.reentrancy) - set(REENTRANCY_CHOICES)}"
     args.no_code = args.no_code or 0
     args.code = args.code or 0
     args.no_password = args.no_password or 0
@@ -168,7 +194,11 @@ def patch_up_args(args):
     has_debuggable = args.debuggable > 0 or args.not_debuggable > 0
     has_binary = has_code or has_locked or has_password or has_debuggable
     has_other = (
-        args.autoerror or args.breakpoints or args.password_match or args.path_length
+        args.autoerror
+        or args.breakpoints
+        or args.password_match
+        or args.path_length
+        or args.reentrancy
     )
 
     if (
@@ -313,6 +343,46 @@ def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str):
         and save_record.suspend_on_run()
     ):
         problems.append(Problem(next_path, "Suspend on run is on"))
+
+
+def reentrancy_settings(save_record: TypeLVSR) -> set:
+    """Apply our rules to the reentrancy bits. Each setting is judged on its own:
+    inline: the inline bit is set (shared or preallocate bits are ignored)
+    reentrant: the reentrant bit or the preallocate marker bit is set
+    non-reentrant: not reentrant (the shared bit alone does not make a VI reentrant)
+    shared-clone: reentrant and the shared bit is set
+    preallocate-clone: reentrant and the shared bit is clear
+    Returns None if the save record has no reentrancy bits."""
+    reentrant = save_record.reentrant()
+    preallocate_marker = save_record.preallocate_clones()
+    shared = save_record.shared_clones()
+    inline = save_record.inline()
+
+    if reentrant is None:
+        return None
+
+    found = set()
+
+    if inline:
+        found.add(INLINE_REENTRANT)
+
+    if not (reentrant or preallocate_marker):
+        found.add(NON_REENTRANT)
+    elif shared:
+        found.add(SHARED_REENTRANT)
+    else:
+        found.add(PREALLOCATE_REENTRANT)
+
+    return found
+
+
+def validate_reentrancy(args, save_record: TypeLVSR, problems: list, next_path: str):
+    """Validates the reentrancy settings against the allowed list"""
+    reentrancy = reentrancy_settings(save_record)
+
+    if args.reentrancy and reentrancy and not reentrancy & set(args.reentrancy):
+        found = ", ".join(sorted(reentrancy))
+        problems.append(Problem(next_path, f"Reentrancy is {found}"))
 
 
 def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str):
@@ -496,6 +566,9 @@ def validate(args, resources: Resources, problems: list, next_path: str):
 
     if save_record_resources:
         validate_code(args, save_record, problems, next_path)
+
+    if save_record_resources:
+        validate_reentrancy(args, save_record, problems, next_path)
 
     if save_record_resources:
         validate_run(args, save_record, problems, next_path)

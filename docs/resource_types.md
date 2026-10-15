@@ -652,6 +652,12 @@ The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 
 | 00001000 | VI was marked as Suspend when called                                              |
 | 00002000 | VI is locked (possibly with password, see [BDPW](#bdpw---block-diagram-password)) |
 | 00004000 | VI was marked as Run on Open                                                      |
+| 01000000 | VI is reentrant (shared or preallocate clones)                                    |
+| 00000080 | Reentrant VI uses shared clones (clear means preallocate clones)                  |
+| 00000020 | Also marks a reentrant VI (seen in LabVIEW 2020 files where `01000000` is clear)  |
+
+A VI is reentrant if `01000000` or `00000020` is set. When reentrant, `00000080` selects shared (set) or preallocate (clear).
+`00000080` has no meaning on a VI that is not reentrant.
 
 #### LVSR Flags
 
@@ -659,6 +665,7 @@ The known sizes are: 68, 76, 80, 82, 96, 112, 116, 120, 136, 137, 140, 144, and 
 |----------|------------------------------------|
 | 00000004 | Saved for previous                 |
 | 00000400 | Separate compiled code from source |
+| 00020000 | Inline (independent of shared or preallocate) |
 | 01000000 | Clear indicators when called       |
 | 20000000 | Automatic Error Handling           |
 

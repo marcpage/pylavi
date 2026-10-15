@@ -6,6 +6,7 @@ test all:
         - ../tests/empty_beta.vi
         - ../tests/empty_dev.vi
         - ../tests/empty_invalid.vi
+        - ../tests/reentrancy/*
     eq: 21.0f
     no_beta: true
     no_alpha: true
@@ -71,6 +72,7 @@ test flags:
         - ../tests/add_breakpoints.vi
         - ../tests/empty_password.vi
         - ../tests/empty_locked.vi
+        - ../tests/reentrancy/*
     code: true
     breakpoints: true
     not_locked: true

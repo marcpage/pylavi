@@ -71,6 +71,7 @@ You can validate the following:
 - **suspend on run** require VIs be saved with the `Suspend when called` or require they not be saved with this setting
 - **debuggable** require VIs be saved with the `Allow debugging` or require they not be saved with this setting
 - **autoerror** require VIs have the `Enable automatic error handling` flag be turned off
+- **reentrancy** require VIs have one of the listed reentrancy settings (`non-reentrant`, `shared-clone`, `preallocate-clone`, `inline`). `--reentrancy` can be repeated and a VI passes if it matches any of them. `inline` is judged only by the inline bit, so an inline VI also matches `shared-clone` or `preallocate-clone` depending on its clone setting. `.ctl` files report `non-reentrant`; use `--extension` or `--skip` to leave them out.
 - **path length** require that the path to the VI (including the `--path` length) be less than the given length
 - **absolute dependency paths** require that all paths are relative to the VI or a known LabVIEW location (ie `<vilib>`)
 
@@ -101,6 +102,9 @@ public api:
     not_debuggable: true
     no_absolute_path: true
     autoerror: true
+    reentrancy:
+        - shared-clone
+        - inline
     path_length: 128
 
 test code:
@@ -116,7 +120,7 @@ Each entry in the yaml file is treated as a separate call to `vi_validate`.
 The `--verbose` and `--quiet` flags (or lack of them) on the command line override the .yaml file.
 The top level is the name of the set (displayed if `--verbose` is passed).
 Each key underneath is the `--` name with hyphens converted to underscores (eg `--no-absolute-path` -> `no_absolute_path`).
-`path`, `skip`, and `extension` are lists.
+`path`, `skip`, `extension` and `reentrancy` are lists.
 `path_length` and `password_match` are values.
 All enable flags are set to `true` to enable.
 `path` and `skip` paths are relative to the directory that the config file is in.
@@ -125,7 +129,7 @@ All enable flags are set to `true` to enable.
 usage: vi_validate [-h] [-l LT] [-g GT] [-e EQ] [-r] [-b] [-a] [-d] [-i] [-c] [--code] [--breakpoints] [--locked] [--not-locked]
                    [--password-match PASSWORD_MATCH] [--password] [--no-password] [--clear-indicators] [--no-clear-indicators]
                    [--run-on-open] [--no-run-on-open] [--suspend-on-run] [--no-suspend-on-run] [--debuggable] [--not-debuggable]
-                   [--no-absolute-path] [--autoerror] [--path-length PATH_LENGTH] [-p PATH] [-s SKIP] [-x EXTENSION] [-q] [-v]
+                   [--no-absolute-path] [--autoerror] [--reentrancy {non-reentrant,shared-clone,preallocate-clone,inline}] [--path-length PATH_LENGTH] [-p PATH] [-s SKIP] [-x EXTENSION] [-q] [-v]
                    [--config CONFIG]
 
 Validates LabVIEW resource files
@@ -160,6 +164,8 @@ optional arguments:
   --not-debuggable      VI is not debuggable
   --no-absolute-path    Does not reference links by absolute path
   --autoerror           Not saved with auto error handling turned on
+  --reentrancy {non-reentrant,shared-clone,preallocate-clone,inline}
+                        Allowed reentrancy (may be repeated); a VI passes if it matches any listed setting
   --path-length PATH_LENGTH
                         Maximum number of characters for the path
   -p PATH, --path PATH  Path to scan for files (or a file path) (defaults to current directory)
