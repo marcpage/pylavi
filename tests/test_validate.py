@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
 import os
+import struct
 
 from pylavi.validate import parse_args, main, start_finding_files, find_problems
-from pylavi.validate import parse_config_file
+from pylavi.validate import parse_config_file, patch_up_args, reentrancy_settings
+from pylavi.validate import REENTRANCY_CHOICES, NON_REENTRANT, SHARED_REENTRANT
+from pylavi.validate import PREALLOCATE_REENTRANT, INLINE_REENTRANT
 from pylavi.file import Resources
+from pylavi.resource_types import TypeLVSR
 
 
 def test_arguments():
@@ -188,7 +192,99 @@ EXPECTED_FILES = {
 }
 
 
+def reentrancy_problems(path, *options):
+    args = parse_args(['-q', '-p', path, *options])
+    return find_problems(start_finding_files(parse_config_file(args)), parse_args(['-q']))
+
+
+def lvsr_with_flags(word0, word1):
+    return TypeLVSR().from_bytes(b'\x14\x00\x80\x00' + struct.pack('>II', word0, word1) + bytes(24))
+
+
+def test_reentrancy_settings():
+    for word0, word1, expected in REENTRANCY_SETTINGS_CASES:
+        settings = reentrancy_settings(lvsr_with_flags(word0, word1))
+        assert settings == expected, (hex(word0), hex(word1), settings)
+
+    assert reentrancy_settings(TypeLVSR().from_bytes(b'\x14\x00\x80\x00\x00\x00')) is None
+
+
+def test_reentrancy():
+    for version in ('23.0', '26.0'):
+        for name, settings in REENTRANCY_VI_CASES.items():
+            path = os.path.join('tests', 'reentrancy', version, name)
+            lvsr = TypeLVSR().from_bytes(Resources.load(path).get_resources('LVSR')[0][2])
+            assert reentrancy_settings(lvsr) == settings, path
+
+            for choice in REENTRANCY_CHOICES:
+                problems = reentrancy_problems(path, '--reentrancy', choice)
+                assert len(problems) == (0 if choice in settings else 1), (path, choice)
+
+            allowed = [item for choice in settings for item in ('--reentrancy', choice)]
+            assert not reentrancy_problems(path, *allowed), path
+
+    inline = os.path.join('tests', 'reentrancy', '23.0', 'Inline.vi')
+    assert not reentrancy_problems(inline, '--reentrancy', SHARED_REENTRANT, '--reentrancy', INLINE_REENTRANT)
+    assert reentrancy_problems(inline, '--reentrancy', NON_REENTRANT, '--reentrancy', PREALLOCATE_REENTRANT)
+    problems = reentrancy_problems(os.path.join('tests', 'reentrancy', '23.0', 'Inline - preallocate.vi'), '--reentrancy', SHARED_REENTRANT)
+    assert 'Reentrancy is inline, preallocate' in str(problems[0])
+    assert not reentrancy_problems(inline, '--breakpoints')
+
+
+def test_reentrancy_arguments():
+    args = patch_up_args(parse_args(['--reentrancy', 'shared']))
+    assert args.reentrancy == ['shared']
+    assert not args.no_beta
+    assert not args.path_length
+    assert parse_args(['-q']).reentrancy == []
+
+    args = parse_args(['-q'])
+    args.reentrancy = 'inline'
+    assert patch_up_args(args).reentrancy == ['inline']
+
+    args = parse_args(['-q'])
+    args.reentrancy = ['bogus']
+    try:
+        patch_up_args(args)
+        assert False, 'invalid reentrancy accepted'
+    except AssertionError as error:
+        assert 'Invalid reentrancy' in str(error)
+
+    try:
+        parse_args(['--reentrancy', 'bogus'])
+        assert False, 'invalid reentrancy accepted'
+    except SystemExit:
+        pass
+
+
+# (flag word 0, flag word 1, expected settings)
+REENTRANCY_SETTINGS_CASES = [
+    (0x00000000, 0x20000600, {NON_REENTRANT}),
+    (0x01000000, 0x20000600, {PREALLOCATE_REENTRANT}),
+    (0x01000080, 0x20000600, {SHARED_REENTRANT}),
+    (0x01000080, 0x00020600, {INLINE_REENTRANT, SHARED_REENTRANT}),
+    (0x01000000, 0x00020600, {INLINE_REENTRANT, PREALLOCATE_REENTRANT}),
+    (0x04000020, 0x20000600, {PREALLOCATE_REENTRANT}),
+    (0x000000A0, 0x00000600, {SHARED_REENTRANT}),
+    (0x040000A0, 0x20000400, {SHARED_REENTRANT}),
+    (0x40000180, 0x00000400, {NON_REENTRANT}),
+    (0x00000080, 0x00000400, {NON_REENTRANT}),
+    (0x00100000, 0x20000400, {NON_REENTRANT}),
+]
+
+REENTRANCY_VI_CASES = {
+    'Non-Reentrant.vi': {NON_REENTRANT},
+    'Preallocate-Reentrant.vi': {PREALLOCATE_REENTRANT},
+    'Shared-Reentrant.vi': {SHARED_REENTRANT},
+    'Inline.vi': {INLINE_REENTRANT, SHARED_REENTRANT},
+    'Inline - preallocate.vi': {INLINE_REENTRANT, PREALLOCATE_REENTRANT},
+}
+
+
 if __name__ == "__main__":
     test_arguments()
     test_find_files()
     test_run()
+    test_reentrancy_settings()
+    test_reentrancy()
+    test_reentrancy_arguments()

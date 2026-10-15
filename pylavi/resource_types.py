@@ -106,6 +106,10 @@ class TypeLVSR(Structure):
     AUTO_ERROR_HANDLING = (1, 0x20000000)
     BREAKPOINTS_SET = (5, 0x20000000)
     DEBUGGABLE = (5, 0x40000200)
+    REENTRANT = (0, 0x01000000)
+    SHARED_CLONES = (0, 0x00000080)
+    PREALLOCATE_CLONES = (0, 0x00000020)
+    INLINE = (1, 0x00020000)
     BREAKPOINT_COUNT_INDEX = 28
 
     def __init__(self):
@@ -181,6 +185,22 @@ class TypeLVSR(Structure):
     def has_breakpoints(self, value: bool = None) -> bool:
         """Was this VI saved for previous version"""
         return self.__flag_value(*TypeLVSR.BREAKPOINTS_SET, value)
+
+    def reentrant(self, value: bool = None) -> bool:
+        """Is the reentrant bit (0x01000000 of the first flag word) set"""
+        return self.__flag_value(*TypeLVSR.REENTRANT, value)
+
+    def shared_clones(self, value: bool = None) -> bool:
+        """Is the shared clones bit (0x80 of the first flag word) set"""
+        return self.__flag_value(*TypeLVSR.SHARED_CLONES, value)
+
+    def preallocate_clones(self, value: bool = None) -> bool:
+        """Is the preallocate marker bit (0x20 of the first flag word) set"""
+        return self.__flag_value(*TypeLVSR.PREALLOCATE_CLONES, value)
+
+    def inline(self, value: bool = None) -> bool:
+        """Is the inline bit (0x00020000 of the second flag word) set"""
+        return self.__flag_value(*TypeLVSR.INLINE, value)
 
     def separate_code(self, value: bool = None) -> bool:
         """Was this VI saved with code separate"""

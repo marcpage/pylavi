@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import struct
 
 from pylavi.resource_types import TypeLVSR
 
@@ -40,6 +41,54 @@ def test_basics():
     assert str(lvsr) == expected_str, [str(lvsr), expected_str]
     expected_repr = 'TypeLVSR({\'version\': \'14a70\', \'flags\': "\\\\x00\\\\x00\\\\x00\\\\x00 \\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x04\\\\x00\\\\x03\\\\x00<\\\\x00\\\\x00\\\\x00\\\\x1f@\\\\x80\\\\x02\\\\x10\\\\x00\\\\x00\\\\x00\\\\x01\\\\x00\\\\x01\\\\x00\\\\x02\\\\xff\\\\xff\\\\xff\\\\xff\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00fE\\\\xa4n\\\\xec\\\\xad\'D\\\\xa1\\\\x08\\\\xe8\\\\x8e\\\\xdd2l2\\\\x00\\\\x00\\\\x00\\\\x0c\\\\x00\\\\x00\\\\x00\\\\x10\\\\x00\\\\x00\\\\x00\\\\x00\\\\x16\\\\xd7\\\\xbc\\\\xa0\\\\x18\\\\xa84K\\\\xac\\\\x90\\\\xb5~\\\\xd7\\\\xe0:\\\\xe6\\\\xd4\\\\x1d\\\\x8c\\\\xd9\\\\x8f\\\\x00\\\\xb2\\\\x04\\\\xe9\\\\x80\\\\x09\\\\x98\\\\xec\\\\xf8B~\\\\x00\\\\x00\\\\x10\\\\x00\\\\x00\\\\x00\\\\x00\\\\x00\\\\x01\\\\xc5h-1\\\\xad\\\\xa1H\\\\xab\\\\xb5}jH\\\\x0d\\\\xfaM\\\\x01"})'
     assert repr(lvsr) == expected_repr, [repr(lvsr), expected_repr]
+
+
+def lvsr_with_flags(word0: int, word1: int) -> TypeLVSR:
+    return TypeLVSR().from_bytes(
+        b"\x14\x00\x80\x00" + struct.pack(">II", word0, word1) + bytes(24)
+    )
+
+
+def test_reentrancy_bits():
+    for word0, word1, reentrant, shared, marker, inline in REENTRANCY_BIT_CASES:
+        lvsr = lvsr_with_flags(word0, word1)
+        assert lvsr.reentrant() == reentrant, (hex(word0), hex(word1))
+        assert lvsr.shared_clones() == shared, (hex(word0), hex(word1))
+        assert lvsr.preallocate_clones() == marker, (hex(word0), hex(word1))
+        assert lvsr.inline() == inline, (hex(word0), hex(word1))
+
+    lvsr = lvsr_with_flags(0, 0)
+    lvsr.reentrant(True)
+    assert lvsr.reentrant() and not lvsr.shared_clones() and not lvsr.inline()
+    lvsr.shared_clones(True)
+    lvsr.preallocate_clones(True)
+    lvsr.inline(True)
+    assert lvsr.to_bytes()[4:12] == struct.pack(">II", 0x010000A0, 0x00020000)
+    lvsr.reentrant(False)
+    lvsr.shared_clones(False)
+    lvsr.preallocate_clones(False)
+    lvsr.inline(False)
+    assert lvsr.to_bytes()[4:12] == bytes(8)
+
+
+def test_reentrancy_bits_unsupported_record():
+    lvsr = TypeLVSR().from_bytes(b"\x14\x00\x80\x00\x00\x00")
+    assert lvsr.reentrant() is None
+    assert lvsr.shared_clones() is None
+    assert lvsr.inline() is None
+
+
+# (flag word 0, flag word 1, reentrant, shared, preallocate marker, inline)
+REENTRANCY_BIT_CASES = [
+    (0x00000000, 0x20000600, False, False, False, False),  # Non-Reentrant.vi
+    (0x01000000, 0x20000600, True, False, False, False),  # Preallocate-Reentrant.vi
+    (0x01000080, 0x20000600, True, True, False, False),  # Shared-Reentrant.vi
+    (0x01000080, 0x00020600, True, True, False, True),  # Inline.vi
+    (0x01000000, 0x00020600, True, False, False, True),  # Inline - preallocate.vi
+    (0x04000020, 0x20000600, False, False, True, False),
+    (0x000000A0, 0x00000600, False, True, True, False),
+    (0x40000180, 0x00000400, False, True, False, False),
+]
 
 
 TEST_CASES = {
