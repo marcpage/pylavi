@@ -227,13 +227,13 @@ def test_reentrancy():
     assert not reentrancy_problems(inline, '--reentrancy', SHARED_REENTRANT, '--reentrancy', INLINE_REENTRANT)
     assert reentrancy_problems(inline, '--reentrancy', NON_REENTRANT, '--reentrancy', PREALLOCATE_REENTRANT)
     problems = reentrancy_problems(os.path.join('tests', 'reentrancy', '23.0', 'Inline - preallocate.vi'), '--reentrancy', SHARED_REENTRANT)
-    assert 'Reentrancy is inline, preallocate-clone' in str(problems[0])
+    assert 'Reentrancy is inline, preallocate' in str(problems[0])
     assert not reentrancy_problems(inline, '--breakpoints')
 
 
 def test_reentrancy_arguments():
-    args = patch_up_args(parse_args(['--reentrancy', 'shared-clone']))
-    assert args.reentrancy == ['shared-clone']
+    args = patch_up_args(parse_args(['--reentrancy', 'shared']))
+    assert args.reentrancy == ['shared']
     assert not args.no_beta
     assert not args.path_length
     assert parse_args(['-q']).reentrancy == []

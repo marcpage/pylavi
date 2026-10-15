@@ -43,8 +43,8 @@ class Problem:
 
 
 NON_REENTRANT = "non-reentrant"
-SHARED_REENTRANT = "shared-clone"
-PREALLOCATE_REENTRANT = "preallocate-clone"
+SHARED_REENTRANT = "shared"
+PREALLOCATE_REENTRANT = "preallocate"
 INLINE_REENTRANT = "inline"
 REENTRANCY_CHOICES = [
     NON_REENTRANT,
@@ -350,8 +350,8 @@ def reentrancy_settings(save_record: TypeLVSR) -> set:
     inline: the inline bit is set (shared or preallocate bits are ignored)
     reentrant: the reentrant bit or the preallocate marker bit is set
     non-reentrant: not reentrant (the shared bit alone does not make a VI reentrant)
-    shared-clone: reentrant and the shared bit is set
-    preallocate-clone: reentrant and the shared bit is clear
+    shared: reentrant and the shared bit is set
+    preallocate: reentrant and the shared bit is clear
     Returns None if the save record has no reentrancy bits."""
     reentrant = save_record.reentrant()
     preallocate_marker = save_record.preallocate_clones()
