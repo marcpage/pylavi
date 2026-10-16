@@ -2,11 +2,12 @@
 
 import os
 import struct
+import types
 
 from pylavi.validate import parse_args, main, start_finding_files, find_problems
 from pylavi.validate import parse_config_file, patch_up_args, reentrancy_settings
 from pylavi.validate import REENTRANCY_CHOICES, NON_REENTRANT, SHARED_REENTRANT
-from pylavi.validate import PREALLOCATE_REENTRANT, INLINE_REENTRANT
+from pylavi.validate import PREALLOCATE_REENTRANT, INLINE_REENTRANT, excluded_from_reentrancy
 from pylavi.file import Resources
 from pylavi.resource_types import TypeLVSR
 
@@ -231,6 +232,25 @@ def test_reentrancy():
     assert not reentrancy_problems(inline, '--breakpoints')
 
 
+def vi_resources(file_type='LVIN', **counts):
+    counts = {'BDPW': 1, 'CPST': 0, **counts}
+    return types.SimpleNamespace(
+        file_type=types.SimpleNamespace(to_string=lambda: file_type),
+        count_type=lambda resource_type: counts.get(resource_type, 0),
+    )
+
+
+def test_excluded_from_reentrancy():
+    for version in ('23.0', '26.0'):
+        for name in REENTRANCY_VI_CASES:
+            assert not excluded_from_reentrancy(Resources.load(os.path.join('tests', 'reentrancy', version, name)))
+
+    assert not excluded_from_reentrancy(vi_resources())
+    assert excluded_from_reentrancy(vi_resources(file_type='LVCC'))  # control
+    assert excluded_from_reentrancy(vi_resources(BDPW=0))  # no block diagram (global)
+    assert excluded_from_reentrancy(vi_resources(CPST=1))  # polymorphic
+
+
 def test_reentrancy_arguments():
     args = patch_up_args(parse_args(['--reentrancy', 'shared']))
     assert args.reentrancy == ['shared']
@@ -287,4 +307,5 @@ if __name__ == "__main__":
     test_run()
     test_reentrancy_settings()
     test_reentrancy()
+    test_excluded_from_reentrancy()
     test_reentrancy_arguments()

@@ -71,7 +71,7 @@ You can validate the following:
 - **suspend on run** require VIs be saved with the `Suspend when called` or require they not be saved with this setting
 - **debuggable** require VIs be saved with the `Allow debugging` or require they not be saved with this setting
 - **autoerror** require VIs have the `Enable automatic error handling` flag be turned off
-- **reentrancy** require VIs have one of the listed reentrancy settings (`non-reentrant`, `shared`, `preallocate`, `inline`). `--reentrancy` can be repeated and a VI passes if it matches any of them. `inline` is judged only by the inline bit, so an inline VI also matches `shared` or `preallocate` depending on its clone setting. `.ctl` files report `non-reentrant`; use `--extension` or `--skip` to leave them out.
+- **reentrancy** require VIs have one of the listed reentrancy settings (`non-reentrant`, `shared`, `preallocate`, `inline`). `--reentrancy` can be repeated and a VI passes if it matches any of them. `inline` is judged only by the inline bit, so an inline VI also matches `shared` or `preallocate` depending on its clone setting. Controls, VIs with no block diagram (such as global variable VIs) and polymorphic VIs are not checked for reentrancy.
 - **path length** require that the path to the VI (including the `--path` length) be less than the given length
 - **absolute dependency paths** require that all paths are relative to the VI or a known LabVIEW location (ie `<vilib>`)
 
