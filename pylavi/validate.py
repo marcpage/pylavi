@@ -46,6 +46,9 @@ NON_REENTRANT = "non-reentrant"
 SHARED_REENTRANT = "shared"
 PREALLOCATE_REENTRANT = "preallocate"
 INLINE_REENTRANT = "inline"
+VI_FILE_TYPE = "LVIN"
+BLOCK_DIAGRAM_RESOURCE_TYPE = "BDPW"
+POLYMORPHIC_RESOURCE_TYPE = "CPST"
 REENTRANCY_CHOICES = [
     NON_REENTRANT,
     SHARED_REENTRANT,
@@ -376,6 +379,17 @@ def reentrancy_settings(save_record: TypeLVSR) -> set:
     return found
 
 
+def excluded_from_reentrancy(resources: Resources) -> bool:
+    """Files that are not checked for reentrancy: controls (file type is not a VI),
+    VIs with no block diagram such as globals (no BDPW record) and
+    polymorphic VIs (have a CPST record)"""
+    return (
+        resources.file_type.to_string() != VI_FILE_TYPE
+        or resources.count_type(BLOCK_DIAGRAM_RESOURCE_TYPE) == 0
+        or resources.count_type(POLYMORPHIC_RESOURCE_TYPE) > 0
+    )
+
+
 def validate_reentrancy(args, save_record: TypeLVSR, problems: list, next_path: str):
     """Validates the reentrancy settings against the allowed list"""
     reentrancy = reentrancy_settings(save_record)
@@ -567,7 +581,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
     if save_record_resources:
         validate_code(args, save_record, problems, next_path)
 
-    if save_record_resources:
+    if save_record_resources and not excluded_from_reentrancy(resources):
         validate_reentrancy(args, save_record, problems, next_path)
 
     if save_record_resources:
