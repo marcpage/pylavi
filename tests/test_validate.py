@@ -38,7 +38,7 @@ def test_find_files():
         if next_path is None:
             break
 
-        file_list.add(next_path[1])
+        file_list.add(next_path[1].replace(os.sep, '/'))
 
     assert EXPECTED_FILES - file_list == set(), EXPECTED_FILES - file_list
 
