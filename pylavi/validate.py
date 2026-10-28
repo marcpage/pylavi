@@ -226,7 +226,7 @@ def patch_up_args(args):
 
 def parse_args(command_line=None):
     """Interpret command line arguments"""
-    command_line = command_line or sys.argv[1:]
+    command_line = sys.argv[1:] if command_line is None else command_line
     parser = argparse.ArgumentParser(description="Validates LabVIEW resource files")
     add_version_options(parser)
     add_flag_options(parser)
