@@ -70,6 +70,8 @@ $(LINT_LOG): $(SOURCES) $(VENV_ACTIVATE_SCRIPT)
 		> $@ || (cat $@; exit 1)
 	@$(RUN_IN_VENV) pip3 install -q -r $(INFRA_REQUIREMENTS_FILE) && black --check $(SOURCES) \
 		2>> $@ || (cat $@; exit 1)
+	@$(RUN_IN_VENV) pip3 install -q -r $(INFRA_REQUIREMENTS_FILE) && mypy $(MODULE_NAME) \
+		>> $@ || (cat $@; exit 1)
 	@echo Linting Complete
 
 lint: $(LINT_LOG)
