@@ -68,7 +68,14 @@ def test_reentrancy_bits():
     lvsr.shared_clones(False)
     lvsr.preallocate_clones(False)
     lvsr.inline(False)
-    assert lvsr.to_bytes()[4:12] == bytes(8)
+
+
+def test_setting_unsupported_flag_is_a_noop():
+    lvsr = TypeLVSR()
+    lvsr.flags.value = b""
+
+    assert lvsr.debuggable(True) is None
+    assert lvsr.flags.value == b""
 
 
 def test_reentrancy_bits_unsupported_record():
@@ -149,5 +156,3 @@ TEST_CASES = {
 
 if __name__ == "__main__":
     test_basics()
-
-

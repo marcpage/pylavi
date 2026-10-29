@@ -144,8 +144,10 @@ class Integer(Description):
         )
 
     def __lt__(self, other: Any) -> bool:
+        assert self.value is not None
+
         if isinstance(other, int):
-            return self.value < other  # type: ignore[operator]
+            return self.value < other
 
         if isinstance(other, bytes):
             return self.value < struct.unpack(self.__struct_description(), other)[0]
@@ -162,13 +164,18 @@ class Integer(Description):
         return self.value == other.value
 
     def __add__(self, other: Any) -> int:
+        assert self.value is not None
+
         if isinstance(other, int):
-            return self.value + other  # type: ignore[operator]
+            return self.value + other
 
         return self.value + other.value
 
     def __hash__(self) -> int:
-        return self.value  # type: ignore[return-value]
+        if self.value is None:
+            raise TypeError("uninitialized integer has no hash")
+
+        return self.value
 
 
 class UInt32(Integer):
@@ -206,7 +213,8 @@ class Bytes(Description):
 
     def size(self) -> int:
         """Get the size of the bytes representation"""
-        return len(self.value)  # type: ignore[arg-type]
+        assert self.value is not None, "You must specify byte_count in constructor"
+        return len(self.value)
 
     def from_bytes(self, data: bytes, offset: int = 0) -> Self:
         """fill in data from bytes"""
@@ -217,7 +225,8 @@ class Bytes(Description):
 
     def to_bytes(self) -> bytes:
         """get the binary version"""
-        return self.value  # type: ignore[return-value]
+        assert self.value is not None, "You must specify byte_count in constructor"
+        return self.value
 
     def from_value(self, description: Any) -> Self:
         """Get a Python basic type to represent this value"""
@@ -299,7 +308,8 @@ class PString(Bytes):
         byte_count = Integer(byte_count=self.prefix_size, signed=False)
         byte_count.from_bytes(data, offset)
         start = offset + Integer.SIZES[self.prefix_size]
-        end = start + byte_count.value  # type: ignore[operator]
+        assert byte_count.value is not None
+        end = start + byte_count.value
         self.value = data[start:end]
         assert len(self.value) == byte_count.value, [
             len(self.value),
@@ -310,10 +320,11 @@ class PString(Bytes):
 
     def to_bytes(self) -> bytes:
         """get the binary version"""
+        assert self.value is not None, "You must specify byte_count in constructor"
         prefix = Integer(
-            len(self.value), byte_count=self.prefix_size, signed=False  # type: ignore[arg-type]
+            len(self.value), byte_count=self.prefix_size, signed=False
         ).to_bytes()
-        value = prefix + self.value  # type: ignore[operator]
+        value = prefix + self.value
         return value + b"\x00" * (self.size() - len(value))
 
     def __repr__(self) -> str:
@@ -547,8 +558,9 @@ class Path(Structure):
     def get_type(self) -> int:
         """Get the format int"""
         if isinstance(self.type, Integer):
-            assert self.type.value < len(Path.TYPES)  # type: ignore[operator]
-            return self.type.value  # type: ignore[return-value]
+            assert self.type.value is not None
+            assert self.type.value < len(Path.TYPES)
+            return self.type.value
 
         assert self.type.to_string() in Path.NEW_TYPES, [
             self.type.to_string(),
@@ -772,10 +784,13 @@ class Version(UInt32):
                 assert build is None
                 version_value = major_or_str
 
-            if not version_value:
-                version_value = Version.__compose(
-                    major, minor, patch, phase, build  # type: ignore[arg-type]
-                )
+            if version_value is None:
+                assert major is not None
+                assert minor is not None
+                assert patch is not None
+                assert phase is not None
+                assert build is not None
+                version_value = Version.__compose(major, minor, patch, phase, build)
 
         super().__init__(version_value)
 
@@ -823,13 +838,15 @@ class Version(UInt32):
         return f"Version('{self.to_string()}')"
 
     def __number(self) -> int:
-        return self.value  # type: ignore[return-value]
+        assert self.value is not None
+        return self.value
 
     def __lt__(self, other: Any) -> bool:
         other_value = (
             other.value if isinstance(other, Version) else Version(other).value
         )
-        return self.__number() < other_value  # type: ignore[operator]
+        assert other_value is not None
+        return self.__number() < other_value
 
     def __eq__(self, other: Any) -> bool:
         if isinstance(other, Version):

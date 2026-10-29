@@ -322,9 +322,11 @@ class Resources:
         file_creator: Optional[FourCharCode] = None,
         description: Optional[List[ResourceTypeEntry]] = None,
     ) -> None:
-        self.file_type: FourCharCode = file_type  # type: ignore[assignment]
-        self.file_creator: FourCharCode = file_creator  # type: ignore[assignment]
-        self.__resources: List[ResourceTypeEntry] = description  # type: ignore[assignment]
+        self.file_type: Optional[FourCharCode] = file_type
+        self.file_creator: Optional[FourCharCode] = file_creator
+        self.__resources: List[ResourceTypeEntry] = (
+            description if description is not None else []
+        )
 
     def types(self) -> List[str]:
         """Get the types contained in the resource file"""
@@ -427,7 +429,8 @@ class Resources:
                 + resource_info.name_offset.value
             )
             name = PString().from_bytes(contents, name_offset)
-            assert len(name.value) > 0, f"name_size = {len(name.value)}"  # type: ignore[arg-type]
+            assert name.value is not None
+            assert len(name.value) > 0, f"name_size = {len(name.value)}"
             return name.value
 
         return None
