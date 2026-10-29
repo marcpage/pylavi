@@ -40,6 +40,10 @@ def test_bytes():
         assert reconstituted == version
 
 
+def test_zero_bytes():
+    assert Version(b"\x00\x00\x00\x00").to_bytes() == b"\x00\x00\x00\x00"
+
+
 def test_fields():
     for version_fields in VERSION_BYTES.values():
         version = Version(*version_fields)
@@ -106,5 +110,4 @@ if __name__ == "__main__":
     test_bytes()
     test_fields()
     test_comparisons()
-
 

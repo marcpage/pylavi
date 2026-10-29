@@ -33,6 +33,8 @@ def main(args: Optional[argparse.Namespace] = None) -> None:
     """run the (dis)assembler"""
     args = args or parse_args()
     resources = pylavi.file.Resources.load(args.input_file)
+    assert resources.file_type is not None
+    assert resources.file_creator is not None
     output: Dict[str, Any] = {
         "path": args.input_file,
         "type": resources.file_type.to_string(),

@@ -45,7 +45,8 @@ class TypeLPTH(Array):
         """fill in data from bytes"""
         data_count = UInt32().from_bytes(data, offset)
         offset += data_count.size()
-        self.set_length(data_count.value)  # type: ignore[arg-type]
+        assert data_count.value is not None
+        self.set_length(data_count.value)
         super().from_bytes(data, offset)
         return self
 
@@ -132,15 +133,17 @@ class TypeLVSR(Structure):
         if flag * value.size() + value.size() > self.flags.size():
             return None
 
-        flags: bytes = self.flags.value  # type: ignore[assignment]
+        flags = self.flags.value
+        assert flags is not None
         return value.from_bytes(flags, flag * value.size()).value
 
     def __set_flag_set(self, flag: int, new_value: int) -> None:
         value = UInt32(new_value)
 
         if flag * value.size() + value.size() <= self.flags.size():
-            prefix = self.flags.value[: flag * value.size()]  # type: ignore[index]
-            suffix = self.flags.value[(flag + 1) * value.size() :]  # type: ignore[index]
+            assert self.flags.value is not None
+            prefix = self.flags.value[: flag * value.size()]
+            suffix = self.flags.value[(flag + 1) * value.size() :]
             self.flags.value = prefix + value.to_bytes() + suffix
 
     def __flag_value(
@@ -150,10 +153,13 @@ class TypeLVSR(Structure):
         old_value = None if flag_value is None else (flag_value & mask != 0)
 
         if new_value is not None:
+            if flag_value is None:
+                return old_value
+
             if new_value:
-                flag_value |= mask  # type: ignore[operator]
+                flag_value |= mask
             else:
-                flag_value &= ~mask  # type: ignore[operator]
+                flag_value &= ~mask
 
             self.__set_flag_set(flag, flag_value)
 

@@ -393,6 +393,9 @@ def excluded_from_reentrancy(resources: Resources) -> bool:
     """Files that are not checked for reentrancy: controls (file type is not a VI),
     VIs with no block diagram such as globals (no BDPW record) and
     polymorphic VIs (have a CPST record)"""
+    if resources.file_type is None:
+        return True
+
     return (
         resources.file_type.to_string() != VI_FILE_TYPE
         or resources.count_type(BLOCK_DIAGRAM_RESOURCE_TYPE) == 0
