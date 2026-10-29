@@ -2,7 +2,17 @@
     Parses a LabVIEW resource file
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, List, Optional, Tuple
+
 from pylavi.data_types import Structure, Array, FourCharCode, PString, UInt16, UInt32
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+ResourceEntry = Tuple[UInt32, Optional[bytes], bytes]
+ResourceTypeEntry = Tuple[str, List[ResourceEntry]]
 
 
 # pylint: disable=no-member
@@ -28,7 +38,9 @@ class Header(Structure):
     SIGNATURE = FourCharCode().from_bytes(b"RSRC")
     CORRUPTION_CHECK = b"\r\n"
 
-    def __init__(self, file_type: str = None, file_creator: str = None):
+    def __init__(
+        self, file_type: Optional[str] = None, file_creator: Optional[str] = None
+    ) -> None:
         file_type = file_type or Header.FILE_TYPES[0]
         file_creator = file_creator or Header.FILE_CREATORS[0]
         super().__init__(
@@ -52,7 +64,7 @@ class Header(Structure):
             UInt32(),
         )
 
-    def to_string(self):
+    def to_string(self) -> str:
         """String representation of the header"""
         return (
             "{"
@@ -66,7 +78,7 @@ class Header(Structure):
     def __repr__(self) -> str:
         return f"Header({self.to_string()})"
 
-    def validate(self, file_size: int = None):
+    def validate(self, file_size: Optional[int] = None) -> Self:
         """ensured the header data makes sense"""
         assert (
             self.file_format == Header.SIGNATURE
@@ -113,7 +125,7 @@ class Header(Structure):
 class MetadataHeader(Structure):
     """header for the metadata section"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         header_size = Header().size()
         super().__init__(
             "unused_8",
@@ -129,7 +141,7 @@ class MetadataHeader(Structure):
         )
         self.metadata_header_size.value = header_size + self.size()
 
-    def to_string(self):
+    def to_string(self) -> str:
         """String representation of the header"""
         return (
             "{"
@@ -144,7 +156,7 @@ class MetadataHeader(Structure):
     def __repr__(self) -> str:
         return f"MetadataHeader({self.to_string()})"
 
-    def validate(self, file_header: Header, file_size: int):
+    def validate(self, file_header: Header, file_size: int) -> Self:
         """validate that the data makes sense"""
         assert (
             self.file_header_size == Header().size()
@@ -171,7 +183,7 @@ class TypeInfo(Structure):
         resource_type: str = "\0\0\0\0",
         resource_count: int = 1,
         list_offset: int = 0,
-    ):
+    ) -> None:
         super().__init__(
             "resource_type",
             FourCharCode(resource_type),
@@ -181,7 +193,7 @@ class TypeInfo(Structure):
             UInt32(list_offset),
         )
 
-    def to_string(self):
+    def to_string(self) -> str:
         """get string values"""
         return (
             "TypeInfo{"
@@ -202,11 +214,11 @@ class TypeInfo(Structure):
 class TypeList(Array):
     """Fixed size list of types"""
 
-    def __init__(self, *elements, length: int = 0):
+    def __init__(self, *elements: Any, length: int = 0) -> None:
         assert not elements or all(isinstance(e, TypeInfo) for e in elements)
         super().__init__(TypeInfo, *elements, data_count=length)
 
-    def from_bytes(self, data: bytes, offset: int = 0):
+    def from_bytes(self, data: bytes, offset: int = 0) -> Self:
         """fill in data from bytes"""
         length = UInt32().from_bytes(data, offset) + 1
         offset += UInt32().size()
@@ -225,7 +237,7 @@ class TypeList(Array):
         """get the binary version"""
         return UInt32(self.length() - 1).to_bytes() + super().to_bytes()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"TypeList({', '.join(repr(v) for v in self.value)})"
 
 
@@ -235,8 +247,11 @@ class ResourceMetadata(Structure):
     NO_NAME = 0xFFFFFFFF
 
     def __init__(
-        self, res_id: int = None, name_offset: int = None, data_offset: int = None
-    ):
+        self,
+        res_id: Optional[int] = None,
+        name_offset: Optional[int] = None,
+        data_offset: Optional[int] = None,
+    ) -> None:
         super().__init__(
             "resource_id",
             UInt32(res_id),
@@ -256,7 +271,7 @@ class ResourceMetadata(Structure):
         )
         assert self.data_offset.value is None or self.data_offset.value % 4 == 0
 
-    def to_string(self):
+    def to_string(self) -> str:
         """Convert to a string"""
         return (
             "{"
@@ -275,11 +290,11 @@ class ResourceMetadata(Structure):
 class ResourceList(Array):
     """Fixed size list of types"""
 
-    def __init__(self, *elements, length: int = 0):
+    def __init__(self, *elements: Any, length: int = 0) -> None:
         assert not elements or all(isinstance(e, ResourceMetadata) for e in elements)
         super().__init__(ResourceMetadata, *elements, data_count=length)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ResourceList({', '.join(repr(v) for v in self.value)})"
 
 
@@ -302,13 +317,16 @@ class Resources:
     ]
 
     def __init__(
-        self, file_type: str = None, file_creator: str = None, description: list = None
-    ):
-        self.file_type = file_type
-        self.file_creator = file_creator
-        self.__resources = description
+        self,
+        file_type: Optional[FourCharCode] = None,
+        file_creator: Optional[FourCharCode] = None,
+        description: Optional[List[ResourceTypeEntry]] = None,
+    ) -> None:
+        self.file_type: FourCharCode = file_type  # type: ignore[assignment]
+        self.file_creator: FourCharCode = file_creator  # type: ignore[assignment]
+        self.__resources: List[ResourceTypeEntry] = description  # type: ignore[assignment]
 
-    def types(self) -> [str]:
+    def types(self) -> List[str]:
         """Get the types contained in the resource file"""
         return list(t[0] for t in self.__resources)
 
@@ -316,19 +334,21 @@ class Resources:
         """Get the number of resources of the given type"""
         return sum(len(t[1]) for t in self.__resources if t[0] == resource_type)
 
-    def get_ids(self, resource_type: str) -> [int]:
+    def get_ids(self, resource_type: str) -> List[Optional[int]]:
         """Get the id of the resources"""
         return list(
             r[0].value for t in self.__resources if t[0] == resource_type for r in t[1]
         )
 
-    def get_names(self, resource_type: str) -> [str]:
+    def get_names(self, resource_type: str) -> List[Optional[bytes]]:
         """Get the names of the resources"""
         return list(
             r[1] for t in self.__resources if t[0] == resource_type for r in t[1]
         )
 
-    def get_resources(self, resource_type: str) -> [(int, str, bytes)]:
+    def get_resources(
+        self, resource_type: str
+    ) -> List[Tuple[Optional[int], Optional[bytes], bytes]]:
         """Gets all resources of a given type with their name and id"""
         return list(
             (r[0].value, r[1], r[2])
@@ -338,8 +358,11 @@ class Resources:
         )
 
     def get_resource(
-        self, resource_type: str, resource_id: int = None, name: str = None
-    ) -> bytes:
+        self,
+        resource_type: str,
+        resource_id: Optional[int] = None,
+        name: Optional[str] = None,
+    ) -> Optional[bytes]:
         """Get a resource either by name of id"""
         assert resource_id is not None or name is not None
 
@@ -377,7 +400,7 @@ class Resources:
     @staticmethod
     def __load_metadata_header(
         contents: bytes, header: Header, offset: int
-    ) -> (int, MetadataHeader):
+    ) -> Tuple[int, MetadataHeader]:
         metadata_header = (
             MetadataHeader()
             .from_bytes(contents, offset)
@@ -387,7 +410,7 @@ class Resources:
         return offset, metadata_header
 
     @staticmethod
-    def __load_typelist(contents: bytes, offset: int) -> any:
+    def __load_typelist(contents: bytes, offset: int) -> TypeList:
         return TypeList().from_bytes(contents, offset)
 
     @staticmethod
@@ -396,7 +419,7 @@ class Resources:
         metadata_header: MetadataHeader,
         resource_info: ResourceMetadata,
         contents: bytes,
-    ) -> str:
+    ) -> Optional[bytes]:
         if resource_info.name_offset != ResourceMetadata.NO_NAME:
             name_offset = (
                 header.metadata_offset.value
@@ -404,13 +427,15 @@ class Resources:
                 + resource_info.name_offset.value
             )
             name = PString().from_bytes(contents, name_offset)
-            assert len(name.value) > 0, f"name_size = {len(name.value)}"
+            assert len(name.value) > 0, f"name_size = {len(name.value)}"  # type: ignore[arg-type]
             return name.value
 
         return None
 
     @staticmethod
-    def __load_resource_data(header, resource_info, contents):
+    def __load_resource_data(
+        header: Header, resource_info: ResourceMetadata, contents: bytes
+    ) -> bytes:
         data_offset = header.data_offset + resource_info.data_offset
         data_size = UInt32().from_bytes(contents, data_offset)
         data_offset += data_size.size()
@@ -418,7 +443,7 @@ class Resources:
         return contents[data_offset:offset_past_data]
 
     @staticmethod
-    def load(path: str):
+    def load(path: str) -> "Resources":
         """Loads the resources from the LabVIEW resource file"""
         with open(path, "rb") as resource_file:
             contents = resource_file.read()

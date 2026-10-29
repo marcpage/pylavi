@@ -10,6 +10,7 @@ import sys
 import threading
 import time
 import types
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 import yaml
 
@@ -20,25 +21,32 @@ from pylavi.data_types import Version, Path
 
 MAX_FILES_TO_QUEUE = 1000
 
+Args = Union[argparse.Namespace, types.SimpleNamespace]
+
 
 class Problem:
     """Describe a problem found with a file"""
 
-    def __init__(self, path, message, other=None):
+    def __init__(
+        self,
+        path: str,
+        message: Union[str, BaseException],
+        other: Optional[List[str]] = None,
+    ) -> None:
         self.path = path
         self.message = message
         self.other = other
 
-    def to_string(self):
+    def to_string(self) -> str:
         """Displayable message about the problem"""
         return f"{self.message}: {self.path}" + (
             ("\n\t" + "\n\t".join(self.other)) if self.other else ""
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.to_string()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.to_string()
 
 
@@ -57,7 +65,7 @@ REENTRANCY_CHOICES = [
 ]
 
 
-def add_version_options(parser):
+def add_version_options(parser: argparse.ArgumentParser) -> None:
     """adds options related to LabVIEW version that saved the file"""
     parser.add_argument(
         "-l", "--lt", type=str, help="LabVIEW version must be less than this"
@@ -95,7 +103,7 @@ def add_version_options(parser):
     )
 
 
-def add_flag_options(parser):
+def add_flag_options(parser: argparse.ArgumentParser) -> None:
     """add options for checking flags"""
     parser.add_argument("-c", "--no-code", action="count", help="Saved without code")
     parser.add_argument("--code", action="count", help="Saved with code")
@@ -153,7 +161,7 @@ def add_flag_options(parser):
     )
 
 
-def patch_up_args(args):
+def patch_up_args(args: Args) -> Args:
     """from the raw args patch them up to be useful"""
     args.path = args.path or ([] if args.config else ["."])
     args.skip = args.skip or []
@@ -224,7 +232,7 @@ def patch_up_args(args):
     return args
 
 
-def parse_args(command_line=None):
+def parse_args(command_line: Optional[Sequence[str]] = None) -> Args:
     """Interpret command line arguments"""
     command_line = sys.argv[1:] if command_line is None else command_line
     parser = argparse.ArgumentParser(description="Validates LabVIEW resource files")
@@ -277,7 +285,7 @@ def parse_args(command_line=None):
     return patch_up_args(parser.parse_args(args=command_line))
 
 
-def find_files(found_queue, argsset):
+def find_files(found_queue: "queue.Queue[Any]", argsset: Sequence[Args]) -> None:
     """Find files in given paths and put them in the queue"""
     for args in argsset:
         for path in args.path:
@@ -291,17 +299,17 @@ def find_files(found_queue, argsset):
     found_queue.put(None)
 
 
-def start_finding_files(args):
+def start_finding_files(args: Sequence[Args]) -> "queue.Queue[Any]":
     """Start the find_files function running in the background finding files"""
-    found = queue.Queue(MAX_FILES_TO_QUEUE)
+    found: "queue.Queue[Any]" = queue.Queue(MAX_FILES_TO_QUEUE)
     thread = threading.Thread(target=find_files, args=(found, args), daemon=True)
     thread.start()
     return found
 
 
-def find_paths(data):
+def find_paths(data: bytes) -> List[Path]:
     """Search a block of data for potential Path data in it"""
-    paths = []
+    paths: List[Path] = []
 
     while b"PTH" in data:
         try:
@@ -314,7 +322,9 @@ def find_paths(data):
     return paths
 
 
-def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str):
+def validate_run(
+    args: Args, save_record: TypeLVSR, problems: List[Problem], next_path: str
+) -> None:
     """validate run flags"""
 
     if (
@@ -348,7 +358,7 @@ def validate_run(args, save_record: TypeLVSR, problems: list, next_path: str):
         problems.append(Problem(next_path, "Suspend on run is on"))
 
 
-def reentrancy_settings(save_record: TypeLVSR) -> set:
+def reentrancy_settings(save_record: TypeLVSR) -> Optional[Set[str]]:
     """Apply our rules to the reentrancy bits. Each setting is judged on its own:
     inline: the inline bit is set (shared or preallocate bits are ignored)
     reentrant: the reentrant bit or the preallocate marker bit is set
@@ -364,7 +374,7 @@ def reentrancy_settings(save_record: TypeLVSR) -> set:
     if reentrant is None:
         return None
 
-    found = set()
+    found: Set[str] = set()
 
     if inline:
         found.add(INLINE_REENTRANT)
@@ -390,7 +400,9 @@ def excluded_from_reentrancy(resources: Resources) -> bool:
     )
 
 
-def validate_reentrancy(args, save_record: TypeLVSR, problems: list, next_path: str):
+def validate_reentrancy(
+    args: Args, save_record: TypeLVSR, problems: List[Problem], next_path: str
+) -> None:
     """Validates the reentrancy settings against the allowed list"""
     reentrancy = reentrancy_settings(save_record)
 
@@ -399,7 +411,9 @@ def validate_reentrancy(args, save_record: TypeLVSR, problems: list, next_path: 
         problems.append(Problem(next_path, f"Reentrancy is {found}"))
 
 
-def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str):
+def validate_code(
+    args: Args, save_record: TypeLVSR, problems: List[Problem], next_path: str
+) -> None:
     """Validates if the separate code flags matches the command line arguments"""
 
     if args.code - args.no_code > 0 and save_record.separate_code():
@@ -416,8 +430,12 @@ def validate_code(args, save_record: TypeLVSR, problems: list, next_path: str):
 
 
 def validate_locked_password(
-    args, save_record: TypeLVSR, password: TypeBDPW, problems: list, next_path: str
-):
+    args: Args,
+    save_record: TypeLVSR,
+    password: TypeBDPW,
+    problems: List[Problem],
+    next_path: str,
+) -> None:
     """Validates if the separate code flags matches the command line arguments"""
     if args.password_match and not password.password_matches(args.password_match):
         problems.append(Problem(next_path, f"Password is not '{args.password_match}'"))
@@ -439,7 +457,9 @@ def validate_locked_password(
             problems.append(Problem(next_path, "Locked"))
 
 
-def validate_version(args, versions, problems, next_path):
+def validate_version(
+    args: Args, versions: Sequence[Version], problems: List[Problem], next_path: str
+) -> None:
     """Validates the version checking logic"""
     for version in versions:
         version_string = version.to_string()
@@ -510,9 +530,11 @@ def validate_version(args, versions, problems, next_path):
             break
 
 
-def validate_links(resources: Resources, problems: list, next_path: str):
+def validate_links(
+    resources: Resources, problems: List[Problem], next_path: str
+) -> None:
     """validates that references are not linked via absolute paths"""
-    bad_paths = []
+    bad_paths: List[str] = []
 
     for _, _, data in resources.get_resources("LIvi"):
         for path in find_paths(data):
@@ -540,7 +562,9 @@ def validate_links(resources: Resources, problems: list, next_path: str):
 
 
 # pylint: disable=no-member
-def validate(args, resources: Resources, problems: list, next_path: str):
+def validate(
+    args: Args, resources: Resources, problems: List[Problem], next_path: str
+) -> None:
     """Validate that the given resources file is valid"""
     version_resources = resources.get_resources("vers")
     save_record_resources = resources.get_resources("LVSR")
@@ -570,24 +594,24 @@ def validate(args, resources: Resources, problems: list, next_path: str):
 
     if args.breakpoints and save_record:
         if save_record.has_breakpoints():
-            number = save_record.breakpoint_count()
-            plural = "" if number == 1 else "s"
-            number = "" if number is None else f"{number} "
+            count = save_record.breakpoint_count()
+            plural = "" if count == 1 else "s"
+            number = "" if count is None else f"{count} "
             problems.append(Problem(next_path, f"{number} breakpoint{plural} found"))
 
     if args.autoerror and save_record and save_record.auto_error_handling():
         problems.append(Problem(next_path, "Auto error handling turned on"))
 
-    if save_record_resources:
+    if save_record is not None:
         validate_code(args, save_record, problems, next_path)
 
-    if save_record_resources and not excluded_from_reentrancy(resources):
+    if save_record is not None and not excluded_from_reentrancy(resources):
         validate_reentrancy(args, save_record, problems, next_path)
 
-    if save_record_resources:
+    if save_record is not None:
         validate_run(args, save_record, problems, next_path)
 
-    if save_record_resources and password_record:
+    if save_record is not None and password_record:
         validate_locked_password(
             args, save_record, password_record, problems, next_path
         )
@@ -598,7 +622,7 @@ def validate(args, resources: Resources, problems: list, next_path: str):
         print(f"FAIL: {problems[-1]}")
 
 
-def should_skip(args, path, verbose: int):
+def should_skip(args: Args, path: str, verbose: int) -> bool:
     """Determine if the file should be skipped"""
     if os.path.splitext(path)[1] not in args.extension:
         return True
@@ -612,9 +636,9 @@ def should_skip(args, path, verbose: int):
     return any(fnmatch.fnmatch(path, p) for p in ([] if not args.skip else args.skip))
 
 
-def find_problems(files, top_args):
+def find_problems(files: "queue.Queue[Any]", top_args: Args) -> List[Problem]:
     """Searchs for problems files and returns them"""
-    problems = []
+    problems: List[Problem] = []
     file_count = 0
     start = time.time()
 
@@ -656,7 +680,7 @@ def find_problems(files, top_args):
     return problems
 
 
-def parse_config_file(args):
+def parse_config_file(args: Args) -> Tuple[Args, ...]:
     """parse the config yaml file and generate args"""
     if not args.config:
         return (args,)
@@ -665,8 +689,8 @@ def parse_config_file(args):
         more_args = yaml.load(config_file, Loader=yaml.Loader)
 
     config_dir = os.path.dirname(args.config)
-    full_arg_set = {a: None for a in dir(args) if not a.startswith("_")}
-    config_args = []
+    full_arg_set: Dict[str, Any] = {a: None for a in dir(args) if not a.startswith("_")}
+    config_args: List[Args] = []
 
     for arg_set_name in more_args:
         assert set(more_args[arg_set_name]) <= set(full_arg_set), (
@@ -691,12 +715,12 @@ def parse_config_file(args):
     return (args, *config_args)
 
 
-def main(args=None):
+def main(args: Optional[Args] = None) -> int:
     """run the (dis)assembler"""
-    args = parse_config_file(args or parse_args())
+    argsets = parse_config_file(args or parse_args())
 
-    if args[0].verbose > 1:
-        for argset in args:
+    if argsets[0].verbose > 1:
+        for argset in argsets:
             print(
                 f"{argset.name if 'name' in dir(argset) else 'CLI'}: "
                 + ", ".join(
@@ -706,10 +730,10 @@ def main(args=None):
                 )
             )
 
-    files = start_finding_files(args)
-    problems = find_problems(files, args[0])
+    files = start_finding_files(argsets)
+    problems = find_problems(files, argsets[0])
 
-    if len(problems) > 0 and args[0].quiet < 3:
+    if len(problems) > 0 and argsets[0].quiet < 3:
         print(f"{len(problems)} problems encountered")
         return 1
 

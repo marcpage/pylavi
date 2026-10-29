@@ -5,11 +5,12 @@
 import argparse
 import json
 import sys
+from typing import Any, Dict, Optional, Sequence
 
 import pylavi.file
 
 
-def parse_args(command_line=None):
+def parse_args(command_line: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Interpret command line arguments"""
     command_line = command_line or sys.argv[1:]
     parser = argparse.ArgumentParser(description="Converts LabVIEW Resources to text")
@@ -28,11 +29,11 @@ def parse_args(command_line=None):
     return args
 
 
-def main(args=None):
+def main(args: Optional[argparse.Namespace] = None) -> None:
     """run the (dis)assembler"""
     args = args or parse_args()
     resources = pylavi.file.Resources.load(args.input_file)
-    output = {
+    output: Dict[str, Any] = {
         "path": args.input_file,
         "type": resources.file_type.to_string(),
         "creator": resources.file_creator.to_string(),
