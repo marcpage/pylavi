@@ -56,7 +56,6 @@ setup(
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: The Unlicense (Unlicense)",
         "Programming Language :: Python :: 3.9",
         "Topic :: Utilities",
         "Topic :: Software Development",
