@@ -96,25 +96,64 @@ class Integer(Description):
     ):
         assert value is None or signed or value >= 0
         self.value = value
-        self.endian = endian
-        self.signed = signed
-        self.byte_count = byte_count
+        self.__endian = endian
+        self.__signed = signed
+        self.__byte_count = byte_count
+        self.__size = 0
+        self.__format = ""
+        self.__update_cache()
+
+    def __update_cache(self) -> None:
+        """Recalculate the size and struct format from endian, signed and byte_count"""
+        self.__size = Integer.SIZES[self.__byte_count]
+        self.__format = self.__endian.value + (
+            self.__byte_count.value
+            if self.__signed
+            else self.__byte_count.value.upper()
+        )
+
+    @property
+    def endian(self) -> Endian:
+        """byte order of the integer"""
+        return self.__endian
+
+    @endian.setter
+    def endian(self, endian: Endian) -> None:
+        self.__endian = endian
+        self.__update_cache()
+
+    @property
+    def signed(self) -> bool:
+        """whether the integer is signed"""
+        return self.__signed
+
+    @signed.setter
+    def signed(self, signed: bool) -> None:
+        self.__signed = signed
+        self.__update_cache()
+
+    @property
+    def byte_count(self) -> IntSize:
+        """size of the integer"""
+        return self.__byte_count
+
+    @byte_count.setter
+    def byte_count(self, byte_count: IntSize) -> None:
+        self.__byte_count = byte_count
+        self.__update_cache()
 
     def size(self) -> int:
         """Get the size of the bytes representation"""
-        return Integer.SIZES[self.byte_count]
+        return self.__size
 
     def __struct_description(self) -> str:
-        return self.endian.value + (
-            self.byte_count.value if self.signed else self.byte_count.value.upper()
-        )
+        return self.__format
 
     def from_bytes(self, data: bytes, offset: int = 0) -> Self:
         """fill in data from bytes"""
-        assert len(data) >= offset + self.size(), [self.size(), offset, data]
-        self.value = struct.unpack(
-            self.__struct_description(), data[offset : offset + self.size()]
-        )[0]
+        size = self.__size
+        assert len(data) >= offset + size, [size, offset, data]
+        self.value = struct.unpack(self.__format, data[offset : offset + size])[0]
         return self
 
     def to_bytes(self) -> bytes:
@@ -294,8 +333,7 @@ class PString(Bytes):
     def size(self) -> int:
         """Get the size of the bytes representation"""
         return (
-            int((Integer.SIZES[self.prefix_size] + super().size() - 1) / self.pad_to)
-            + 1
+            (Integer.SIZES[self.prefix_size] + super().size() - 1) // self.pad_to + 1
         ) * self.pad_to
 
     def from_bytes(self, data: bytes, offset: int = 0) -> Self:
@@ -403,11 +441,7 @@ class Structure(Description):
         return f"Structure({', '.join(n+'='+repr(self.__dict__[n]) for n in self.__fields)})"
 
     def __getitem__(self, key: str) -> Optional[Description]:
-        for name in self.__fields:
-            if name == key:
-                return self.__dict__[name]
-
-        return None
+        return self.__dict__[key] if key in self.__fields else None
 
     # pylint: disable=protected-access
     def __eq__(self, other: Any) -> bool:
@@ -736,14 +770,14 @@ class Version(UInt32):
         assert patch <= 9, patch
         assert build <= 1999, build
         return (
-            (int(major / 10) << 28)
+            (major // 10 << 28)
             + ((major % 10) << 24)
             + (minor << 20)
             + (patch << 16)
             + (phase << 13)
-            + (int(build / 1000) << 12)
-            + (int(build % 1000 / 100) << 8)
-            + (int(build % 100 / 10) << 4)
+            + (build // 1000 << 12)
+            + (build % 1000 // 100 << 8)
+            + (build % 100 // 10 << 4)
             + ((build % 10) << 0)
         )
 
@@ -793,10 +827,6 @@ class Version(UInt32):
                 version_value = Version.__compose(major, minor, patch, phase, build)
 
         super().__init__(version_value)
-
-    def size(self) -> int:
-        """Get the size of the bytes representation"""
-        return Integer.SIZES[self.byte_count]
 
     def from_value(self, description: Any) -> Self:
         """Get a Python basic type to represent this value"""

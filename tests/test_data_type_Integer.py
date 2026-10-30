@@ -22,6 +22,19 @@ def test_basic():
     assert set((Integer(5), Integer(7), Integer(7))) == set((Integer(5), Integer(7)))
 
 
+def test_changing_properties_updates_cache():
+    i = Integer(1)
+    assert i.size() == 4 and i.to_bytes() == b'\x00\x00\x00\x01'
+    i.endian = Endian.LITTLE
+    assert i.to_bytes() == b'\x01\x00\x00\x00'
+    i.byte_count = IntSize.INT16
+    assert i.size() == 2 and i.to_bytes() == b'\x01\x00'
+    i.signed = True
+    i.value = -2
+    assert i.to_bytes() == b'\xfe\xff'
+    assert i.from_bytes(b'\xff\xff').value == -1
+
+
 def test_aliases():
     for test_index, test_set in enumerate(TEST_SET):
         if test_set[3] == IntSize.INT32:
