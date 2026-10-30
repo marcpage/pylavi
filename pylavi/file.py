@@ -460,12 +460,12 @@ class Resources:
         data_types = Resources.__load_typelist(contents, offset)
         resource_types = []
         last_offset = 0
-        max_resources = header.metadata_size.value / ResourceMetadata().size()
+        max_resources = header.metadata_size.value // ResourceMetadata().size()
         lists_base = header.metadata_offset.value + Header().size()
         lists_base += MetadataHeader().size()
 
         for entry in data_types:
-            assert entry.resource_count < int(max_resources), "Corrupted"
+            assert entry.resource_count < max_resources, "Corrupted"
             assert (
                 entry.list_offset > last_offset
             ), f"Unordered type table {entry.list_offset} vs {last_offset}"
