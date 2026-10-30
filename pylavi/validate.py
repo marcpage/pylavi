@@ -312,17 +312,14 @@ def find_paths(data: bytes) -> List[Path]:
     paths: List[Path] = []
     offset = 0
 
-    while True:
-        offset = data.find(b"PTH", offset)
-
-        if offset < 0:
-            return paths
-
+    while (offset := data.find(b"PTH", offset)) >= 0:
         try:
             paths.append(Path().from_bytes(data, offset))
             offset += paths[-1].size()
         except AssertionError:  # Just a random PTH in the resource, not a path
             offset += 1
+
+    return paths
 
 
 def validate_run(
