@@ -50,13 +50,14 @@ setup(
     url="https://github.com/marcpage/pylavi",
     license="Unlicense",
     # https://pypi.org/pypi?%3Aaction=list_classifiers
+    # License classifiers are deprecated; use the license= SPDX expression above.
+    # See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license
     classifiers=[
         "Development Status :: 1 - Planning",
         "Environment :: Console",
         "Intended Audience :: Developers",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: The Unlicense (Unlicense)",
         "Programming Language :: Python :: 3.9",
         "Topic :: Utilities",
         "Topic :: Software Development",
