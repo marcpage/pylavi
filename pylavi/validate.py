@@ -310,16 +310,19 @@ def start_finding_files(args: Sequence[Args]) -> "queue.Queue[Any]":
 def find_paths(data: bytes) -> List[Path]:
     """Search a block of data for potential Path data in it"""
     paths: List[Path] = []
+    offset = 0
 
-    while b"PTH" in data:
+    while True:
+        offset = data.find(b"PTH", offset)
+
+        if offset < 0:
+            return paths
+
         try:
-            data = data[data.find(b"PTH") :]
-            paths.append(Path().from_bytes(data))
-            data = data[paths[-1].size() :]
+            paths.append(Path().from_bytes(data, offset))
+            offset += paths[-1].size()
         except AssertionError:  # Just a random PTH in the resource, not a path
-            data = data[1:]
-
-    return paths
+            offset += 1
 
 
 def validate_run(
@@ -652,10 +655,7 @@ def find_problems(files: "queue.Queue[Any]", top_args: Args) -> List[Problem]:
             break
 
         args, next_path = next_path
-        suffix = ""
-
-        if "name" in dir(args):
-            suffix = f" from {args.name}"
+        suffix = f" from {args.name}" if hasattr(args, "name") else ""
 
         if should_skip(args, next_path, verbose=args.verbose):
             if args.verbose > 1:
@@ -675,9 +675,10 @@ def find_problems(files: "queue.Queue[Any]", top_args: Args) -> List[Problem]:
                 print(f"FAIL: {problems[-1]}")
 
     if top_args.verbose > 1:
+        elapsed = max(time.time() - start, 1e-6)
         print(
-            f"{file_count} files in {time.time() - start:0.1f} seconds "
-            + f"{file_count / (time.time() - start):0.0f} files/second"
+            f"{file_count} files in {elapsed:0.1f} seconds "
+            + f"{file_count / elapsed:0.0f} files/second"
         )
 
     return problems
@@ -689,7 +690,7 @@ def parse_config_file(args: Args) -> Tuple[Args, ...]:
         return (args,)
 
     with open(args.config, "r", encoding="utf-8") as config_file:
-        more_args = yaml.load(config_file, Loader=yaml.Loader)
+        more_args = yaml.safe_load(config_file)
 
     config_dir = os.path.dirname(args.config)
     full_arg_set: Dict[str, Any] = {a: None for a in dir(args) if not a.startswith("_")}
