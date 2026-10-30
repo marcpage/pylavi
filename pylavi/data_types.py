@@ -96,13 +96,51 @@ class Integer(Description):
     ):
         assert value is None or signed or value >= 0
         self.value = value
-        self.endian = endian
-        self.signed = signed
-        self.byte_count = byte_count
-        self.__size = Integer.SIZES[byte_count]
-        self.__format = endian.value + (
-            byte_count.value if signed else byte_count.value.upper()
+        self.__endian = endian
+        self.__signed = signed
+        self.__byte_count = byte_count
+        self.__size = 0
+        self.__format = ""
+        self.__update_cache()
+
+    def __update_cache(self) -> None:
+        """Recalculate the size and struct format from endian, signed and byte_count"""
+        self.__size = Integer.SIZES[self.__byte_count]
+        self.__format = self.__endian.value + (
+            self.__byte_count.value
+            if self.__signed
+            else self.__byte_count.value.upper()
         )
+
+    @property
+    def endian(self) -> Endian:
+        """byte order of the integer"""
+        return self.__endian
+
+    @endian.setter
+    def endian(self, endian: Endian) -> None:
+        self.__endian = endian
+        self.__update_cache()
+
+    @property
+    def signed(self) -> bool:
+        """whether the integer is signed"""
+        return self.__signed
+
+    @signed.setter
+    def signed(self, signed: bool) -> None:
+        self.__signed = signed
+        self.__update_cache()
+
+    @property
+    def byte_count(self) -> IntSize:
+        """size of the integer"""
+        return self.__byte_count
+
+    @byte_count.setter
+    def byte_count(self, byte_count: IntSize) -> None:
+        self.__byte_count = byte_count
+        self.__update_cache()
 
     def size(self) -> int:
         """Get the size of the bytes representation"""
