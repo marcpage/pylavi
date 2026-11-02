@@ -73,7 +73,13 @@ def add_version_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-g", "--gt", type=str, help="LabVIEW version must be greater than this"
     )
-    parser.add_argument("-e", "--eq", type=str, help="LabVIEW version must this")
+    parser.add_argument(
+        "-e",
+        "--eq",
+        type=str,
+        help="LabVIEW version must match this; "
+        "omitted parts or * are wildcards (e.g. 20, 20.*, 20.1)",
+    )
     parser.add_argument(
         "-r",
         "--no-release",
@@ -480,7 +486,7 @@ def validate_version(
             )
             break
 
-        if args.eq and not version == args.eq:
+        if args.eq and not version.matches(args.eq):
             problems.append(
                 Problem(
                     next_path, f"VI saved in LabVIEW {version_string} is not {args.eq}"

@@ -111,3 +111,16 @@ if __name__ == "__main__":
     test_fields()
     test_comparisons()
 
+
+
+def test_matches_wildcards():
+    version = Version('20.0.0f2')
+    assert version.matches('20')
+    assert version.matches('20.*')
+    assert version.matches('20.0.*')
+    assert version.matches('20.0.0f')
+    assert version.matches('20.0.0f2')
+    assert not version.matches('20.1')
+    assert not version.matches('19')
+    assert not version.matches('20.0.0b')
+    assert not version.matches('20.0.0f3')
