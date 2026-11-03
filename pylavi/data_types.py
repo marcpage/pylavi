@@ -747,7 +747,7 @@ class Version(UInt32):
     PATTERN = re.compile(r"((\d+)(\.(\d+)(\.(\d+))?)?)(([abdfABDF]|{\d})(\d+)?)?")
 
     MATCH_PATTERN = re.compile(
-        r"(\d+)(?:\.(\d+|\*)(?:\.(\d+|\*))?)?(?:([abdfABDF]|\{\d\})(\d+)?)?"
+        r"(\d+)(?:\.(\d+|\*)(?:\.(\d+|\*))?)?(?:(?:([abdfABDF])|\{(\d)\})(\d+)?)?"
     )
 
     @staticmethod
@@ -896,15 +896,15 @@ class Version(UInt32):
         '20' and '20.*' match any 20.x.y; '20.1' matches any 20.1.y"""
         found = Version.MATCH_PATTERN.fullmatch(pattern.strip())
         assert found, f"Incorrect version pattern: '{pattern}'"
-        major, minor, patch, phase_str, build = found.groups()
+        major, minor, patch, phase_letter, phase_number, build = found.groups()
         checks = [(self.major(), major), (self.minor(), minor), (self.patch(), patch)]
 
-        if phase_str:
-            if phase_str.startswith("{"):
-                phase = int(phase_str[1:-1])
-            else:
-                phase = Version.PHASES.find(phase_str.lower())
-            checks.append((self.phase(), str(phase)))
+        if phase_letter:
+            checks.append(
+                (self.phase(), str(Version.PHASES.find(phase_letter.lower())))
+            )
+        elif phase_number:
+            checks.append((self.phase(), phase_number))
 
         if build:
             checks.append((self.build(), build))
