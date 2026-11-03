@@ -746,6 +746,10 @@ class Version(UInt32):
     PHASES = "?dabf"
     PATTERN = re.compile(r"((\d+)(\.(\d+)(\.(\d+))?)?)(([abdfABDF]|{\d})(\d+)?)?")
 
+    MATCH_PATTERN = re.compile(
+        r"(\d+)(?:\.(\d+|\*)(?:\.(\d+|\*))?)?(?:(?:([abdfABDF])|\{(\d)\})(\d+)?)?"
+    )
+
     @staticmethod
     def __from_string(version: str) -> Tuple[int, int, int, int, int]:
         final = Version.PHASES[Version.RELEASE]
@@ -886,6 +890,29 @@ class Version(UInt32):
 
     def __hash__(self) -> int:
         return self.__number()
+
+    def matches(self, pattern: str) -> bool:
+        """Semantic match: omitted or '*' components in pattern match anything.
+        '20' and '20.*' match any 20.x.y; '20.1' matches any 20.1.y"""
+        found = Version.MATCH_PATTERN.fullmatch(pattern.strip())
+        assert found, f"Incorrect version pattern: '{pattern}'"
+        major, minor, patch, phase_letter, phase_number, build = found.groups()
+        checks = [(self.major(), major), (self.minor(), minor), (self.patch(), patch)]
+
+        if phase_letter:
+            checks.append(
+                (self.phase(), str(Version.PHASES.find(phase_letter.lower())))
+            )
+        elif phase_number:
+            checks.append((self.phase(), phase_number))
+
+        if build:
+            checks.append((self.build(), build))
+
+        return all(
+            expected in (None, "*") or actual == int(expected)
+            for actual, expected in checks
+        )
 
     def major(self) -> int:
         """get the major version"""

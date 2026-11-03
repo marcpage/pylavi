@@ -138,7 +138,8 @@ optional arguments:
   -h, --help            show this help message and exit
   -l LT, --lt LT        LabVIEW version must be less than this
   -g GT, --gt GT        LabVIEW version must be greater than this
-  -e EQ, --eq EQ        LabVIEW version must this
+  -e EQ, --eq EQ        LabVIEW version must match this; omitted parts or * are
+                        wildcards (e.g. 20, 20.*, 20.1)
   -r, --no-release      LabVIEW version must not be release
   -b, --no-beta         LabVIEW version must not be beta
   -a, --no-alpha        LabVIEW version must not be alpha
