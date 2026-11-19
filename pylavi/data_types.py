@@ -751,11 +751,16 @@ class Version(UInt32):
     )
 
     @staticmethod
+    def __year_to_major(major: int) -> int:
+        """Four digit years (2022) are coerced to two digits (22)"""
+        return major - 2000 if 2000 <= major <= 2099 else major
+
+    @staticmethod
     def __from_string(version: str) -> Tuple[int, int, int, int, int]:
         final = Version.PHASES[Version.RELEASE]
         correct_format = Version.PATTERN.match(version)
         assert correct_format, f"Incorrect version string: '{version}'"
-        major = int(correct_format.group(2))
+        major = Version.__year_to_major(int(correct_format.group(2)))
         minor = int(correct_format.group(4)) if correct_format.group(4) else 0
         patch = int(correct_format.group(6)) if correct_format.group(6) else 0
         phase_str = correct_format.group(8) if correct_format.group(8) else final
@@ -809,8 +814,8 @@ class Version(UInt32):
                 assert phase is None
                 assert build is None
                 version_value = int.from_bytes(major_or_str, "big")
-            elif major_or_str <= 99:
-                major = major_or_str
+            elif major_or_str <= 99 or 2000 <= major_or_str <= 2099:
+                major = Version.__year_to_major(major_or_str)
                 minor = minor or 0
                 patch = patch or 0
                 phase = Version.RELEASE if phase is None else phase
@@ -896,8 +901,13 @@ class Version(UInt32):
         '20' and '20.*' match any 20.x.y; '20.1' matches any 20.1.y"""
         found = Version.MATCH_PATTERN.fullmatch(pattern.strip())
         assert found, f"Incorrect version pattern: '{pattern}'"
-        major, minor, patch, phase_letter, phase_number, build = found.groups()
-        checks = [(self.major(), major), (self.minor(), minor), (self.patch(), patch)]
+        major_str, minor, patch, phase_letter, phase_number, build = found.groups()
+        major = Version.__year_to_major(int(major_str))
+        checks = [
+            (self.major(), str(major)),
+            (self.minor(), minor),
+            (self.patch(), patch),
+        ]
 
         if phase_letter:
             checks.append(

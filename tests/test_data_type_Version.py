@@ -124,3 +124,11 @@ def test_matches_wildcards():
     assert not version.matches('19')
     assert not version.matches('20.0.0b')
     assert not version.matches('20.0.0f3')
+
+
+def test_four_digit_year():
+    assert Version('2022.4') == Version('22.4')
+    assert Version(2024) == Version('24')
+    assert Version('2022.4').to_string() == '22.4'
+    assert Version('22.4').matches('2022.4')
+
