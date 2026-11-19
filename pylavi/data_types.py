@@ -901,10 +901,10 @@ class Version(UInt32):
         '20' and '20.*' match any 20.x.y; '20.1' matches any 20.1.y"""
         found = Version.MATCH_PATTERN.fullmatch(pattern.strip())
         assert found, f"Incorrect version pattern: '{pattern}'"
-        major, minor, patch, phase_letter, phase_number, build = found.groups()
-        major = str(Version.__year_to_major(int(major)))
+        major_str, minor, patch, phase_letter, phase_number, build = found.groups()
+        major = Version.__year_to_major(int(major_str))
         checks = [
-            (self.major(), major),
+            (self.major(), str(major)),
             (self.minor(), minor),
             (self.patch(), patch),
         ]
