@@ -902,11 +902,9 @@ class Version(UInt32):
         found = Version.MATCH_PATTERN.fullmatch(pattern.strip())
         assert found, f"Incorrect version pattern: '{pattern}'"
         major, minor, patch, phase_letter, phase_number, build = found.groups()
+        major = str(Version.__year_to_major(int(major)))
         checks = [
-            (
-                self.major(),
-                None if major is None else str(Version.__year_to_major(int(major))),
-            ),
+            (self.major(), major),
             (self.minor(), minor),
             (self.patch(), patch),
         ]
